@@ -1,7 +1,9 @@
 <script setup lang="ts">
-document.documentElement.setAttribute('data-theme', 'dark')
+import { RouterView } from 'vue-router'
 </script>
 
-<template>App Components</template>
+<template>
+  <RouterView />
+</template>
 
 <style scoped></style>

@@ -1,0 +1,79 @@
+/* 浅色主题 */
+:root {
+  /* 背景色 */
+  --background-primary: #ffffff;
+  --background-secondary: #f8f9fa;
+  --background-tertiary: #e9ecef;
+
+  /* 文字颜色 */
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-tertiary: #6c757d;
+
+  /* 主题色 - 蓝绿色系 */
+  --primary: #20c997;
+  /* 主要强调色 */
+  --primary-light: #38d9a9;
+  /* 主题色浅色 */
+  --primary-dark: #199d76;
+  /* 主题色深色 */
+
+  /* 辅助色 */
+  --secondary: #6c757d;
+  /* 次要强调色（灰色） */
+  --success: #28a745;
+  /* 成功状态 */
+  --warning: #ffc107;
+  /* 警告状态 */
+  --danger: #dc3545;
+  /* 危险/错误状态 */
+  --info: #17a2b8;
+  /* 信息状态 */
+
+  /* 边框和分割线 */
+  --border-color: #dee2e6;
+  --divider-color: #e9ecef;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  /* 背景色 */
+  --background-primary: #121212;
+  --background-secondary: #1e1e1e;
+  --background-tertiary: #2d2d2d;
+
+  /* 文字颜色 */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #888888;
+
+  /* 主题色保持一致，但在深色背景下可能需要微调 */
+  --primary: #20c997;
+  --primary-light: #38d9a9;
+  --primary-dark: #199d76;
+
+  /* 辅助色在深色模式下适当调整以保证可读性 */
+  --secondary: #888888;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --info: #29b6f6;
+
+  /* 边框和分割线 */
+  --border-color: #333333;
+  --divider-color: #2d2d2d;
+
+  /* 阴影（深色模式下阴影更微妙） */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}

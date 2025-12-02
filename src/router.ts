@@ -24,4 +24,13 @@ const router = createRouter({
   routes
 })
 
+router.beforeEach((to, from, next) => {
+  // 如果用户在编辑页面退出页面，下次访问页面时直接跳转到编辑页面
+  if (localStorage.getItem('path') === '/edit' && localStorage.getItem('bookId')) {
+    next('/Edit')
+  } else {
+    next()
+  }
+})
+
 export default router

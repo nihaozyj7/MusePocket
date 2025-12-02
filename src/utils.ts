@@ -1,6 +1,8 @@
+import type { Ref } from "vue"
+
 let _uid: () => string
 if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-  _uid = crypto.randomUUID
+  _uid = () => crypto.randomUUID()
 } else {
   _uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0
@@ -10,4 +12,38 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 }
 
 /** 生成一个唯一的 UUID v4 */
-export const uid = () => _uid()
+export const uid = _uid
+
+/**
+ * 设置书架右键菜单的位置
+ * @param e 鼠标事件
+ * @param bookContextMenuRef 书架右键菜单的引用
+ */
+export function setBookMenuPosition(e: MouseEvent, bookContextMenuRef: Ref<HTMLElement | null, HTMLElement | null>) {
+  e.preventDefault()
+
+  const menu = bookContextMenuRef.value!
+  menu.style.display = 'block'
+
+  const menuRect = menu.getBoundingClientRect()
+  const menuWidth = menuRect.width
+  const menuHeight = menuRect.height
+  const windowWidth = window.innerWidth
+  const windowHeight = window.innerHeight
+  let left = e.clientX
+  let top = e.clientY
+
+  if (left + menuWidth > windowWidth) {
+    left = windowWidth - menuWidth
+  }
+
+  if (top + menuHeight > windowHeight) {
+    top = windowHeight - menuHeight
+  }
+
+  left = Math.max(0, left)
+  top = Math.max(0, top)
+
+  menu.style.left = `${left}px`
+  menu.style.top = `${top}px`
+}

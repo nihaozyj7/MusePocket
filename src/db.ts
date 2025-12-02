@@ -27,8 +27,8 @@ async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
 const db = await openAppDB()
 
 export const bookdb = new class {
+  /** 创建书籍 */
   async createBook(book: Book): Promise<Status> {
-    book.deletedTime = book.deletedTime ?? 0
     try {
       const tx = db.transaction(['books'], 'readwrite')
       await tx.objectStore('books').add(book)
@@ -39,6 +39,7 @@ export const bookdb = new class {
     }
   }
 
+  /** 更新书籍 */
   async updateBook(book: Book): Promise<Status> {
     try {
       const updated = { ...book, modifiedTime: Date.now() }
@@ -51,6 +52,7 @@ export const bookdb = new class {
     }
   }
 
+  /** 删除书籍 */
   async deleteBook(bookId: string): Promise<Status> {
     try {
       const tx = db.transaction(['books', 'articles', 'entities'], 'readwrite')
@@ -79,6 +81,7 @@ export const bookdb = new class {
     }
   }
 
+  /** 逻辑删除书籍 */
   async softDeleteBook(bookId: string): Promise<Status> {
     try {
       const tx = db.transaction(['books', 'articles', 'entities'], 'readwrite')
@@ -126,6 +129,7 @@ export const bookdb = new class {
     }
   }
 
+  /** 逻辑恢复书籍 */
   async restoreBookDeep(bookId: string): Promise<Status> {
     try {
       const tx = db.transaction(['books', 'articles', 'entities'], 'readwrite')
@@ -168,13 +172,38 @@ export const bookdb = new class {
     }
   }
 
+  /** 获取书籍下的所有文章 */
   async getBookArticles(bookId: string, includeDeleted = false): Promise<Article[]> {
     const store = db.transaction(['articles'], 'readonly').objectStore('articles')
     const articles = await store.index('by-book').getAll(bookId)
     return includeDeleted ? articles : articles.filter(a => a.deletedTime === 0)
   }
+
+  /**
+   * 获取指定书籍下的所有实体
+   * @param bookId 书籍 ID
+   * @param includeDeleted 是否包含已软删除的实体，默认为 false
+   * @returns 实体数组
+   */
+  async getBookEntities(bookId: string, includeDeleted = false): Promise<Entity[]> {
+    const store = db.transaction(['entities'], 'readonly').objectStore('entities')
+    const entities = await store.index('by-book').getAll(bookId)
+    return includeDeleted ? entities : entities.filter(e => e.deletedTime === 0)
+  }
+
+  /**
+   * 获取所有书籍
+   * @param includeDeleted 是否包含已软删除的书籍，默认为 false
+   * @returns 书籍数组
+   */
+  async getAllBooks(includeDeleted = false): Promise<Book[]> {
+    const store = db.transaction(['books'], 'readonly').objectStore('books')
+    const books = await store.getAll()
+    return includeDeleted ? books : books.filter(b => b.deletedTime === 0)
+  }
 }()
 
+/** 文章数据操作实例 */
 export const articledb = new class {
   async createArticle(article: Article): Promise<Status> {
     article.deletedTime = article.deletedTime ?? 0
@@ -188,6 +217,7 @@ export const articledb = new class {
     }
   }
 
+  /** 创建文章 */
   async updateArticle(article: Article): Promise<Status> {
     try {
       const updated = { ...article, modifiedTime: Date.now() }
@@ -200,6 +230,7 @@ export const articledb = new class {
     }
   }
 
+  /** 删除文章，彻底删除 */
   async deleteArticle(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['articles'], 'readwrite')
@@ -211,6 +242,7 @@ export const articledb = new class {
     }
   }
 
+  /** 逻辑删除文章 */
   async softDeleteArticle(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['articles'], 'readwrite')
@@ -227,6 +259,7 @@ export const articledb = new class {
     }
   }
 
+  /** 恢复文章 */
   async restoreArticle(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['articles'], 'readwrite')
@@ -244,6 +277,7 @@ export const articledb = new class {
   }
 }()
 
+/** 实体数据操作实例 */
 export const entitydb = new class {
   async createEntity(ent: Entity): Promise<Status> {
     ent.deletedTime = ent.deletedTime ?? 0
@@ -257,6 +291,7 @@ export const entitydb = new class {
     }
   }
 
+  /** 更新实体 */
   async updateEntity(ent: Entity): Promise<Status> {
     try {
       const updated = { ...ent, modifiedTime: Date.now() }
@@ -269,6 +304,7 @@ export const entitydb = new class {
     }
   }
 
+  /** 删除实体 */
   async deleteEntity(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['entities'], 'readwrite')
@@ -280,6 +316,7 @@ export const entitydb = new class {
     }
   }
 
+  /** 逻辑删除实体 */
   async softDeleteEntity(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['entities'], 'readwrite')
@@ -296,6 +333,7 @@ export const entitydb = new class {
     }
   }
 
+  /** 恢复实体 */
   async restoreEntity(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['entities'], 'readwrite')

@@ -546,6 +546,14 @@ main {
   overflow: hidden;
 }
 
+.window main .cover img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
 .window main .cover button {
   position: absolute;
   background-color: var(--background-tertiary);

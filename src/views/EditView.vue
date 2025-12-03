@@ -3,7 +3,7 @@ import { articledb, bookdb } from '@/db.ts'
 import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
-import type { Article, Book } from '@/types.ts'
+import type { Article, ArticleBody, Book } from '@/types.ts'
 import { getNewChapterName, uid } from '@/utils.ts'
 import { onMounted, ref } from 'vue'
 
@@ -13,10 +13,39 @@ const articles = ref<Article[]>([])
 const selectedArticleStore = useSelectedArticleStore()
 /** 当前书籍 */
 const selectedBookStore = useSelectedBookStore()
+/** 当前打开的文章的内容 */
+const articleBody = ref<ArticleBody | null>(null)
 
 onMounted(() => {
   loadArticles()
 })
+
+function handleArticleClick(e: MouseEvent) {
+  const articleItem = e.target instanceof Element ?
+    (e.target as Element).closest<HTMLElement>('.article-item') :
+    null
+  if (articleItem) {
+    const id = articleItem.dataset.articleId
+    const article = articles.value.find(article => article.id === id)
+    if (article) {
+      selectedArticleStore.selectedArticle = article
+      openArticle(article)
+    } else {
+      selectedArticleStore.selectedArticle = null
+    }
+  } else {
+    console.log('No .article-item found')
+  }
+}
+
+function openArticle(article: Article) {
+  articledb.getArticleBody(article.id).then(res => {
+    articleBody.value = res
+    console.log(res)
+  }).catch(err => {
+    console.error(`获取文章正文失败, ${err.message}`)
+  })
+}
 
 function creatreArticle() {
   const newArticle = {
@@ -40,7 +69,6 @@ function creatreArticle() {
 function loadArticles() {
   articledb.getBookArticles(selectedBookStore.selectedBook.id).then(res => {
     articles.value = res
-    console.log(res)
   }).catch(err => {
     console.error(`获取文章列表失败, ${err.message}`)
   })
@@ -49,7 +77,7 @@ function loadArticles() {
 </script>
 
 <template>
-  <div class="left-container">
+  <div class="container">
     <div class="sidebar">
       <!-- 搜索栏 -->
       <div class="search">搜索章节</div>
@@ -66,7 +94,7 @@ function loadArticles() {
         <!-- 新建书籍 -->
         <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
       </div>
-      <div class="articleshelf">
+      <div class="articleshelf" @click="handleArticleClick">
         <div class="scroll-container">
           <div class="article-item" v-for="article in articles" :data-article-id="article.id" :key="article.id">
             <span>📜</span>
@@ -102,13 +130,19 @@ function loadArticles() {
       <div class="bottom">
         <main>
           <div class="tu-container">
+            <!-- 文章标题 -->
+            <div class="title">1</div>
             <!-- 文字编辑区 -->
-            <div class="edit"></div>
-            <!-- 侧边内容区 -->
-            <div class="side"></div>
+            <div class="edit">1</div>
           </div>
           <!-- 状态栏 -->
-          <div class="statusbar"></div>
+          <div class="statusbar">
+            <div class="left">
+              <button>➕ 新章节</button>
+            </div>
+            <div class="center">2400字</div>
+            <div class="right">分钟 / 18</div>
+          </div>
         </main>
         <div class="utils-panel vertical-text">
           <button title="" class="selected">✍️ 取名工具</button>
@@ -124,7 +158,7 @@ function loadArticles() {
 </template>
 
 <style scoped>
-.left-container {
+.container {
   height: 100%;
   width: 100%;
   display: flex;
@@ -235,6 +269,8 @@ function loadArticles() {
 
 .right-container {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .toolbar {
@@ -283,14 +319,45 @@ function loadArticles() {
   font-size: 1rem;
 }
 
-.bottom {
+.right-container .bottom {
   display: flex;
   flex: 1;
-  height: 100%;
 }
 
 main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+main .tu-container {
+  flex: 1;
+  height: 0;
+}
+
+main .statusbar {
+  height: 2rem;
+  font-size: .8rem;
+  display: flex;
+  padding: 0 1rem;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-tertiary);
+  background-color: var(--background-secondary);
+}
+
+main .statusbar .left {
+  width: 30%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+main .statusbar .right {
+  width: 30%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .utils-panel {
@@ -308,7 +375,6 @@ main {
   display: inline-block;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 1rem;
-  margin-bottom: 1rem;
   user-select: text;
 }
 

@@ -47,3 +47,14 @@ export function setBookMenuPosition(e: MouseEvent, bookContextMenuRef: Ref<HTMLE
   menu.style.left = `${left}px`
   menu.style.top = `${top}px`
 }
+
+/** 根据图片ID获取图标Base64 URL */
+export function getIconBase64(iconId: string): string {
+  return '/cover/default.png'
+}
+
+
+/** 根据书的ID来获取一个新章节的默认名称 */
+export function getNewChapterName(bookId: string): string {
+  return `第 1 章  `
+}

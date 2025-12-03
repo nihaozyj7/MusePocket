@@ -10,19 +10,27 @@ export interface Time {
   deletedTime: number
 }
 
-/** 文章 */
+/** 文章元数据 */
 export interface Article extends Time {
+  /** 文章ID */
   id: string
-  /** 所属书籍 */
+  /** 所属书籍ID */
   bookId: string
   /** 标题 */
   title: string
-  /** 文章内容 */
+}
+
+/** 文章内容，与文章ID一致 */
+export interface ArticleBody {
+  /** 文章ID */
+  id: string
+  /** 正文内容 */
   content: string
 }
 
 /** 书籍 */
 export interface Book extends Time {
+  /** 书籍ID */
   id: string
   /** 书名 */
   title: string
@@ -40,12 +48,13 @@ export interface EntityAttr {
   title: string
   /** 属性值 */
   value: string
-  /** 排序索引，按照升序排列，可以重复 */
+  /** 排序索引（升序，可重复） */
   sortIndex: number
 }
 
 /** 自定义实体 */
 export interface Entity extends Time {
+  /** 实体ID */
   id: string
   /** 所属书籍ID */
   bookId: string
@@ -63,26 +72,40 @@ export interface Entity extends Time {
 
 /** 数据库结构 */
 export interface AppDB extends DBSchema {
-  /** 文章表 */
+  /** 文章元数据表 */
   articles: {
+    /** 主键：文章ID */
     key: string
+    /** 元数据值 */
     value: Article
+    /** 索引 */
     indexes: {
+      /** 按书籍分类 */
       'by-book': string
     }
   }
+
+  /** 文章正文表（新加） */
+  articleBodies: {
+    /** 主键：文章ID */
+    key: string
+    /** 正文内容 */
+    value: ArticleBody
+  }
+
   /** 书籍表 */
   books: {
-    value: Book
     key: string
+    value: Book
     indexes: {
       'by-author': string
     }
   }
+
   /** 实体表 */
   entities: {
-    value: Entity
     key: string
+    value: Entity
     indexes: {
       'by-book': string
       'by-type': string

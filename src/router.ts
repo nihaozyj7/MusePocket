@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 // 导入组件
 import Books from './views/BooksView.vue'
 import Edit from './views/EditView.vue'
+import { useSelectedBookStore } from './stores/SelectedBookStore'
 
 // 定义路由规则
 const routes = [
@@ -12,7 +13,7 @@ const routes = [
     component: Books
   },
   {
-    path: '/Edit',
+    path: '/edit',
     name: 'Edit',
     component: Edit
   }
@@ -25,12 +26,17 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  // 如果用户在编辑页面退出页面，下次访问页面时直接跳转到编辑页面
-  if (localStorage.getItem('path') === '/edit' && localStorage.getItem('bookId')) {
-    next('/Edit')
-  } else {
-    next()
+  if (to.path === '/' && from.path === '/edit') {
+    useSelectedBookStore().$reset()
   }
+
+  if (useSelectedBookStore().selectedBook) {
+    return to.path === '/edit' ? next() : next('/edit')
+  } else if (to.path === '/edit') {
+    next('/')
+  }
+
+  next()
 })
 
 export default router

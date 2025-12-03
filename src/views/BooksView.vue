@@ -4,8 +4,8 @@ import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useThemeStore } from '@/stores/ThemeStore.ts'
 import type { Book } from '@/types.ts'
-import { setBookMenuPosition, uid } from '@/utils.ts'
-import { onMounted, ref } from 'vue'
+import { getIconBase64, setBookMenuPosition, uid } from '@/utils.ts'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
 const onHome = ref(true)
@@ -17,35 +17,62 @@ const books = ref<Book[]>([])
 const selectedBookStore = useSelectedBookStore()
 /** 书籍右键菜单Ref */
 const bookContextMenuRef = ref<HTMLElement | null>(null)
+/** 单击选中的书籍 */
+const clickSelectedBook = ref<Book | null>(null)
+/** 新书暂存 */
+const newBook = ref<Book | null>(null)
 
 /** 鼠标移出收起菜单的定时器 */
 let timer: number | null = null
 /** 右键菜单选中的书籍 */
-let selectedBook: Book | null = null
+let rightSelectedBook: Book | null = null
 
 /** 书籍的右键菜单功能 */
 const bookContextMenuHanders = {
   open() {
-    selectedBookStore.selectedBook = selectedBook
+    selectedBookStore.selectedBook = rightSelectedBook
     router.push('/Edit')
   },
   delete() {
-    console.log('右键菜单删除', selectedBook)
+    bookdb.softDeleteBook(rightSelectedBook.id).then(res => {
+      if (res.success) {
+        books.value = books.value.filter(book => book.id !== rightSelectedBook.id)
+        if (selectedBookStore.selectedBook === rightSelectedBook) {
+          selectedBookStore.selectedBook = null
+        }
+      } else {
+        console.error(`删除书籍失败, ${res.message}`)
+      }
+    })
   },
   edit() {
-    console.log('右键菜单编辑', selectedBook)
+    console.log('右键菜单编辑', rightSelectedBook)
   },
   exportTxt() {
-    console.log('右键菜单导出TXT', selectedBook)
+    console.log('右键菜单导出TXT', rightSelectedBook)
   },
   exportBackup() {
-    console.log('右键菜单导出备份', selectedBook)
+    console.log('右键菜单导出备份', rightSelectedBook)
   }
+}
+
+function hiddenBooksMenu() {
+  clearTimeout(timer!)
+  bookContextMenuRef.value!.style.display = 'none'
 }
 
 onMounted(async () => {
   loadBooks()
+  document.addEventListener('click', hiddenBooksMenu)
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', hiddenBooksMenu)
+})
+
+function bookIdEqual(book: Book) {
+  return book && clickSelectedBook.value && book.id === clickSelectedBook.value.id
+}
 
 function handleBookDoubleClick(book: Book) {
   selectedBookStore.selectedBook = book
@@ -54,7 +81,7 @@ function handleBookDoubleClick(book: Book) {
 
 function handleMouseOut() {
   clearTimeout(timer!)
-  timer = setTimeout(hideBookContextMenu, 1000)
+  timer = setTimeout(hideBookContextMenu, 700)
 }
 
 function handleMouseEnter() {
@@ -75,7 +102,7 @@ function hideBookContextMenu() {
 function handleBookItemContextMenu(e: MouseEvent, book: Book) {
   e.preventDefault()
 
-  selectedBook = book
+  rightSelectedBook = book
   setBookMenuPosition(e, bookContextMenuRef)
   bookContextMenuRef.value?.addEventListener('click', handleBookItemContentMenuItenClick)
 }
@@ -83,7 +110,7 @@ function handleBookItemContextMenu(e: MouseEvent, book: Book) {
 
 function handleClickBookItem(book: Book) {
   onHome.value = false
-  selectedBookStore.selectedBook = book
+  clickSelectedBook.value = book
 }
 
 function goHome() {
@@ -91,33 +118,38 @@ function goHome() {
   selectedBookStore.selectedBook = null
 }
 
-function addBook() {
-  const book = {
+function openAddBookDialog() {
+  newBook.value = {
     id: uid(),
     title: '新书',
     author: '作者',
-    description: '这是一本新书，请开始你的阅读之旅！',
-    coverID: 'cover-1',
+    description: '这是一本新书，开始你的写作之旅！',
+    coverID: '/default.png',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
     deletedTime: 0
   }
-  bookdb.createBook(book).then(res => {
+}
+
+function addBook() {
+  if (!newBook.value) return
+
+  bookdb.createBook(newBook.value).then(res => {
     if (res.success) {
-      books.value.push(book)
+      books.value.unshift(newBook.value)
     } else {
       console.error(`创建书籍失败, ${res.message}`)
     }
+    newBook.value = null
   })
 }
 
-async function loadBooks() {
-  const res = await bookdb.getAllBooks()
-  if (res && typeof res === 'object' && Array.isArray(res)) {
+function loadBooks() {
+  bookdb.getAllBooks().then(res => {
     books.value = res
-  } else {
-    console.error('获取书籍列表失败')
-  }
+  }).catch(err => {
+    console.error(`获取书籍列表失败, ${err.message}`)
+  })
 }
 
 </script>
@@ -135,16 +167,18 @@ async function loadBooks() {
         <button class="button-m" title="导入导出">📥 导入导出</button>
         <!-- 回收站 -->
         <button class="button-m" title="回收站">🗑 回收站</button>
+        <!-- 占位符 -->
+        <div style="flex: 1;"></div>
         <!-- 新建书籍 -->
-        <button class="button-m" title="创建新书籍" @click="addBook">✏️ 新书</button>
+        <button class="button-m" title="创建新书籍" @click="openAddBookDialog">✏️ 新书</button>
       </div>
       <div class="bookshelf">
         <div class="scroll-container">
           <!-- 单个书籍项（示例） -->
-          <div class="book-item" :class="{ 'checked': selectedBookStore.isSelectedBook(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
+          <div class="book-item" :class="{ 'checked': bookIdEqual(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
             <!-- 封面占位 -->
             <div class="cover">
-
+              <img :src="getIconBase64(book.coverID)" alt="封面" class="cover-img"></img>
             </div>
             <!-- 书籍信息 -->
             <div class="bookInfo">
@@ -207,6 +241,29 @@ async function loadBooks() {
     <div class="menu-item" data-type="exportTxt">📄 导出为TXT</div>
     <div class="menu-item" data-type="exportBackup">💾 导出备份</div>
   </div>
+  <!-- 新建弹出层 -->
+  <div class="mask" v-if="newBook" @click="newBook = null">
+    <div class="window" @click="e => e.stopPropagation()">
+      <header>
+        <h3>新建书籍</h3>
+        <button class="close" @click="newBook = null">❌</button>
+      </header>
+      <main>
+        <div class="cover">
+          <img :src="getIconBase64(newBook.coverID)" :alt="newBook.title + '的封面'">
+          <button>更换封面</button>
+        </div>
+        <div class="form">
+          <label for="title">书名</label>
+          <input type="text" id="title" placeholder="请输入书名" v-model="newBook.title">
+          <label for="overview">简介</label>
+          <textarea id="overview" v-model="newBook.description"></textarea>
+          <button @click="addBook">创建</button>
+        </div>
+      </main>
+    </div>
+    <div class="tips">点击空白处关闭</div>
+  </div>
 </template>
 
 <style scoped>
@@ -242,11 +299,6 @@ async function loadBooks() {
   -webkit-text-fill-color: transparent;
 }
 
-/* .search input {
-  width: 100%;
-  background-color: transparent;
-} */
-
 .operations {
   display: flex;
   height: 2.2rem;
@@ -256,10 +308,11 @@ async function loadBooks() {
 }
 
 .operations button {
-  padding: 0 .61rem;
+  padding: .2rem .25rem;
   border-radius: .25rem;
   background-color: var(--background-tertiary);
   margin-right: .25rem;
+  font-size: .8rem;
 }
 
 .operations button:last-child {
@@ -285,11 +338,17 @@ async function loadBooks() {
   background-color: var(--background-tertiary);
 }
 
-.cover {
+.book-item .cover {
   height: 8rem;
   width: 5rem;
   border-radius: .25rem;
   margin-right: .5rem;
+  overflow: hidden;
+}
+
+.book-item .cover img {
+  height: 100%;
+  width: 100%;
 }
 
 .bookInfo {
@@ -343,6 +402,7 @@ async function loadBooks() {
 .breadcrumb span {
   display: block;
   margin-left: .5rem;
+  font-size: .8rem;
 }
 
 .tools {
@@ -415,5 +475,123 @@ main {
 
 .book-context-menu .menu-item:hover {
   background-color: var(--background-tertiary);
+}
+
+.mask {
+  width: 100%;
+  height: 100%;
+  background-color: #0006;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.mask .tips {
+  position: absolute;
+  bottom: 1rem;
+  font-size: .8rem;
+  color: var(--text-tertiary);
+}
+
+.window {
+  width: 26rem;
+  height: 15rem;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: .25rem;
+  overflow: hidden;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+}
+
+.window header {
+  width: 100%;
+  height: 2rem;
+  background-color: var(--background-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 .5rem;
+}
+
+.window header * {
+  display: block;
+  line-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.window header h3 {
+  font-size: .8rem;
+}
+
+.window main {
+  flex: 1;
+  height: 0;
+  margin: .5rem;
+  display: flex;
+}
+
+.window main .cover {
+  height: 100%;
+  width: 7.42rem;
+  background-color: var(--background-secondary);
+  border-radius: .25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.window main .cover button {
+  position: absolute;
+  background-color: var(--background-tertiary);
+  height: 2rem;
+  width: 100%;
+  bottom: 0;
+  font-size: .8rem;
+}
+
+.window main .form {
+  flex: 1;
+  width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-left: .5rem;
+}
+
+.window main .form * {
+  width: 100%;
+}
+
+.window main .form label {
+  font-size: .8rem;
+  color: var(--text-secondary);
+}
+
+.window main .form input {
+  border-bottom: 1px solid var(--border-color);
+  padding: .5rem .5rem .5rem 0;
+  margin-bottom: 1rem;
+}
+
+.window main .form textarea {
+  border: 1px solid var(--border-color);
+  line-height: 1.5rem;
+  margin-top: .5rem;
+  height: 3.1rem;
+  padding: 0 .25rem;
+}
+
+.window main .form button {
+  background-color: var(--primary-dark);
+  margin-top: 1rem;
+  height: 1.9rem;
+  line-height: 1.9rem;
+  border-radius: .25rem;
+  color: var(--text-primary);
 }
 </style>

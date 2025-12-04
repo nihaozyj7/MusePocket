@@ -5,7 +5,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody, Book } from '@/types.ts'
 import { getNewChapterName, uid } from '@/utils.ts'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -15,9 +15,26 @@ const selectedArticleStore = useSelectedArticleStore()
 const selectedBookStore = useSelectedBookStore()
 /** 当前打开的文章的内容 */
 const articleBody = ref<ArticleBody | null>(null)
+/** 编辑区 */
+const bodyRef = ref<HTMLElement | null>(null)
+/** 编辑区Canvas背景 */
+const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
+
+/** 观察者实例 */
+let observer: ResizeObserver
+
 
 onMounted(() => {
   loadArticles()
+  observer = new ResizeObserver(entries => {
+    bodyBackgroundRef.value.width = entries[0].contentRect.width
+    bodyBackgroundRef.value.height = entries[0].contentRect.height
+  })
+  observer.observe(bodyRef.value)
+})
+
+onUnmounted(() => {
+  observer.unobserve(bodyRef.value)
 })
 
 function handleArticleClick(e: MouseEvent) {
@@ -38,10 +55,15 @@ function handleArticleClick(e: MouseEvent) {
   }
 }
 
+function goHome() {
+  selectedBookStore.selectedBook = null
+  router.push({ path: '/', replace: true })
+}
+
 function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
+    selectedArticleStore.selectedArticle = article
     articleBody.value = res
-    console.log(res)
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -55,11 +77,13 @@ function creatreArticle() {
     content: '',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
+    wordCount: 0,
     deletedTime: 0
   }
   articledb.createArticle(newArticle).then(res => {
     if (res.success) {
       articles.value.push(newArticle)
+      openArticle(articles.value[articles.value.length - 1])
     } else {
       console.error(`创建文章失败, ${res.message}`)
     }
@@ -69,6 +93,15 @@ function creatreArticle() {
 function loadArticles() {
   articledb.getBookArticles(selectedBookStore.selectedBook.id).then(res => {
     articles.value = res
+    // 如何存在历史打开的文章，则查找文章列表中是否存在该文章，如果存在则打开
+    const article = selectedArticleStore.selectedArticle
+      && articles.value.find(article => article.id === selectedArticleStore.selectedArticle.id)
+    // 用户离开页面时存在打开的文章，则恢复
+    if (article) openArticle(article)
+    // 不存在打开的文章，则打开最后一章
+    if (res.length > 0) openArticle(articles.value[res.length - 1])
+    // 不存在文章，创建新文章
+    else creatreArticle()
   }).catch(err => {
     console.error(`获取文章列表失败, ${err.message}`)
   })
@@ -84,7 +117,7 @@ function loadArticles() {
       <!-- 操作按钮 -->
       <div class="operations">
         <!-- 回到主页 -->
-        <button class="button-m" title="回到主页" @click="() => router.back()">🔙 返回</button>
+        <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
         <!-- 占位符 -->
         <div style="flex: 1;"></div>
         <!-- 自定义 -->
@@ -99,7 +132,7 @@ function loadArticles() {
           <div class="article-item" v-for="article in articles" :data-article-id="article.id" :key="article.id">
             <span>📜</span>
             <h4>{{ article.title }}</h4>
-            <div class="count">310</div>
+            <div class="count">{{ article.wordCount }}</div>
           </div>
         </div>
       </div>
@@ -131,16 +164,24 @@ function loadArticles() {
         <main>
           <div class="tu-container">
             <!-- 文章标题 -->
-            <div class="title">1</div>
+            <div class="title">
+              <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title"></input>
+            </div>
             <!-- 文字编辑区 -->
-            <div class="edit">1</div>
+            <div class="edit scroll-container">
+              <div class="body" contenteditable ref="bodyRef">
+                <template v-for="value in 100">saddddddddddddddddd<br></template>
+              </div>
+              <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
+              <canvas ref="bodyBackgroundRef"></canvas>
+            </div>
           </div>
           <!-- 状态栏 -->
           <div class="statusbar">
             <div class="left">
-              <button>➕ 新章节</button>
+              <button @click="creatreArticle">➕ 新章节</button>
             </div>
-            <div class="center">2400字</div>
+            <div class="center">{{ articleBody && articleBody.content.length }}</div>
             <div class="right">分钟 / 18</div>
           </div>
         </main>
@@ -322,17 +363,54 @@ function loadArticles() {
 .right-container .bottom {
   display: flex;
   flex: 1;
+  height: 0;
 }
 
 main {
   flex: 1;
+  width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 main .tu-container {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   height: 0;
+  padding: 2rem;
+}
+
+.tu-container .title {
+  height: 2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.tu-container .title input {
+  width: 100%;
+}
+
+.tu-container .edit {
+  flex: 1;
+  position: relative;
+  height: 0;
+  overflow: hide;
+}
+
+.tu-container .edit .body {
+  position: relative;
+  z-index: 2;
+}
+
+.tu-container .edit canvas {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: red;
 }
 
 main .statusbar {

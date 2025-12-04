@@ -18,6 +18,8 @@ export interface Article extends Time {
   bookId: string
   /** 标题 */
   title: string
+  /** 字数 */
+  wordCount: number
 }
 
 /** 文章内容，与文章ID一致 */

@@ -61,6 +61,7 @@ export function getIconBase64(iconId: string): string {
  * - titles 中每项形如 "第 1 章 xxx"
  * - 需要解析其中的数字部分，找到最大章节号
  * - 返回 "第 n 章"（n = 最大章节号 + 1）
+ *
  */
 export function getNewChapterName(titles: { title: string }[]): string {
   // 提取数字的正则：匹配 "第 xxx 章"
@@ -81,7 +82,7 @@ export function getNewChapterName(titles: { title: string }[]): string {
   }
   // 返回下一章编号
   const next = maxNumber + 1
-  return `第 ${next} 章`
+  return `第${next}章 `
 }
 
 /** 精确获取指定元素中单行文本的真实行高（单位：像素）*/
@@ -173,10 +174,168 @@ export function deleteBackward() {
 }
 
 /**
- * 将字符串中的换行符转换为 <br> 标签
- * @param text 需要处理的字符串
- * @returns 转换后的字符串，可用于 innerHTML
+ * 将字符串按行转换为 <p> 段落
+ * @param text 原始字符串
+ * @param options 配置项
+ * @param options.collapse 是否折叠多余空行（多个连续换行只保留一个）
+ * @returns 处理后的 HTML 字符串，可用于 innerHTML
  */
-export function newlineToBr(text: string): string {
-  return text.replace(/\n/g, '<br>')
+export function newlineToP(
+  text: string,
+  options: { collapse?: boolean } = {}
+): string {
+  const { collapse = false } = options
+
+  // 按换行符分割文本为多行
+  let lines = text.split(/\r?\n/)
+
+  // 是否折叠多余空行：把连续空行折叠为 1 行
+  if (collapse) {
+    const result: string[] = []
+    let prevEmpty = false
+
+    for (const line of lines) {
+      const isEmpty = line.trim() === ''
+
+      // 如果当前行为空，并且前一行也是空，则跳过
+      if (isEmpty && prevEmpty) continue
+
+      result.push(line)
+      prevEmpty = isEmpty
+    }
+
+    lines = result
+  }
+
+  // 将每一行转换为 <p>XXX</p>
+  const html = lines
+    .map(line => `<p>${line === '' ? '&nbsp;' : line}</p>`)
+    .join('')
+
+  return html
 }
+
+
+/**
+ * 清理多余换行，并可选移除“空白行”（只包含空格 / 制表符 / &nbsp; 的行）
+ * @param text 原始字符串
+ * @param options 配置项
+ * @param options.removeBlankLines 是否移除空白行（默认 false）
+ * @returns 处理后的字符串
+ */
+export function trimAndReduceNewlines(
+  text: string,
+  options: { removeBlankLines?: boolean } = {}
+): string {
+  if (!text) return ''
+
+  const { removeBlankLines = false } = options
+
+  // 按行拆分
+  let lines = text.split(/\r?\n/)
+
+  // 移除空白行：只包含空格、制表符、全角空格、&nbsp; 的行
+  if (removeBlankLines) {
+    lines = lines.filter(line => {
+      // 去除普通空白
+      const cleaned = line.replace(/\s+/g, '').replace(/&nbsp;/g, '')
+      return cleaned !== ''
+    })
+  }
+
+  // 折叠多余空行：多个空行 -> 一个空行
+  const collapsed: string[] = []
+  let prevEmpty = false
+
+  for (const line of lines) {
+    const isEmpty = line.trim() === ''
+    if (isEmpty && prevEmpty) continue
+    collapsed.push(line)
+    prevEmpty = isEmpty
+  }
+
+  // 去除首尾空行
+  while (collapsed.length > 0 && collapsed[0].trim() === '') collapsed.shift()
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1].trim() === '') collapsed.pop()
+
+  return collapsed.join('\n')
+}
+
+/**
+ * 检测光标是否在可视区
+ * @param container 编辑器容器（contenteditable 的 div）
+ * @returns true 表示光标完全在可视区内，false 表示部分或完全不可见
+ */
+export function isCaretInViewport(container: HTMLElement): boolean {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return false
+
+  const range = sel.getRangeAt(0)
+  let node = range.endContainer as HTMLElement
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement!
+
+  const rect = node.getBoundingClientRect()
+  const cRect = container.getBoundingClientRect()
+
+  // 检查节点是否完全在容器可视区域
+  return rect.top >= cRect.top && rect.bottom <= cRect.bottom
+}
+
+/**
+ * 将光标滚动到可视区
+ * @param container 编辑器容器（contenteditable 的 div）
+ * @param behavior 可选滚动方式 'smooth' | 'auto'，默认 'auto'
+ */
+export function scrollCaretIntoView(container: HTMLElement, behavior: ScrollBehavior = 'auto') {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  let node = range.endContainer as HTMLElement
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement!
+
+  const rect = node.getBoundingClientRect()
+  const cRect = container.getBoundingClientRect()
+
+  // 光标中心相对容器可视区的偏移（尽量滚动到中间）
+  const caretMiddle = rect.top + rect.height / 2
+  const containerMiddle = cRect.top + cRect.height / 2
+  let scrollOffset = caretMiddle - containerMiddle
+
+  // 边界判断：滚动量不能超出容器顶部或底部
+  const maxScrollUp = -container.scrollTop
+  const maxScrollDown = container.scrollHeight - container.clientHeight - container.scrollTop
+  if (scrollOffset < maxScrollUp) scrollOffset = maxScrollUp
+  if (scrollOffset > maxScrollDown) scrollOffset = maxScrollDown
+
+  // 光标在可视区外才滚动
+  if (rect.top < cRect.top || rect.bottom > cRect.bottom) {
+    container.scrollBy({ top: scrollOffset, behavior })
+  }
+}
+
+/**
+ * 将光标移动到内容末尾，并且将容器滚动到最底部（直接等于元素高度）
+ * @param container 编辑器容器（contenteditable 的 div）
+ * @param behavior 可选滚动方式 'smooth' | 'auto'，默认 'auto'
+ */
+export function moveCaretToEndAndScrollToBottom(
+  container: HTMLElement,
+  behavior: ScrollBehavior = 'auto'
+): void {
+  // 确保容器获得焦点
+  container.focus()
+  // 获取当前 Selection，失败则直接返回
+  const sel = window.getSelection()
+  if (!sel) return
+  // 创建一个 Range 并折叠到容器内容末尾（光标移动到最末）
+  const range = document.createRange()
+  range.selectNodeContents(container)
+  range.collapse(false)
+  // 将新 Range 设置为选区
+  sel.removeAllRanges()
+  sel.addRange(range)
+  // 滚动到父元素的最底部
+  container.parentElement.scrollTo({ top: container.clientHeight, behavior })
+}
+

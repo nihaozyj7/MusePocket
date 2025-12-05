@@ -71,3 +71,11 @@ button:hover {
   height: 100%;
   overflow: auto;
 }
+
+.margin-left {
+  margin-left: 1rem;
+}
+
+.margin-right {
+  margin-right: 1rem;
+}

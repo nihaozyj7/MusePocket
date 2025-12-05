@@ -2,7 +2,7 @@
 import { bookdb } from '@/db.ts'
 import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
-import { useThemeStore } from '@/stores/ThemeStore.ts'
+import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
 import { getIconBase64, setBookMenuPosition, uid } from '@/utils.ts'
 import { onMounted, onUnmounted, ref } from 'vue'
@@ -10,7 +10,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
 const onHome = ref(true)
 /** 主题状态管理器 */
-const themeStore = useThemeStore()
+const settingStore = useSettingStore()
 /** 所有书籍 */
 const books = ref<Book[]>([])
 /** 当前用户选中的书籍 */
@@ -38,7 +38,7 @@ const bookContextMenuHanders = {
       if (res.success) {
         books.value = books.value.filter(book => book.id !== rightSelectedBook.id)
         if (selectedBookStore.selectedBook === rightSelectedBook) {
-          selectedBookStore.selectedBook = null
+          clickSelectedBook.value = selectedBookStore.selectedBook = null
         }
       } else {
         console.error(`删除书籍失败, ${res.message}`)
@@ -115,7 +115,7 @@ function handleClickBookItem(book: Book) {
 
 function goHome() {
   onHome.value = true
-  selectedBookStore.selectedBook = null
+  clickSelectedBook.value = selectedBookStore.selectedBook = null
 }
 
 function openAddBookDialog() {
@@ -204,8 +204,8 @@ function loadBooks() {
         </div>
         <!-- 工具按钮 -->
         <div class="tools">
-          <button @click="themeStore.toggleTheme">
-            <span v-if="themeStore.isDark">🌝 切换主题</span>
+          <button @click="settingStore.setDark(!settingStore.isDark)">
+            <span v-if="settingStore.isDark">🌝 切换主题</span>
             <span v-else>☀️ 切换主题</span>
           </button>
           <button style="margin-left: 1rem;">⚙️ 设置</button>
@@ -289,14 +289,11 @@ function loadBooks() {
   align-items: center;
   justify-content: center;
   padding: .5rem;
-  color: var(--text-secondary);
+  color: var(--primary);
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: .12rem;
   border-bottom: 1px solid var(--border-color);
-  text-rendering: optimizeLegibility;
-  -webkit-text-stroke: 1px var(--primary);
-  -webkit-text-fill-color: transparent;
 }
 
 .operations {

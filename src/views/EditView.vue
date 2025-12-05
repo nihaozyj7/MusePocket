@@ -4,9 +4,10 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, newlineToBr, uid } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
+import { useSettingStore } from '@/stores/SettingStore.ts'
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -20,6 +21,14 @@ const articleBody = ref<ArticleBody | null>(null)
 const bodyRef = ref<HTMLElement | null>(null)
 /** 编辑区Canvas背景 */
 const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
+/** 配置项 */
+const settingStore = useSettingStore()
+/** 状态栏右侧信息列表 */
+const statusBarRight = ref({
+  saveState: '已保存',
+  /** 所选内容字数 */
+  selectedWordCount: 0
+})
 
 /** 观察者实例 */
 let observer: ResizeObserver
@@ -28,32 +37,66 @@ onMounted(() => {
   loadArticles()
   observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
+  settingStore.setEditorWidthMode()
+  document.addEventListener('selectionchange', handleTextSelect)
 })
 
 onUnmounted(() => {
   observer?.disconnect()
   handleSaveArticle.cancel()
+  document.removeEventListener('selectionchange', handleTextSelect)
 })
 
+function handleTextSelect() {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  const container = range.commonAncestorContainer
+
+  // 不在编辑区域
+  if (!bodyRef.value.contains(container)) return
+
+  if (!sel.isCollapsed) {
+    statusBarRight.value.selectedWordCount = countNonWhitespace(sel.toString())
+  } else {
+    statusBarRight.value.selectedWordCount = 0
+  }
+}
+
 /** 保存文章内容 节流 3s内只能保存一次*/
-const handleSaveArticle = throttle(_saveArticle, 3000)
+const handleSaveArticle = throttle(_saveArticle, 1500)
 
 const handleResize = throttle((entries) => {
+  const lineHeight = getActualLineHeight(bodyRef.value)
   bodyBackgroundRef.value.width = entries[0].contentRect.width
-  bodyBackgroundRef.value.height = entries[0].contentRect.height
-  drawBackground(getActualLineHeight(bodyRef.value), entries[0].contentRect)
+  bodyBackgroundRef.value.height = entries[0].contentRect.height + lineHeight * 5
+
+  drawBackground(lineHeight, {
+    width: bodyBackgroundRef.value.width,
+    height: bodyBackgroundRef.value.height
+  })
 }, 100)
 
+function handleSaveArticleTitle(e: FocusEvent) {
+  articledb.updateArticle(selectedArticleStore.selectedArticle).then(res => {
+    if (!res.success) console.error(`更新标题失败, ${res.message}`)
+  })
+}
+
 function _saveArticle(text: string) {
-  articleBody.value.content = text
+  articleBody.value.content = trimAndReduceNewlines(text, { removeBlankLines: true })
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
   articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value)
+  statusBarRight.value.saveState = '已保存'
 }
 
 function handelBodyInput(e: InputEvent) {
   const target = e.target as HTMLDivElement
+  statusBarRight.value.saveState = '等待保存'
   handleSaveArticle(target.innerText)
+  // !isCursorInViewport(bodyRef.value) && scrollCursorIntoView(bodyRef.value)
 }
 
 const drawBackground = (function () {
@@ -67,7 +110,7 @@ const drawBackground = (function () {
     ctx.setLineDash([5, 5])
     ctx.lineDashOffset = 0
 
-    ctx.strokeStyle = '#495057'
+    ctx.strokeStyle = '#49505780'
     ctx.lineWidth = 1
     ctx.beginPath()
 
@@ -86,6 +129,13 @@ function handleBodyPaste(e: ClipboardEvent) {
   e.preventDefault()
   const text = e.clipboardData.getData('text/plain')
   insertText(text)
+  setTimeout(() => {
+    const scroll = bodyRef.value.parentElement as HTMLElement
+    console.log('isCaretInViewport', isCaretInViewport(scroll))
+    if (!isCaretInViewport(scroll)) scrollCaretIntoView(scroll)
+  }, 50)
+  handleSaveArticle.cancel()
+  _saveArticle(bodyRef.value.innerText)
 }
 
 function handleArticleClick(e: MouseEvent) {
@@ -116,7 +166,7 @@ function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
-    bodyRef.value.innerHTML = newlineToBr(res.content)
+    bodyRef.value.innerHTML = newlineToP(res.content, { collapse: true })
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -219,7 +269,7 @@ function loadArticles() {
           <div class="tu-container">
             <!-- 文章标题 -->
             <div class="title">
-              <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title"></input>
+              <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title" @blur="handleSaveArticleTitle"></input>
             </div>
             <!-- 文字编辑区 -->
             <div class="edit scroll-container">
@@ -227,16 +277,20 @@ function loadArticles() {
 
               </div>
               <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
-              <canvas ref="bodyBackgroundRef"></canvas>
+              <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
             </div>
           </div>
           <!-- 状态栏 -->
           <div class="statusbar">
             <div class="left">
               <button @click="creatreArticle">➕ 新章节</button>
+              <button @click="settingStore.setEditorWidthMode(!settingStore.isAutoWidthMode)" class="margin-left">{{ settingStore.editorWidthModeText }}列宽</button>
             </div>
             <div class="center">{{ selectedArticleStore.selectedArticle?.wordCount }}</div>
-            <div class="right">分钟 / 18</div>
+            <div class="right">
+              <span class="margin-right" v-if="statusBarRight.selectedWordCount">(已选择:{{ statusBarRight.selectedWordCount }})</span>
+              <span>{{ statusBarRight.saveState }}</span>
+            </div>
           </div>
         </main>
         <div class="utils-panel vertical-text">
@@ -436,6 +490,10 @@ main .tu-container {
   padding: 2rem;
 }
 
+main .tu-container.narrow-margin {
+  padding: 2rem calc((100% - 720px) / 2);
+}
+
 .tu-container .title {
   height: 2rem;
   font-size: 1.2rem;
@@ -461,7 +519,12 @@ main .tu-container {
   line-height: 2.5rem;
   color: var(--text-primary);
   text-indent: 2em;
-  min-height: 100%;
+  white-space: pre-line;
+  min-height: calc(100% - 5 * 2.5rem);
+}
+
+.tu-container .edit .body * {
+  color: var(--text-primary);
 }
 
 .tu-container .edit canvas {

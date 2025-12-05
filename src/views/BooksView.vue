@@ -22,8 +22,6 @@ const clickSelectedBook = ref<Book | null>(null)
 /** 新书暂存 */
 const newBook = ref<Book | null>(null)
 
-/** 鼠标移出收起菜单的定时器 */
-let timer: number | null = null
 /** 右键菜单选中的书籍 */
 let rightSelectedBook: Book | null = null
 
@@ -57,7 +55,6 @@ const bookContextMenuHanders = {
 }
 
 function hiddenBooksMenu() {
-  clearTimeout(timer!)
   bookContextMenuRef.value!.style.display = 'none'
 }
 
@@ -77,15 +74,6 @@ function bookIdEqual(book: Book) {
 function handleBookDoubleClick(book: Book) {
   selectedBookStore.selectedBook = book
   router.push('/Edit')
-}
-
-function handleMouseOut() {
-  clearTimeout(timer!)
-  timer = setTimeout(hideBookContextMenu, 700)
-}
-
-function handleMouseEnter() {
-  clearTimeout(timer!)
 }
 
 async function handleBookItemContentMenuItenClick(e: MouseEvent) {
@@ -234,7 +222,7 @@ function loadBooks() {
   </div>
 
   <!-- 书籍右键菜单 -->
-  <div class="book-context-menu" ref="bookContextMenuRef" @mouseleave="handleMouseOut" @mouseenter="handleMouseEnter">
+  <div class="context-menu" ref="bookContextMenuRef">
     <div class="menu-item" data-type="open">📂 打开</div>
     <div class="menu-item" data-type="delete">🗑️ 删除</div>
     <div class="menu-item" data-type="edit">✏️ 编辑</div>

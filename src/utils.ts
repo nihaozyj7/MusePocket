@@ -308,10 +308,7 @@ export function scrollCaretIntoView(container: HTMLElement, behavior: ScrollBeha
   if (scrollOffset < maxScrollUp) scrollOffset = maxScrollUp
   if (scrollOffset > maxScrollDown) scrollOffset = maxScrollDown
 
-  // 光标在可视区外才滚动
-  if (rect.top < cRect.top || rect.bottom > cRect.bottom) {
-    container.scrollBy({ top: scrollOffset, behavior })
-  }
+  container.scrollBy({ top: scrollOffset, behavior })
 }
 
 /**
@@ -339,3 +336,41 @@ export function moveCaretToEndAndScrollToBottom(
   container.parentElement.scrollTo({ top: container.clientHeight, behavior })
 }
 
+
+/**
+ * 将光标向下滚动到容器可视区（只考虑向下滚动）
+ * @param container 编辑器容器（contenteditable 的 div）
+ * @param behavior 可选滚动方式 'smooth' | 'auto'，默认 'auto'
+ */
+export function scrollCaretDownIntoView(
+  container: HTMLElement,
+  behavior: ScrollBehavior = 'auto'
+): void {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  let node = range.endContainer as HTMLElement
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement!
+
+  const rect = node.getBoundingClientRect()
+  const cRect = container.getBoundingClientRect()
+
+  const caretMiddle = rect.top + rect.height / 2
+  const containerMiddle = cRect.top + cRect.height / 2
+
+  // 期望向下滚动量（只允许正数，表示向下）
+  let scrollOffset = caretMiddle - containerMiddle
+
+  // 若光标本来就在中间或上方，则不滚动（保证只向下滚）
+  if (scrollOffset <= 0) return
+
+  // 能向下滚动的最大值
+  const maxScrollDown = container.scrollHeight - container.clientHeight - container.scrollTop
+
+  // 如果期望滚动超出实际能滚动的范围，则使用实际极限
+  if (scrollOffset > maxScrollDown) scrollOffset = maxScrollDown
+
+  // 最终滚动
+  container.scrollBy({ top: scrollOffset, behavior })
+}

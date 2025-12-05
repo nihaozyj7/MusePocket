@@ -4,7 +4,7 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, setBookMenuPosition, scrollCaretDownIntoView } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
@@ -21,6 +21,8 @@ const articleBody = ref<ArticleBody | null>(null)
 const bodyRef = ref<HTMLElement | null>(null)
 /** 编辑区Canvas背景 */
 const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
+/** 右键菜单 */
+const articleContextMenuRef = ref<HTMLElement | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
 /** 状态栏右侧信息列表 */
@@ -47,6 +49,34 @@ onUnmounted(() => {
   document.removeEventListener('selectionchange', handleTextSelect)
 })
 
+const contextMenuHanders = {
+  edit(id: string) { },
+  delete(id: string) { },
+  copy(id: string) { },
+  cut(id: string) { },
+}
+
+function handleArticleContextmenu(e: MouseEvent) {
+  e.preventDefault()
+
+  const articleItem = (e.target as HTMLElement).closest<HTMLElement>('.article-item')
+
+  if (!articleItem) return
+
+  const aid = articleItem.dataset.articleId
+
+  if (!articleContextMenuRef) return console.error('articleContextMenuRef is null')
+
+  articleContextMenuRef.value.style.display = 'block'
+  setBookMenuPosition(e, articleContextMenuRef)
+
+  document.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.dataset?.type) contextMenuHanders[target.dataset.type](aid)
+    articleContextMenuRef.value.style.display = 'none'
+  }, { once: true })
+}
+
 function handleTextSelect() {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return
@@ -64,13 +94,19 @@ function handleTextSelect() {
   }
 }
 
-/** 保存文章内容 节流 3s内只能保存一次*/
+/** 保存文章内容 节流*/
 const handleSaveArticle = throttle(_saveArticle, 1500)
+/** 光标跳转到中间 节流 */
+const handleJumpToMiddle = throttle(() => {
+  scrollCaretDownIntoView(bodyRef.value.parentElement)
+}, 100)
 
 const handleResize = throttle((entries) => {
   const lineHeight = getActualLineHeight(bodyRef.value)
+  const center = bodyRef.value.parentElement.clientHeight / 2
+  const overflow = center - (center % lineHeight)
   bodyBackgroundRef.value.width = entries[0].contentRect.width
-  bodyBackgroundRef.value.height = entries[0].contentRect.height + lineHeight * 5
+  bodyBackgroundRef.value.height = entries[0].contentRect.height + overflow
 
   drawBackground(lineHeight, {
     width: bodyBackgroundRef.value.width,
@@ -96,7 +132,7 @@ function handelBodyInput(e: InputEvent) {
   const target = e.target as HTMLDivElement
   statusBarRight.value.saveState = '等待保存'
   handleSaveArticle(target.innerText)
-  // !isCursorInViewport(bodyRef.value) && scrollCursorIntoView(bodyRef.value)
+  handleJumpToMiddle()
 }
 
 const drawBackground = (function () {
@@ -125,15 +161,18 @@ const drawBackground = (function () {
   }
 })()
 
+function scrollToCursor() {
+  setTimeout(() => {
+    const scroll = bodyRef.value.parentElement as HTMLElement
+    if (!isCaretInViewport(scroll)) scrollCaretIntoView(scroll)
+  }, 50)
+}
+
 function handleBodyPaste(e: ClipboardEvent) {
   e.preventDefault()
   const text = e.clipboardData.getData('text/plain')
   insertText(text)
-  setTimeout(() => {
-    const scroll = bodyRef.value.parentElement as HTMLElement
-    console.log('isCaretInViewport', isCaretInViewport(scroll))
-    if (!isCaretInViewport(scroll)) scrollCaretIntoView(scroll)
-  }, 50)
+  scrollToCursor()
   handleSaveArticle.cancel()
   _saveArticle(bodyRef.value.innerText)
 }
@@ -231,7 +270,7 @@ function loadArticles() {
         <!-- 新建书籍 -->
         <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
       </div>
-      <div class="articleshelf" @click="handleArticleClick">
+      <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
         <div class="scroll-container">
           <div class="article-item" :class="{ 'selected': isSelected(article) }" v-for="article in articles" :data-article-id="article.id" :key="article.id">
             <span>📜</span>
@@ -303,6 +342,13 @@ function loadArticles() {
         </div>
       </div>
     </div>
+  </div>
+  <!-- 右键菜单 -->
+  <div class="context-menu" ref="articleContextMenuRef">
+    <div class="menu-item" data-type="edit">✏️ 编辑</div>
+    <div class="menu-item" data-type="delete">🗑️ 删除</div>
+    <div class="menu-item" data-type="exportTxt">📄 导出为TXT</div>
+    <div class="menu-item" data-type="copy">📋 复制到剪贴板</div>
   </div>
 </template>
 
@@ -520,7 +566,7 @@ main .tu-container.narrow-margin {
   color: var(--text-primary);
   text-indent: 2em;
   white-space: pre-line;
-  min-height: calc(100% - 5 * 2.5rem);
+  min-height: calc(50%);
 }
 
 .tu-container .edit .body * {
@@ -532,6 +578,7 @@ main .tu-container.narrow-margin {
   z-index: 1;
   top: 0;
   left: 0;
+  cursor: text;
 }
 
 main .statusbar {
@@ -600,6 +647,10 @@ main .statusbar .right {
 .article-item {
   display: flex;
   padding: .5rem;
+}
+
+.article-item:hover h4 {
+  color: var(--primary-light);
 }
 
 .article-item .count {

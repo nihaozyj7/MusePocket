@@ -4,7 +4,7 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { getActualLineHeight, getNewChapterName, uid } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, newlineToBr, uid } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 
@@ -26,29 +26,29 @@ let observer: ResizeObserver
 
 onMounted(() => {
   loadArticles()
-  const handleResize = throttle((entries) => {
-    bodyBackgroundRef.value.width = entries[0].contentRect.width
-    bodyBackgroundRef.value.height = entries[0].contentRect.height
-    drawBackground(getActualLineHeight(bodyRef.value), entries[0].contentRect)
-  }, 100)
-
   observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
 })
 
 onUnmounted(() => {
-  observer.unobserve(bodyRef.value)
+  observer?.disconnect()
+  handleSaveArticle.cancel()
 })
 
-/** 保存文章内容 节流 5s内只能保存一次*/
+/** 保存文章内容 节流 3s内只能保存一次*/
 const handleSaveArticle = throttle(_saveArticle, 3000)
+
+const handleResize = throttle((entries) => {
+  bodyBackgroundRef.value.width = entries[0].contentRect.width
+  bodyBackgroundRef.value.height = entries[0].contentRect.height
+  drawBackground(getActualLineHeight(bodyRef.value), entries[0].contentRect)
+}, 100)
 
 function _saveArticle(text: string) {
   articleBody.value.content = text
-  articledb.updateArticleBody(articleBody.value)
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
-  selectedArticleStore.selectedArticle.wordCount = text.length
-  articledb.updateArticle(selectedArticleStore.selectedArticle)
+  selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
+  articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value)
 }
 
 function handelBodyInput(e: InputEvent) {
@@ -82,23 +82,24 @@ const drawBackground = (function () {
   }
 })()
 
+function handleBodyPaste(e: ClipboardEvent) {
+  e.preventDefault()
+  const text = e.clipboardData.getData('text/plain')
+  insertText(text)
+}
+
 function handleArticleClick(e: MouseEvent) {
-  const articleItem = e.target instanceof Element ?
-    (e.target as Element).closest<HTMLElement>('.article-item') :
-    null
-  if (articleItem) {
-    const id = articleItem.dataset.articleId
-    const article = articles.value.find(article => article.id === id)
-    if (article) {
-      selectedArticleStore.selectedArticle = article
-      handleSaveArticle.cancel()
-      _saveArticle(bodyRef.value.innerText)
-      openArticle(article)
-    } else {
-      selectedArticleStore.selectedArticle = null
-    }
+  const articleItem = e.target instanceof Element ? (e.target as Element).closest<HTMLElement>('.article-item') : null
+  if (!articleItem) return
+  const id = articleItem.dataset.articleId
+  const article = articles.value.find(article => article.id === id)
+  if (article) {
+    handleSaveArticle.cancel()
+    _saveArticle(bodyRef.value.innerText)
+    selectedArticleStore.selectedArticle = article
+    openArticle(article)
   } else {
-    console.error('No .article-item found')
+    selectedArticleStore.selectedArticle = null
   }
 }
 
@@ -115,7 +116,7 @@ function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
-    bodyRef.value.innerHTML = res.content
+    bodyRef.value.innerHTML = newlineToBr(res.content)
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -145,6 +146,7 @@ function creatreArticle() {
 function loadArticles() {
   articledb.getBookArticles(selectedBookStore.selectedBook.id).then(res => {
     articles.value = res
+    articles.value.sort((a, b) => a.createdTime - b.createdTime)
     // 如何存在历史打开的文章，则查找文章列表中是否存在该文章，如果存在则打开
     const article = selectedArticleStore.selectedArticle
       && articles.value.find(article => article.id === selectedArticleStore.selectedArticle.id)
@@ -221,7 +223,7 @@ function loadArticles() {
             </div>
             <!-- 文字编辑区 -->
             <div class="edit scroll-container">
-              <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput">
+              <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="">
 
               </div>
               <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
@@ -233,7 +235,7 @@ function loadArticles() {
             <div class="left">
               <button @click="creatreArticle">➕ 新章节</button>
             </div>
-            <div class="center">{{ articleBody && articleBody.content.length }}</div>
+            <div class="center">{{ selectedArticleStore.selectedArticle?.wordCount }}</div>
             <div class="right">分钟 / 18</div>
           </div>
         </main>

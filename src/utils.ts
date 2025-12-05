@@ -79,7 +79,6 @@ export function getNewChapterName(titles: { title: string }[]): string {
       }
     }
   }
-
   // 返回下一章编号
   const next = maxNumber + 1
   return `第 ${next} 章`
@@ -107,4 +106,63 @@ export function getActualLineHeight(element: Element): number {
 
   document.body.removeChild(tempDiv)
   return actualLineHeight
+}
+
+
+/**
+ * 统计字符串中的非空白字符数量。
+ *
+ * 非空白字符指：除空格、换行、制表符等所有空白符以外的字符。
+ *
+ * @param text 要统计的字符串
+ * @returns 非空白字符数量
+ */
+export function countNonWhitespace(text: string): number {
+  // 使用正则移除所有空白字符，再统计长度
+  // \s 匹配空格、制表符、换行、全角空格等常见空白符
+  const cleaned = text.replace(/\s+/g, "")
+  return cleaned.length
+}
+
+export function insertText(text: string) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  range.deleteContents()
+
+  const textNode = document.createTextNode(text)
+  range.insertNode(textNode)
+
+  // 光标移动
+  range.setStartAfter(textNode)
+  range.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(range)
+}
+
+/** 删除光标前的字符 */
+export function deleteBackward() {
+  const sel = window.getSelection()
+  if (!sel || !sel.rangeCount) return
+
+  const range = sel.getRangeAt(0)
+
+  if (!range.collapsed) {
+    range.deleteContents()
+    return
+  }
+
+  // collapsed，删除前一个字符
+  range.setStart(range.startContainer, range.startOffset - 1)
+  range.deleteContents()
+}
+
+/**
+ * 将字符串中的换行符转换为 <br> 标签
+ * @param text 需要处理的字符串
+ * @returns 转换后的字符串，可用于 innerHTML
+ */
+export function newlineToBr(text: string): string {
+  return text.replace(/\n/g, '<br>')
 }

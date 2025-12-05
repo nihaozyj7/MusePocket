@@ -206,7 +206,7 @@ export const articledb = new class {
     article.deletedTime = article.deletedTime ?? 0
     try {
       const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
-      await tx.objectStore('articles').add(article)
+      await tx.objectStore('articles').add({ ...article })
       // 创建空内容
       await tx.objectStore('articleBodies').add({ id: article.id, content: '' })
       await tx.done
@@ -307,7 +307,7 @@ export const articledb = new class {
   async updateArticleBody(body: ArticleBody): Promise<Status> {
     try {
       const tx = db.transaction(['articleBodies'], 'readwrite')
-      await tx.objectStore('articleBodies').put(body)
+      await tx.objectStore('articleBodies').put({ ...body })
       await tx.done
       return { success: true }
     } catch (err: any) {
@@ -331,7 +331,7 @@ export const entitydb = new class {
     ent.deletedTime = ent.deletedTime ?? 0
     try {
       const tx = db.transaction(['entities'], 'readwrite')
-      await tx.objectStore('entities').add(ent)
+      await tx.objectStore('entities').add({ ...ent })
       await tx.done
       return { success: true }
     } catch (err: any) {

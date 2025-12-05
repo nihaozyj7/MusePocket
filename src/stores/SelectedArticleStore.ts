@@ -2,9 +2,7 @@ import type { Article } from '@/types'
 import { defineStore } from 'pinia'
 
 export const useSelectedArticleStore = defineStore('selectedArticle', {
-  persist: {
-    afterHydrate: ctx => { }
-  },
+  persist: true,
 
   state: () => ({
     selectedArticle: null as Article | null

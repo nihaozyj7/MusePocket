@@ -24,19 +24,12 @@ const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
 /** 观察者实例 */
 let observer: ResizeObserver
 
-const articleBodyHtml = computed(() => {
-  return '1441416546<div style="background-color: red;">dwadwa</div>456424154dwadwa'
-})
-
 onMounted(() => {
   loadArticles()
-
   const handleResize = throttle((entries) => {
-    console.log(entries[0].contentRect)
     bodyBackgroundRef.value.width = entries[0].contentRect.width
     bodyBackgroundRef.value.height = entries[0].contentRect.height
     drawBackground(getActualLineHeight(bodyRef.value), entries[0].contentRect)
-    console.log('resize')
   }, 100)
 
   observer = new ResizeObserver(handleResize)
@@ -47,8 +40,20 @@ onUnmounted(() => {
   observer.unobserve(bodyRef.value)
 })
 
+/** 保存文章内容 节流 5s内只能保存一次*/
+const handleSaveArticle = throttle(_saveArticle, 3000)
+
+function _saveArticle(text: string) {
+  articleBody.value.content = text
+  articledb.updateArticleBody(articleBody.value)
+  selectedArticleStore.selectedArticle.modifiedTime = Date.now()
+  selectedArticleStore.selectedArticle.wordCount = text.length
+  articledb.updateArticle(selectedArticleStore.selectedArticle)
+}
+
 function handelBodyInput(e: InputEvent) {
-  console.log(e.data)
+  const target = e.target as HTMLDivElement
+  handleSaveArticle(target.innerText)
 }
 
 const drawBackground = (function () {
@@ -86,13 +91,19 @@ function handleArticleClick(e: MouseEvent) {
     const article = articles.value.find(article => article.id === id)
     if (article) {
       selectedArticleStore.selectedArticle = article
+      handleSaveArticle.cancel()
+      _saveArticle(bodyRef.value.innerText)
       openArticle(article)
     } else {
       selectedArticleStore.selectedArticle = null
     }
   } else {
-    console.log('No .article-item found')
+    console.error('No .article-item found')
   }
+}
+
+function isSelected(article: Article) {
+  return selectedArticleStore.selectedArticle && selectedArticleStore.selectedArticle.id === article.id
 }
 
 function goHome() {
@@ -104,6 +115,7 @@ function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
+    bodyRef.value.innerHTML = res.content
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -113,7 +125,7 @@ function creatreArticle() {
   const newArticle = {
     bookId: selectedBookStore.selectedBook!.id,
     id: uid(),
-    title: getNewChapterName(selectedBookStore.selectedBook!.id),
+    title: getNewChapterName(articles.value),
     content: '',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
@@ -139,7 +151,7 @@ function loadArticles() {
     // 用户离开页面时存在打开的文章，则恢复
     if (article) openArticle(article)
     // 不存在打开的文章，则打开最后一章
-    if (res.length > 0) openArticle(articles.value[res.length - 1])
+    else if (res.length > 0) openArticle(articles.value[res.length - 1])
     // 不存在文章，创建新文章
     else creatreArticle()
   }).catch(err => {
@@ -169,7 +181,7 @@ function loadArticles() {
       </div>
       <div class="articleshelf" @click="handleArticleClick">
         <div class="scroll-container">
-          <div class="article-item" v-for="article in articles" :data-article-id="article.id" :key="article.id">
+          <div class="article-item" :class="{ 'selected': isSelected(article) }" v-for="article in articles" :data-article-id="article.id" :key="article.id">
             <span>📜</span>
             <h4>{{ article.title }}</h4>
             <div class="count">{{ article.wordCount }}</div>

@@ -54,40 +54,57 @@ export function getIconBase64(iconId: string): string {
 }
 
 
-/** 根据书的ID来获取一个新章节的默认名称 */
-export function getNewChapterName(bookId: string): string {
-  return `第 1 章  `
+/**
+ * 根据书籍 ID 和现有章节标题生成一个新的默认章节名。
+ *
+ * 规则：
+ * - titles 中每项形如 "第 1 章 xxx"
+ * - 需要解析其中的数字部分，找到最大章节号
+ * - 返回 "第 n 章"（n = 最大章节号 + 1）
+ */
+export function getNewChapterName(titles: { title: string }[]): string {
+  // 提取数字的正则：匹配 "第 xxx 章"
+  const chapterReg = /第\s*(\d+)\s*章/
+
+  let maxNumber = 0
+
+  // 遍历所有标题，解析出章节号
+  for (const item of titles) {
+    const match = item.title.match(chapterReg)
+    if (match) {
+      const num = Number(match[1])
+      if (!Number.isNaN(num)) {
+        // 记录最大章节号
+        maxNumber = Math.max(maxNumber, num)
+      }
+    }
+  }
+
+  // 返回下一章编号
+  const next = maxNumber + 1
+  return `第 ${next} 章`
 }
 
-/**
- * 精确获取指定元素中单行文本的真实行高（单位：像素）
- */
+/** 精确获取指定元素中单行文本的真实行高（单位：像素）*/
 export function getActualLineHeight(element: Element): number {
-  // 1. 创建一个临时的 div，用于模拟行高测量
   const tempDiv = document.createElement('div')
   tempDiv.style.position = 'absolute'
-  tempDiv.style.top = '-9999px' // 移出视口
+  tempDiv.style.top = '-9999px'
   tempDiv.style.left = '-9999px'
   tempDiv.style.visibility = 'hidden'
-  tempDiv.style.whiteSpace = 'nowrap' // 防止换行
+  tempDiv.style.whiteSpace = 'nowrap'
   tempDiv.style.fontSize = getComputedStyle(element).fontSize
   tempDiv.style.fontFamily = getComputedStyle(element).fontFamily
-  tempDiv.style.lineHeight = getComputedStyle(element).lineHeight // 继承原始样式
+  tempDiv.style.lineHeight = getComputedStyle(element).lineHeight
   tempDiv.style.padding = '0'
   tempDiv.style.margin = '0'
 
-  // 2. 插入一个字符，确保有内容可测量
-  tempDiv.textContent = 'A' // 用一个字母即可
+  tempDiv.textContent = 'A'
 
-  // 3. 插入文档，以便触发渲染
   document.body.appendChild(tempDiv)
-
-  // 4. 读取实际高度（注意：这里要读的是 contentRect.height）
   const rect = tempDiv.getBoundingClientRect()
   const actualLineHeight = rect.height
 
-  // 5. 清理
   document.body.removeChild(tempDiv)
-
   return actualLineHeight
 }

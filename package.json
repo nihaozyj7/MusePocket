@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
     "idb": "^8.0.3",
+    "lodash-es": "^4.17.21",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.24",

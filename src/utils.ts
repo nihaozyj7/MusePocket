@@ -58,3 +58,36 @@ export function getIconBase64(iconId: string): string {
 export function getNewChapterName(bookId: string): string {
   return `第 1 章  `
 }
+
+/**
+ * 精确获取指定元素中单行文本的真实行高（单位：像素）
+ */
+export function getActualLineHeight(element: Element): number {
+  // 1. 创建一个临时的 div，用于模拟行高测量
+  const tempDiv = document.createElement('div')
+  tempDiv.style.position = 'absolute'
+  tempDiv.style.top = '-9999px' // 移出视口
+  tempDiv.style.left = '-9999px'
+  tempDiv.style.visibility = 'hidden'
+  tempDiv.style.whiteSpace = 'nowrap' // 防止换行
+  tempDiv.style.fontSize = getComputedStyle(element).fontSize
+  tempDiv.style.fontFamily = getComputedStyle(element).fontFamily
+  tempDiv.style.lineHeight = getComputedStyle(element).lineHeight // 继承原始样式
+  tempDiv.style.padding = '0'
+  tempDiv.style.margin = '0'
+
+  // 2. 插入一个字符，确保有内容可测量
+  tempDiv.textContent = 'A' // 用一个字母即可
+
+  // 3. 插入文档，以便触发渲染
+  document.body.appendChild(tempDiv)
+
+  // 4. 读取实际高度（注意：这里要读的是 contentRect.height）
+  const rect = tempDiv.getBoundingClientRect()
+  const actualLineHeight = rect.height
+
+  // 5. 清理
+  document.body.removeChild(tempDiv)
+
+  return actualLineHeight
+}

@@ -3,9 +3,10 @@ import { articledb, bookdb } from '@/db.ts'
 import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
-import type { Article, ArticleBody, Book } from '@/types.ts'
-import { getNewChapterName, uid } from '@/utils.ts'
-import { onMounted, ref, computed, onUnmounted } from 'vue'
+import type { Article, ArticleBody } from '@/types.ts'
+import { getActualLineHeight, getNewChapterName, uid } from '@/utils.ts'
+import { onMounted, ref, onUnmounted, computed } from 'vue'
+import { throttle } from 'lodash-es'
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -23,19 +24,58 @@ const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
 /** 观察者实例 */
 let observer: ResizeObserver
 
+const articleBodyHtml = computed(() => {
+  return '1441416546<div style="background-color: red;">dwadwa</div>456424154dwadwa'
+})
 
 onMounted(() => {
   loadArticles()
-  observer = new ResizeObserver(entries => {
+
+  const handleResize = throttle((entries) => {
+    console.log(entries[0].contentRect)
     bodyBackgroundRef.value.width = entries[0].contentRect.width
     bodyBackgroundRef.value.height = entries[0].contentRect.height
-  })
+    drawBackground(getActualLineHeight(bodyRef.value), entries[0].contentRect)
+    console.log('resize')
+  }, 100)
+
+  observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
 })
 
 onUnmounted(() => {
   observer.unobserve(bodyRef.value)
 })
+
+function handelBodyInput(e: InputEvent) {
+  console.log(e.data)
+}
+
+const drawBackground = (function () {
+  let ctx: CanvasRenderingContext2D
+
+  return (lineHeight: number, rect: { width: number, height: number }) => {
+    if (!ctx) ctx = bodyBackgroundRef.value.getContext('2d')
+
+    ctx.clearRect(0, 0, rect.width, rect.height)
+
+    ctx.setLineDash([5, 5])
+    ctx.lineDashOffset = 0
+
+    ctx.strokeStyle = '#495057'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+
+    const x = rect.width - (rect.width % 5)
+
+    for (let y = lineHeight; y <= rect.height + lineHeight; y += lineHeight) {
+      ctx.moveTo(0, y)
+      ctx.lineTo(x, y)
+    }
+
+    ctx.stroke()
+  }
+})()
 
 function handleArticleClick(e: MouseEvent) {
   const articleItem = e.target instanceof Element ?
@@ -169,8 +209,8 @@ function loadArticles() {
             </div>
             <!-- 文字编辑区 -->
             <div class="edit scroll-container">
-              <div class="body" contenteditable ref="bodyRef">
-                <template v-for="value in 100">saddddddddddddddddd<br></template>
+              <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput">
+
               </div>
               <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
               <canvas ref="bodyBackgroundRef"></canvas>
@@ -398,11 +438,16 @@ main .tu-container {
   position: relative;
   height: 0;
   overflow: hide;
+  padding-right: 5px;
 }
 
 .tu-container .edit .body {
   position: relative;
   z-index: 2;
+  line-height: 2.5rem;
+  color: var(--text-primary);
+  text-indent: 2em;
+  min-height: 100%;
 }
 
 .tu-container .edit canvas {
@@ -410,7 +455,6 @@ main .tu-container {
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: red;
 }
 
 main .statusbar {

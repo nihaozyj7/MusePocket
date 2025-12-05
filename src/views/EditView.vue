@@ -50,8 +50,25 @@ onUnmounted(() => {
 })
 
 const contextMenuHanders = {
-  edit(id: string) { },
-  delete(id: string) { },
+  edit(id: string) {
+    const article = articles.value.find(article => article.id === id)
+    if (!article) return console.error('文章不存在')
+    openArticle(article)
+  },
+  delete(id: string) {
+    articledb.softDelete(id).then(res => {
+      if (!res.success) return console.error(`删除文章失败, ${res.message}`)
+      let index = articles.value.findIndex(article => article.id === id) - 1
+      articles.value = articles.value.filter(article => article.id !== id)
+      if (selectedArticleStore.selectedArticle.id !== id) return
+
+      if (articles.value.length === 0) {
+        creatreArticle()
+      } else {
+        selectedArticleStore.selectedArticle = articles.value[Math.max(0, index)]
+      }
+    })
+  },
   copy(id: string) { },
   cut(id: string) { },
 }

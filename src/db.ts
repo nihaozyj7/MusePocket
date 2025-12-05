@@ -169,7 +169,7 @@ export const bookdb = new class {
         const body = await bodiesStore.get(art.id)
         if (!body) {
           // 若正文缺失，补一条空正文
-          await bodiesStore.put({ id: art.id, content: '' })
+          await bodiesStore.put({ id: art.id, content: '', createdTime: Date.now(), modifiedTime: Date.now(), deletedTime: 0 })
         }
       }
 
@@ -199,16 +199,30 @@ export const bookdb = new class {
 }()
 
 
-/** 文章操作类 */
+/** 文章数据库操作类 */
 export const articledb = new class {
-  /** 创建文章（同时在 articleBodies 表中创建空内容） */
+
+  /** 创建文章 + 空正文 */
   async createArticle(article: Article): Promise<Status> {
     article.deletedTime = article.deletedTime ?? 0
+
     try {
       const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
+
+      // 写入文章元数据
       await tx.objectStore('articles').add({ ...article })
-      // 创建空内容
-      await tx.objectStore('articleBodies').add({ id: article.id, content: '' })
+
+      // 创建空正文（初始化正文的时间字段）
+      const now = Date.now()
+      const emptyBody: ArticleBody = {
+        id: article.id,
+        content: '',
+        createdTime: now,
+        modifiedTime: now,
+        deletedTime: 0,
+      }
+      await tx.objectStore('articleBodies').add(emptyBody)
+
       await tx.done
       return { success: true }
     } catch (err: any) {
@@ -217,29 +231,29 @@ export const articledb = new class {
   }
 
   /**
-   * 更新文章（可选更新文章体）
-   * - 如果传入 `body`，会在同一事务内写入或覆盖 articleBodies 中对应的内容；
-   * - 如果未传入 `body`，仅更新 articles 表中的元数据，不会创建或修改正文；
-   *
-   * @param article 要更新的文章元数据
-   * @param body 可选的文章体（与 article.id 对应），如果提供则会写入或覆盖 articleBodies
+   * 更新文章，可选同时更新正文
    */
   async updateArticle(article: Article, body?: ArticleBody): Promise<Status> {
     try {
-      // 根据是否需要同时修改正文，选择要打开的 objectStore 列表。
-      const stores = body ? ['articles', 'articleBodies'] as const : ['articles'] as const
+      const stores = body
+        ? ['articles', 'articleBodies'] as const
+        : ['articles'] as const
+
       const tx = db.transaction(stores, 'readwrite')
       const articlesStore = tx.objectStore('articles')
 
       // 更新文章元数据
-      const updated = { ...article, modifiedTime: Date.now() }
+      const updated: Article = { ...article, modifiedTime: Date.now() }
       await articlesStore.put(updated)
 
-      // 仅在调用方传入 body 时才更新正文（使用 put 做 upsert）
+      // 更新正文（upsert）
       if (body) {
         const bodyStore = tx.objectStore('articleBodies')
-        // 强制使用 article.id 作为主键，避免 body.id 与 article.id 不一致
-        await bodyStore.put({ id: article.id, content: body.content })
+        await bodyStore.put({
+          ...body,
+          id: article.id,
+          modifiedTime: Date.now(),
+        })
       }
 
       await tx.done
@@ -249,8 +263,7 @@ export const articledb = new class {
     }
   }
 
-
-  /** 删除文章及其内容 */
+  /** 删除文章 + 正文 */
   async deleteArticle(id: string): Promise<Status> {
     try {
       const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
@@ -263,16 +276,37 @@ export const articledb = new class {
     }
   }
 
-  /** 逻辑删除文章 */
-  async softDeleteArticle(id: string): Promise<Status> {
+  /**
+   * 软删除文章 + 正文
+   * 文章和正文强关联，需要一起设置 deletedTime
+   */
+  async softDelete(id: string): Promise<Status> {
     try {
-      const tx = db.transaction(['articles'], 'readwrite')
-      const store = tx.objectStore('articles')
-      const art = await store.get(id)
-      if (!art) { tx.abort(); return { success: false, message: '未找到文章' } }
-      art.deletedTime = Date.now()
-      art.modifiedTime = Date.now()
-      await store.put(art)
+      const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
+
+      const artStore = tx.objectStore('articles')
+      const bodyStore = tx.objectStore('articleBodies')
+
+      const article = await artStore.get(id)
+      const body = await bodyStore.get(id)
+
+      if (!article || !body) {
+        tx.abort()
+        return { success: false, message: '未找到文章或正文' }
+      }
+
+      const now = Date.now()
+
+      // 更新文章状态
+      article.deletedTime = now
+      article.modifiedTime = now
+      await artStore.put(article)
+
+      // 更新正文状态
+      body.deletedTime = now
+      body.modifiedTime = now
+      await bodyStore.put(body)
+
       await tx.done
       return { success: true }
     } catch (err: any) {
@@ -280,16 +314,37 @@ export const articledb = new class {
     }
   }
 
-  /** 恢复文章 */
-  async restoreArticle(id: string): Promise<Status> {
+  /**
+   * 恢复文章 + 正文
+   * 恢复时一并恢复 deletedTime
+   */
+  async restore(id: string): Promise<Status> {
     try {
-      const tx = db.transaction(['articles'], 'readwrite')
-      const store = tx.objectStore('articles')
-      const art = await store.get(id)
-      if (!art) { tx.abort(); return { success: false, message: '未找到文章' } }
-      art.deletedTime = 0
-      art.modifiedTime = Date.now()
-      await store.put(art)
+      const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
+
+      const artStore = tx.objectStore('articles')
+      const bodyStore = tx.objectStore('articleBodies')
+
+      const article = await artStore.get(id)
+      const body = await bodyStore.get(id)
+
+      if (!article || !body) {
+        tx.abort()
+        return { success: false, message: '未找到文章或正文' }
+      }
+
+      const now = Date.now()
+
+      // 恢复文章
+      article.deletedTime = 0
+      article.modifiedTime = now
+      await artStore.put(article)
+
+      // 恢复正文
+      body.deletedTime = 0
+      body.modifiedTime = now
+      await bodyStore.put(body)
+
       await tx.done
       return { success: true }
     } catch (err: any) {
@@ -297,17 +352,17 @@ export const articledb = new class {
     }
   }
 
-  /** 根据文章ID获取内容 */
+  /** 获取文章正文 */
   async getArticleBody(id: string): Promise<ArticleBody | undefined> {
     const store = db.transaction(['articleBodies'], 'readonly').objectStore('articleBodies')
     return store.get(id)
   }
 
-  /** 更新文章体 */
+  /** 更新正文 */
   async updateArticleBody(body: ArticleBody): Promise<Status> {
     try {
       const tx = db.transaction(['articleBodies'], 'readwrite')
-      await tx.objectStore('articleBodies').put({ ...body })
+      await tx.objectStore('articleBodies').put({ ...body, modifiedTime: Date.now() })
       await tx.done
       return { success: true }
     } catch (err: any) {
@@ -315,7 +370,7 @@ export const articledb = new class {
     }
   }
 
-  /** 获取指定书籍下的所有文章 */
+  /** 根据书籍ID获取文章列表，可选包含已软删除 */
   async getBookArticles(bookId: string, includeDeleted = false): Promise<Article[]> {
     const store = db.transaction(['articles'], 'readonly').objectStore('articles')
     const articles = await store.index('by-book').getAll(bookId)

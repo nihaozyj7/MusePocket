@@ -23,7 +23,7 @@ export interface Article extends Time {
 }
 
 /** 文章内容，与文章ID一致 */
-export interface ArticleBody {
+export interface ArticleBody extends Time {
   /** 文章ID */
   id: string
   /** 正文内容 */

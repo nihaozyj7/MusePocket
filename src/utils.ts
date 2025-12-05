@@ -124,6 +124,10 @@ export function countNonWhitespace(text: string): number {
   return cleaned.length
 }
 
+/**
+ * 在当前光标位置插入文本，同时支持换行
+ * @param text 要插入的文本，换行用 \n 表示
+ */
 export function insertText(text: string) {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return
@@ -131,15 +135,25 @@ export function insertText(text: string) {
   const range = sel.getRangeAt(0)
   range.deleteContents()
 
-  const textNode = document.createTextNode(text)
-  range.insertNode(textNode)
+  // 将换行符转成 <br> 并创建 DOM 片段
+  const lines = text.split('\n')
+  const frag = document.createDocumentFragment()
 
-  // 光标移动
-  range.setStartAfter(textNode)
-  range.collapse(true)
+  lines.forEach((line, i) => {
+    frag.appendChild(document.createTextNode(line))
+    if (i < lines.length - 1) {
+      frag.appendChild(document.createElement('br'))
+    }
+  })
+
+  range.insertNode(frag)
+
+  // 光标移动到插入内容末尾
+  range.collapse(false)
   sel.removeAllRanges()
   sel.addRange(range)
 }
+
 
 /** 删除光标前的字符 */
 export function deleteBackward() {

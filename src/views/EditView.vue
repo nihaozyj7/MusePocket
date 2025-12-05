@@ -4,7 +4,7 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, setBookMenuPosition, scrollCaretDownIntoView } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, setBookMenuPosition, scrollCaretDownIntoView, showTipsPopup, exportTxt } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
@@ -58,6 +58,7 @@ const contextMenuHanders = {
   delete(id: string) {
     articledb.softDelete(id).then(res => {
       if (!res.success) return console.error(`删除文章失败, ${res.message}`)
+      showTipsPopup('已删除，可在回收站找回')
       let index = articles.value.findIndex(article => article.id === id) - 1
       articles.value = articles.value.filter(article => article.id !== id)
       if (selectedArticleStore.selectedArticle.id !== id) return
@@ -69,8 +70,18 @@ const contextMenuHanders = {
       }
     })
   },
-  copy(id: string) { },
-  cut(id: string) { },
+  exportTxt(id: string) {
+    const article = articles.value.find(article => article.id === id)
+    articledb.getArticleBody(id).then(res => {
+      exportTxt(article?.title || '未命名', res.content || '内容未找到')
+    }).catch(err => {
+      console.error(`导出文章失败, ${err.message}`)
+    })
+  },
+  copy(id: string) {
+    navigator.clipboard.writeText(trimAndReduceNewlines(bodyRef.value.innerText))
+    showTipsPopup('已复制')
+  },
 }
 
 function handleArticleContextmenu(e: MouseEvent) {
@@ -223,6 +234,7 @@ function openArticle(article: Article) {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
     bodyRef.value.innerHTML = newlineToP(res.content, { collapse: true })
+    setTimeout(() => bodyRef.value.focus())
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -233,7 +245,6 @@ function creatreArticle() {
     bookId: selectedBookStore.selectedBook!.id,
     id: uid(),
     title: getNewChapterName(articles.value),
-    content: '',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
     wordCount: 0,

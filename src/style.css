@@ -101,3 +101,13 @@ button:hover {
 .context-menu .menu-item:hover {
   background-color: var(--background-tertiary);
 }
+
+.popup {
+  position: absolute;
+  color: var(--text-primary);
+  background-color: var(--background-primary);
+  border-radius: .5rem;
+  display: inline-block;
+  border: 1px solid var(--border-color);
+  padding: .25rem;
+}

@@ -374,3 +374,45 @@ export function scrollCaretDownIntoView(
   // 最终滚动
   container.scrollBy({ top: scrollOffset, behavior })
 }
+
+/** 在用户的鼠标出弹出一个提示框，鼠标移除后自动消失 */
+export function showTipsPopup(message: string, timeout = 1500) {
+  const popup = document.createElement('div')
+  popup.className = 'popup'
+  popup.textContent = message
+  document.body.appendChild(popup)
+
+  console.log('showTipsPopup', message)
+
+  const handleMouseMove = (e: MouseEvent) => {
+    popup.style.left = `${e.clientX + 30}px`
+    popup.style.top = `${e.clientY}px`
+  }
+
+  // 鼠标移动时更新位置
+  document.addEventListener('mousemove', handleMouseMove)
+
+  // 定时移除提示框并解绑事件
+  setTimeout(() => {
+    popup.remove()
+    document.removeEventListener('mousemove', handleMouseMove)
+  }, timeout)
+}
+
+
+/**
+ * 导出文本文件（txt）
+ * @param filename 文件名，例如 "example.txt"
+ * @param content 文本内容
+ */
+export function exportTxt(filename: string, content: string) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.endsWith('.txt') ? filename : `${filename}.txt`
+  a.click()
+
+  URL.revokeObjectURL(url) // 释放 URL 对象
+}

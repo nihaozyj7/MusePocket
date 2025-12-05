@@ -72,6 +72,12 @@ export interface Entity extends Time {
   attrs: EntityAttr[]
 }
 
+/** 图片Base64字符串 */
+export interface ImageBase64 {
+  id: string
+  base64: string
+}
+
 /** 数据库结构 */
 export interface AppDB extends DBSchema {
   /** 文章元数据表 */

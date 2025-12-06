@@ -1,16 +1,15 @@
 <script setup lang="ts">
+import ContextMenu from '@/components/ContextMenu.vue'
+import Editor from '@/components/Editor.vue'
 import { articledb, bookdb } from '@/db.ts'
+import { getDefaultArticle } from '@/defaultObjects'
 import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
-import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, scrollCaretDownIntoView, showTipsPopup, exportTxt, htmlToElement } from '@/utils.ts'
-import { onMounted, ref, onUnmounted, computed } from 'vue'
-import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
-import ContextMenu from '@/components/ContextMenu.vue'
-import { getDefaultArticle } from '@/defaultObjects'
-import Editor from '@/components/Editor.vue'
+import type { Article, ArticleBody } from '@/types.ts'
+import { countNonWhitespace, exportTxt, showTipsPopup, trimAndReduceNewlines } from '@/utils.ts'
+import { onMounted, ref } from 'vue'
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -20,36 +19,17 @@ const selectedArticleStore = useSelectedArticleStore()
 const selectedBookStore = useSelectedBookStore()
 /** 当前打开的文章的内容 */
 const articleBody = ref<ArticleBody | null>(null)
-/** 编辑区 */
-const bodyRef = ref<HTMLElement | null>(null)
-/** 编辑区Canvas背景 */
-const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
 /** 右键菜单 */
 const articleContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+/** 文本编辑器 */
+const editorRef = ref<InstanceType<typeof Editor> | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
-/** 状态栏右侧信息列表 */
-const statusBarRight = ref({
-  saveState: '已保存',
-  /** 所选内容字数 */
-  selectedWordCount: 0
-})
-
-/** 观察者实例 */
-let observer: ResizeObserver
 
 onMounted(() => {
   loadArticles()
-  observer = new ResizeObserver(handleResize)
-  observer.observe(bodyRef.value)
-  settingStore.setEditorWidthMode()
-  document.addEventListener('selectionchange', handleTextSelect)
-})
 
-onUnmounted(() => {
-  observer?.disconnect()
-  handleSaveArticle.cancel()
-  document.removeEventListener('selectionchange', handleTextSelect)
+  settingStore.setEditorWidthMode()
 })
 
 const contextMenuHanders = {
@@ -82,7 +62,7 @@ const contextMenuHanders = {
     })
   },
   copy(id: string) {
-    navigator.clipboard.writeText(trimAndReduceNewlines(bodyRef.value.innerText))
+    navigator.clipboard.writeText(trimAndReduceNewlines(editorRef.value.getBodyText()))
     showTipsPopup('已复制')
   },
 }
@@ -102,105 +82,29 @@ function handleArticleContextmenu(e: MouseEvent) {
   ])
 }
 
-function handleTextSelect() {
-  const sel = window.getSelection()
-  if (!sel || sel.rangeCount === 0) return
-
-  const range = sel.getRangeAt(0)
-  const container = range.commonAncestorContainer
-
-  if (!bodyRef.value.contains(container)) return
-
-  if (!sel.isCollapsed) {
-    statusBarRight.value.selectedWordCount = countNonWhitespace(sel.toString())
-  } else {
-    statusBarRight.value.selectedWordCount = 0
-  }
-}
-
-/** 保存文章内容 节流*/
-const handleSaveArticle = throttle(_saveArticle, 1500)
-/** 光标跳转到中间 节流 */
-const handleJumpToMiddle = throttle(() => {
-  scrollCaretDownIntoView(bodyRef.value.parentElement)
-}, 100)
-
-const handleResize = throttle((entries) => {
-  const lineHeight = getActualLineHeight(bodyRef.value)
-  const center = bodyRef.value.parentElement.clientHeight / 2
-  const overflow = center - (center % lineHeight)
-  bodyBackgroundRef.value.width = entries[0].contentRect.width
-  bodyBackgroundRef.value.height = entries[0].contentRect.height + overflow
-
-  drawBackground(lineHeight, {
-    width: bodyBackgroundRef.value.width,
-    height: bodyBackgroundRef.value.height
-  })
-}, 100)
-
-function handleSaveArticleTitle(e: FocusEvent) {
+function handleSaveArticleTitle(title: string) {
   articledb.updateArticle(selectedArticleStore.selectedArticle).then(res => {
     if (!res.success) console.error(`更新标题失败, ${res.message}`)
   })
 }
 
-function _saveArticle(text: string) {
+function saveArticle(text: string, oldText?: string) {
   articleBody.value.content = trimAndReduceNewlines(text, { removeBlankLines: true })
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
-  articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value)
   selectedBookStore.selectedBook.modifiedTime = Date.now()
-  bookdb.updateBook(selectedBookStore.selectedBook)
-  statusBarRight.value.saveState = '已保存'
-}
 
-function handelBodyInput(e: InputEvent) {
-  const target = e.target as HTMLDivElement
-  statusBarRight.value.saveState = '等待保存'
-  handleSaveArticle(target.innerText)
-  handleJumpToMiddle()
-}
-
-const drawBackground = (function () {
-  let ctx: CanvasRenderingContext2D
-
-  return (lineHeight: number, rect: { width: number, height: number }) => {
-    if (!ctx) ctx = bodyBackgroundRef.value.getContext('2d')
-
-    ctx.clearRect(0, 0, rect.width, rect.height)
-
-    ctx.setLineDash([5, 5])
-    ctx.lineDashOffset = 0
-
-    ctx.strokeStyle = '#49505780'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-
-    const x = rect.width - (rect.width % 5)
-
-    for (let y = lineHeight; y <= rect.height + lineHeight; y += lineHeight) {
-      ctx.moveTo(0, y)
-      ctx.lineTo(x, y)
+  Promise.all([
+    articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value),
+    bookdb.updateBook(selectedBookStore.selectedBook)
+  ]).then(results => {
+    if (!results.every(result => result.success)) {
+      console.error('数据储存出现错误', results.map(result => result.message).join('\n'))
     }
+  })
 
-    ctx.stroke()
-  }
-})()
-
-function scrollToCursor() {
-  setTimeout(() => {
-    const scroll = bodyRef.value.parentElement as HTMLElement
-    if (!isCaretInViewport(scroll)) scrollCaretIntoView(scroll)
-  }, 50)
-}
-
-function handleBodyPaste(e: ClipboardEvent) {
-  e.preventDefault()
-  const text = e.clipboardData.getData('text/plain')
-  insertText(text)
-  scrollToCursor()
-  handleSaveArticle.cancel()
-  _saveArticle(bodyRef.value.innerText)
+  bookdb.updateBook(selectedBookStore.selectedBook)
+  editorRef.value.setSaveState('已保存')
 }
 
 function handleArticleClick(e: MouseEvent) {
@@ -209,8 +113,7 @@ function handleArticleClick(e: MouseEvent) {
   const id = articleItem.dataset.articleId
   const article = articles.value.find(article => article.id === id)
   if (article) {
-    handleSaveArticle.cancel()
-    _saveArticle(bodyRef.value.innerText)
+    saveArticle(editorRef.value.getBodyText())
     selectedArticleStore.selectedArticle = article
     openArticle(article)
   } else {
@@ -231,8 +134,7 @@ function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
-    bodyRef.value.innerHTML = newlineToP(res.content, { collapse: true })
-    setTimeout(() => bodyRef.value.focus())
+    editorRef.value.resetBody(res.content)
   }).catch(err => {
     console.error(`获取文章正文失败, ${err.message}`)
   })
@@ -323,35 +225,9 @@ function loadArticles() {
         </div>
       </header>
       <div class="bottom">
-        <main>
-          <div class="tu-container">
-            <!-- 文章标题 -->
-            <div class="title">
-              <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title" @blur="handleSaveArticleTitle"></input>
-            </div>
-            <!-- 文字编辑区 -->
-            <!-- <Editor /> -->
-            <div class="edit scroll-container">
-              <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="">
-
-              </div>
-              <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
-              <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
-            </div>
-          </div>
-          <!-- 状态栏 -->
-          <div class="statusbar">
-            <div class="left">
-              <button @click="creatreArticle">➕ 新章节</button>
-              <button @click="settingStore.setEditorWidthMode(!settingStore.isAutoWidthMode)" class="margin-left">{{ settingStore.editorWidthModeText }}列宽</button>
-            </div>
-            <div class="center">{{ selectedArticleStore.selectedArticle?.wordCount }}</div>
-            <div class="right">
-              <span class="margin-right" v-if="statusBarRight.selectedWordCount">(已选择:{{ statusBarRight.selectedWordCount }})</span>
-              <span>{{ statusBarRight.saveState }}</span>
-            </div>
-          </div>
-        </main>
+        <!-- 编辑器 -->
+        <Editor :updateThrottleTime="1000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
+        <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text">
           <button title="" class="selected">✍️ 取名工具</button>
           <button title="">✅ 校对</button>
@@ -538,94 +414,6 @@ function loadArticles() {
   display: flex;
   flex: 1;
   height: 0;
-}
-
-main {
-  flex: 1;
-  width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-main .tu-container {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  height: 0;
-  padding: 2rem;
-}
-
-main .tu-container.narrow-margin {
-  padding: 2rem calc((100% - 720px) / 2);
-}
-
-.tu-container .title {
-  height: 2rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-.tu-container .title input {
-  width: 100%;
-}
-
-.tu-container .edit {
-  flex: 1;
-  position: relative;
-  height: 0;
-  overflow: hide;
-  padding-right: 5px;
-}
-
-.tu-container .edit .body {
-  position: relative;
-  z-index: 2;
-  line-height: 2.5rem;
-  color: var(--text-primary);
-  text-indent: 2em;
-  white-space: pre-line;
-  min-height: calc(50%);
-}
-
-
-.tu-container .edit .body * {
-  color: var(--text-primary);
-}
-
-
-.tu-container .edit canvas {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  cursor: text;
-}
-
-main .statusbar {
-  height: 2rem;
-  font-size: .8rem;
-  display: flex;
-  padding: 0 1rem;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--text-tertiary);
-  background-color: var(--background-secondary);
-}
-
-main .statusbar .left {
-  width: 30%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-main .statusbar .right {
-  width: 30%;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
 }
 
 .utils-panel {

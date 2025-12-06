@@ -108,6 +108,7 @@ export const getActualLineHeight = (() => {
  * @returns 非空白字符数量
  */
 export function countNonWhitespace(text: string): number {
+  if (!text) return 0
   // 使用正则移除所有空白字符（\s）以及零宽字符（\u200B）
   // 注意：\s 不包含 \u200B，因此需单独处理
   const cleaned = text.replace(/[\s\u200B]+/g, "")
@@ -177,6 +178,8 @@ export function newlineToP(
   options: { collapse?: boolean } = {}
 ): string {
   const { collapse = false } = options
+
+  if (text === '') return `<p>${ZERO_WIDTH_CHAR}</p>`
 
   // 按换行符分割文本为多行
   let lines = text.split(/\r?\n/)
@@ -435,3 +438,34 @@ export function htmlToElement(html: string): HTMLElement {
   return el as HTMLElement
 }
 
+class Queue<T> {
+  private readonly maxLength: number
+  private readonly queue: T[]
+  constructor(maxLength: number) {
+    this.queue = []
+    this.maxLength = maxLength
+  }
+  push(item: T): void {
+    if (this.queue.length >= this.maxLength - 1) {
+      this.queue.pop()
+    }
+    this.queue.unshift(item)
+  }
+
+  get length(): number {
+    return this.queue.length
+  }
+
+  get items(): T[] {
+    return this.queue
+  }
+
+  clear(): void {
+    this.queue.length = 0
+  }
+}
+
+/** 获取一个定长的队列，舍弃旧数据，添加新数据，第一个元素是最新的 */
+export function getQueue<T>(maxLength: number): Queue<T> {
+  return new Queue<T>(maxLength)
+}

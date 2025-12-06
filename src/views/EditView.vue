@@ -4,14 +4,13 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, scrollCaretDownIntoView, showTipsPopup, exportTxt } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, scrollCaretDownIntoView, showTipsPopup, exportTxt, htmlToElement } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { getDefaultArticle } from '@/defaultObjects'
-import { AtomicEditor } from '@/plugins/AtomicEditor'
-
+import Editor from '@/components/Editor.vue'
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -45,11 +44,6 @@ onMounted(() => {
   observer.observe(bodyRef.value)
   settingStore.setEditorWidthMode()
   document.addEventListener('selectionchange', handleTextSelect)
-
-  const atomicEditor = new AtomicEditor({
-    editor: bodyRef.value,
-    tooltip: document.getElementById('atomic-tooltip') as HTMLElement,
-  })
 })
 
 onUnmounted(() => {
@@ -336,6 +330,7 @@ function loadArticles() {
               <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title" @blur="handleSaveArticleTitle"></input>
             </div>
             <!-- 文字编辑区 -->
+            <!-- <Editor /> -->
             <div class="edit scroll-container">
               <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="">
 
@@ -372,6 +367,9 @@ function loadArticles() {
   <ContextMenu ref="articleContextMenuRef" />
 
   <!-- 悬浮提示 -->
+  <div id="atomic-tooltip">
+    1111
+  </div>
 </template>
 
 <style scoped>

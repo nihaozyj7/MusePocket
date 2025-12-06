@@ -47,7 +47,7 @@ textarea {
 }
 
 .hide {
-  display: none !important;
+  display: none !important
 }
 
 button {
@@ -88,4 +88,12 @@ button:hover {
   display: inline-block;
   border: 1px solid var(--border-color);
   padding: .25rem;
+}
+
+
+#atomic-tooltip {
+  position: absolute;
+  width: 200px;
+  height: 100px;
+  background-color: red;
 }

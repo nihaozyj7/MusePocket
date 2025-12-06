@@ -239,6 +239,8 @@ export function trimAndReduceNewlines(text: string, options: { removeBlankLines?
   const collapsed: string[] = []
   let prevEmpty = false
 
+
+
   for (const line of lines) {
     const isEmpty = line.trim() === ''
     if (isEmpty && prevEmpty) continue // 跳过连续空行
@@ -411,3 +413,25 @@ export function exportTxt(filename: string, content: string) {
 
   URL.revokeObjectURL(url) // 释放 URL 对象
 }
+
+
+/**
+ * 将 HTML 字符串解析为 HTMLElement
+ * @param html 要转换的 HTML 字符串（必须只有一个根节点）
+ * @returns HTMLElement
+ */
+export function htmlToElement(html: string): HTMLElement {
+  // 使用 DOMParser 将字符串解析成 Document
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, "text/html")
+
+  // 取得第一个元素节点
+  const el = doc.body.firstElementChild
+
+  if (!el) {
+    throw new Error("HTML 中未找到有效的 HTMLElement")
+  }
+
+  return el as HTMLElement
+}
+

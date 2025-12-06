@@ -1,4 +1,4 @@
-import type { Ref } from "vue"
+import { useSettingStore } from "./stores/SettingStore"
 
 let _uid: () => string
 if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -51,8 +51,7 @@ export function getNewChapterName(titles: { title: string }[]): string {
   return `第${next}章 `
 }
 
-/** 精确获取指定元素中单行文本的真实行高（单位：像素）*/
-export function getActualLineHeight(element: Element): number {
+function _getActualLineHeight(element: Element): number {
   const tempDiv = document.createElement('div')
   tempDiv.style.position = 'absolute'
   tempDiv.style.top = '-9999px'
@@ -75,19 +74,43 @@ export function getActualLineHeight(element: Element): number {
   return actualLineHeight
 }
 
+/** 精确获取指定元素中单行文本的真实行高（单位：像素）*/
+export const getActualLineHeight = (() => {
+  let lineHeight: number, element: Element, result: number
+  let settingStore: { lineHeight: number }
+
+  return (e: Element) => {
+    if (!settingStore) settingStore = useSettingStore()
+
+    if (lineHeight === undefined || lineHeight !== settingStore.lineHeight) {
+      lineHeight = useSettingStore().lineHeight
+      element = e
+      result = _getActualLineHeight(element)
+      return result
+    }
+
+    if (e !== element) {
+      element = e
+      result = _getActualLineHeight(element)
+      return result
+    }
+
+    return result
+  }
+})()
 
 /**
  * 统计字符串中的非空白字符数量。
  *
- * 非空白字符指：除空格、换行、制表符等所有空白符以外的字符。
+ * 非空白字符指：除空格、换行、制表符等所有空白符以及零宽字符以外的字符。
  *
  * @param text 要统计的字符串
  * @returns 非空白字符数量
  */
 export function countNonWhitespace(text: string): number {
-  // 使用正则移除所有空白字符，再统计长度
-  // \s 匹配空格、制表符、换行、全角空格等常见空白符
-  const cleaned = text.replace(/\s+/g, "")
+  // 使用正则移除所有空白字符（\s）以及零宽字符（\u200B）
+  // 注意：\s 不包含 \u200B，因此需单独处理
+  const cleaned = text.replace(/[\s\u200B]+/g, "")
   return cleaned.length
 }
 
@@ -139,6 +162,9 @@ export function deleteBackward() {
   range.deleteContents()
 }
 
+/** 零宽字符 */
+export const ZERO_WIDTH_CHAR = '\u200B'
+
 /**
  * 将字符串按行转换为 <p> 段落
  * @param text 原始字符串
@@ -175,57 +201,62 @@ export function newlineToP(
 
   // 将每一行转换为 <p>XXX</p>
   const html = lines
-    .map(line => `<p>${line === '' ? '&nbsp;' : line}</p>`)
+    .map(line => `<p>${line === '' ? ZERO_WIDTH_CHAR : line}</p>`)
     .join('')
 
   return html
 }
 
-
 /**
- * 清理多余换行，并可选移除“空白行”（只包含空格 / 制表符 / &nbsp; 的行）
+ * 清理多余换行，并可选移除“空白行”（只包含空格 / 制表符 / 全角空格 / &nbsp; / 零宽字符 的行）
  * @param text 原始字符串
  * @param options 配置项
  * @param options.removeBlankLines 是否移除空白行（默认 false）
- * @returns 处理后的字符串
+ * @returns 处理后的字符串（已移除所有零宽字符）
  */
-export function trimAndReduceNewlines(
-  text: string,
-  options: { removeBlankLines?: boolean } = {}
-): string {
+export function trimAndReduceNewlines(text: string, options: { removeBlankLines?: boolean } = {}): string {
   if (!text) return ''
 
   const { removeBlankLines = false } = options
 
-  // 按行拆分
-  let lines = text.split(/\r?\n/)
+  // 移除所有零宽字符（\u200B）——在处理前统一清除，简化后续逻辑
+  let cleanedText = text.replace(/\u200B/g, '')
 
-  // 移除空白行：只包含空格、制表符、全角空格、&nbsp; 的行
+  // 按行拆分
+  let lines = cleanedText.split(/\r?\n/)
+
+  // 移除空白行：只包含空格、制表符、全角空格、&nbsp; 等不可见字符的行
   if (removeBlankLines) {
     lines = lines.filter(line => {
-      // 去除普通空白
-      const cleaned = line.replace(/\s+/g, '').replace(/&nbsp;/g, '')
-      return cleaned !== ''
+      // 移除所有空白字符（包括全角空格 \u3000）和 &nbsp;
+      // 注意：此时已无 \u200B，但为健壮性也可保留通用空白处理
+      const stripped = line.replace(/[\s\u3000]+/g, '').replace(/&nbsp;/g, '')
+      return stripped !== ''
     })
   }
 
-  // 折叠多余空行：多个空行 -> 一个空行
+  // 折叠多余空行：多个连续空行 → 保留一个
   const collapsed: string[] = []
   let prevEmpty = false
 
   for (const line of lines) {
     const isEmpty = line.trim() === ''
-    if (isEmpty && prevEmpty) continue
+    if (isEmpty && prevEmpty) continue // 跳过连续空行
     collapsed.push(line)
     prevEmpty = isEmpty
   }
 
   // 去除首尾空行
-  while (collapsed.length > 0 && collapsed[0].trim() === '') collapsed.shift()
-  while (collapsed.length > 0 && collapsed[collapsed.length - 1].trim() === '') collapsed.pop()
+  while (collapsed.length > 0 && collapsed[0].trim() === '') {
+    collapsed.shift()
+  }
+  while (collapsed.length > 0 && collapsed[collapsed.length - 1].trim() === '') {
+    collapsed.pop()
+  }
 
   return collapsed.join('\n')
 }
+
 
 /**
  * 检测光标是否在可视区

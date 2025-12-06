@@ -1,4 +1,3 @@
-import { set } from 'lodash-es'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -11,6 +10,8 @@ export const useSettingStore = defineStore('setting', {
     theme: 'dark',
     /** 文章编辑器宽度模式 */
     editorWidthMode: ref<'auto' | 'fixed'>('auto'),
+    /** 行高 */
+    lineHeight: 2.5,
   }),
 
   getters: {

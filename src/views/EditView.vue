@@ -9,6 +9,8 @@ import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import ContextMenu from '@/components/ContextMenu.vue'
+import { getDefaultArticle } from '@/defaultObjects'
+import { AtomicEditor } from '@/plugins/AtomicEditor'
 
 
 /** 文章列表 */
@@ -43,6 +45,11 @@ onMounted(() => {
   observer.observe(bodyRef.value)
   settingStore.setEditorWidthMode()
   document.addEventListener('selectionchange', handleTextSelect)
+
+  const atomicEditor = new AtomicEditor({
+    editor: bodyRef.value,
+    tooltip: document.getElementById('atomic-tooltip') as HTMLElement,
+  })
 })
 
 onUnmounted(() => {
@@ -90,9 +97,7 @@ function handleArticleContextmenu(e: MouseEvent) {
   e.preventDefault()
 
   const articleItem = (e.target as HTMLElement).closest<HTMLElement>('.article-item')
-
   if (!articleItem) return
-
   const aid = articleItem.dataset.articleId
 
   articleContextMenuRef.value.show(e, [
@@ -110,7 +115,6 @@ function handleTextSelect() {
   const range = sel.getRangeAt(0)
   const container = range.commonAncestorContainer
 
-  // 不在编辑区域
   if (!bodyRef.value.contains(container)) return
 
   if (!sel.isCollapsed) {
@@ -241,15 +245,8 @@ function openArticle(article: Article) {
 }
 
 function creatreArticle() {
-  const newArticle = {
-    bookId: selectedBookStore.selectedBook!.id,
-    id: uid(),
-    title: getNewChapterName(articles.value),
-    createdTime: Date.now(),
-    modifiedTime: Date.now(),
-    wordCount: 0,
-    deletedTime: 0
-  }
+  const newArticle = getDefaultArticle(selectedBookStore.selectedBook.id, articles.value)
+  if (!newArticle) return console.log('获取默认文章失败')
   articledb.createArticle(newArticle).then(res => {
     if (res.success) {
       articles.value.push(newArticle)
@@ -373,6 +370,8 @@ function loadArticles() {
   </div>
   <!-- 右键菜单 -->
   <ContextMenu ref="articleContextMenuRef" />
+
+  <!-- 悬浮提示 -->
 </template>
 
 <style scoped>
@@ -592,9 +591,11 @@ main .tu-container.narrow-margin {
   min-height: calc(50%);
 }
 
+
 .tu-container .edit .body * {
   color: var(--text-primary);
 }
+
 
 .tu-container .edit canvas {
   position: absolute;

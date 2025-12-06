@@ -1,5 +1,5 @@
-import type { Book } from "./types"
-import { uid } from "./utils"
+import type { Article, Book } from "./types"
+import { getNewChapterName, uid } from "./utils"
 
 export function getDefaultBook(): Book {
   return {
@@ -9,6 +9,18 @@ export function getDefaultBook(): Book {
     coverId: '/default.png',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
+    deletedTime: 0
+  }
+}
+
+export function getDefaultArticle(bookId: string, articles: Article[]): Article {
+  return {
+    bookId,
+    id: uid(),
+    title: getNewChapterName(articles),
+    createdTime: Date.now(),
+    modifiedTime: Date.now(),
+    wordCount: 0,
     deletedTime: 0
   }
 }

@@ -146,6 +146,39 @@ export function insertText(text: string) {
   sel.addRange(range)
 }
 
+/**
+ * 在当前光标位置插入指定的 DOM 节点
+ * @param node 要插入的 DOM 节点
+ */
+export function insertNodeAtCursor(node: Node) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+
+  // 删除当前选区内容
+  range.deleteContents()
+
+  // 插入节点
+  // 使用 cloneNode 避免原节点被移动导致不可复用
+  const inserted = node.cloneNode(true)
+  range.insertNode(inserted)
+
+  // 将光标移动到插入节点之后
+  // 创建一个新的 Range 并放置在插入节点之后
+  const newRange = document.createRange()
+  newRange.setStartAfter(inserted)
+  newRange.collapse(true)
+
+  sel.removeAllRanges()
+  sel.addRange(newRange)
+}
+
+/** 在当前光标处插入一个0宽字符 */
+export function insertZeroWidthChar() {
+  insertNodeAtCursor(htmlToElement('<p>' + ZERO_WIDTH_CHAR + '</p>'))
+}
+
 
 /** 删除光标前的字符 */
 export function deleteBackward() {

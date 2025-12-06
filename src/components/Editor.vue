@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, getActualLineHeight, getQueue, insertText, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
+import { countNonWhitespace, getActualLineHeight, getQueue, htmlToElement, insertNodeAtCursor, insertText, insertZeroWidthChar, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -46,6 +46,7 @@ onMounted(() => {
   observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
   document.addEventListener('selectionchange', handleTextSelect)
+  settingStore.setEditorWidthMode()
 })
 
 onUnmounted(() => {
@@ -129,20 +130,23 @@ function handleSaveArticleTitle() {
   emit('update:articleTitle', selectedArticleStore.selectedArticle.title)
 }
 
-/** 文本输入时 */
-function handelBodyInput(e: InputEvent) {
-  const target = e.target as HTMLDivElement
-  statusBarRight.value.saveState = '等待保存'
-  handleJumpToMiddle()
-  emitUpdate()
-}
-
 /** 输入框获取焦点时 移动光标到末尾并滚动到底部 */
 function scrollToCursor() {
   setTimeout(() => {
     const scroll = bodyRef.value.parentElement as HTMLElement
     if (!isCaretInViewport(scroll)) scrollCaretIntoView(scroll)
   }, 50)
+}
+
+/** 文本输入时 */
+function handelBodyInput(e: InputEvent) {
+  const target = e.target as HTMLDivElement
+  statusBarRight.value.saveState = '等待保存'
+  if (bodyRef.value.innerText === '') {
+    insertZeroWidthChar()
+  }
+  handleJumpToMiddle()
+  emitUpdate()
 }
 
 /** 文本粘贴时 */
@@ -152,6 +156,18 @@ function handleBodyPaste(e: ClipboardEvent) {
   insertText(text)
   scrollToCursor()
   _emitUpdate()
+}
+
+/** 在文本框中按下按键时 */
+function handleBodyKeydown(e: KeyboardEvent) {
+  if (e.key === 'Delete') {
+
+  } else if (e.key === 'Backspace') {
+
+  } else if (e.ctrlKey && e.key === 'i') {
+    const html = htmlToElement('<i class="color: red;">变量</i>')
+    insertNodeAtCursor(html)
+  }
 }
 
 defineExpose({
@@ -185,9 +201,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="">
-
-        </div>
+        <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>

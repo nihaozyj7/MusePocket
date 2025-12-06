@@ -97,3 +97,35 @@ button:hover {
   height: 100px;
   background-color: red;
 }
+
+.notyf__ripple {
+  background-color: transparent !important;
+}
+
+.notyf__wrapper {
+  padding: .5rem !important;
+}
+
+.notyf__toast--success {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: .25rem;
+}
+
+.notyf__toast--success .notyf__message {
+  color: var(--success);
+}
+
+.notyf__toast--error {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: .25rem;
+}
+
+.notyf__toast--error .notyf__message {
+  color: var(--danger);
+}
+
+.notyf__message {
+  font-size: .8rem !important;
+}

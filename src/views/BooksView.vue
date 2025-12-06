@@ -8,6 +8,7 @@ import { getImageBase64ByID } from '@/utils.ts'
 import { onMounted, ref } from 'vue'
 import ContextMenu from '@/components/ContextMenu.vue'
 import EditBookPopup from '@/components/EditBookPopup.vue'
+import { $tips } from '@/plugins/notyf'
 
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
@@ -39,12 +40,13 @@ const bookContextMenuHanders = {
   delete() {
     bookdb.softDeleteBook(rightSelectedBook.id).then(res => {
       if (res.success) {
+        $tips.success(`删除成功，回收站中可找回`)
         books.value = books.value.filter(book => book.id !== rightSelectedBook.id)
         if (selectedBookStore.selectedBook === rightSelectedBook) {
           clickSelectedBook.value = selectedBookStore.selectedBook = null
         }
       } else {
-        console.error(`删除书籍失败, ${res.message}`)
+        $tips.error(`删除书籍失败, ${res.message}`)
       }
     })
   },
@@ -106,7 +108,7 @@ function addBook(book: Book) {
     if (res.success) {
       books.value.unshift(book)
     } else {
-      console.error(`创建书籍失败, ${res.message}`)
+      $tips.error(`创建书籍失败, ${res.message}`)
     }
   })
 }
@@ -118,7 +120,7 @@ function updateBook(book: Book) {
 
   bookdb.updateBook(rightSelectedBook).then(res => {
     if (!res.success) {
-      return console.error(`更新书籍失败: ${res.message}`)
+      return $tips.error(`更新书籍失败: ${res.message}`)
     }
   })
 }
@@ -128,7 +130,7 @@ function loadBooks() {
     res.sort((a, b) => b.modifiedTime - a.modifiedTime)
     books.value = res
   }).catch(err => {
-    console.error(`获取书籍列表失败, ${err.message}`)
+    $tips.error(`获取书籍列表失败, ${err.message}`)
   })
 }
 

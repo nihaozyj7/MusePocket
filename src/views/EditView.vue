@@ -3,6 +3,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
 import Editor from '@/components/Editor.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
+import { $tips } from '@/plugins/notyf'
 import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
@@ -35,13 +36,14 @@ onMounted(() => {
 const contextMenuHanders = {
   edit(id: string) {
     const article = articles.value.find(article => article.id === id)
-    if (!article) return console.error('文章不存在')
+    if (!article) return $tips.error('文章不存在')
     openArticle(article)
   },
   delete(id: string) {
     articledb.softDelete(id).then(res => {
       if (!res.success) return console.error(`删除文章失败, ${res.message}`)
-      showTipsPopup('已删除，可在回收站找回')
+      $tips.success('删除成功')
+
       let index = articles.value.findIndex(article => article.id === id) - 1
       articles.value = articles.value.filter(article => article.id !== id)
       if (selectedArticleStore.selectedArticle.id !== id) return
@@ -58,12 +60,12 @@ const contextMenuHanders = {
     articledb.getArticleBody(id).then(res => {
       exportTxt(article?.title || '未命名', res.content || '内容未找到')
     }).catch(err => {
-      console.error(`导出文章失败, ${err.message}`)
+      $tips.error(`导出文章失败, ${err.message}`)
     })
   },
   copy(id: string) {
     navigator.clipboard.writeText(trimAndReduceNewlines(editorRef.value.getBodyText()))
-    showTipsPopup('已复制')
+    $tips.success('已复制')
   },
 }
 
@@ -84,12 +86,11 @@ function handleArticleContextmenu(e: MouseEvent) {
 
 function handleSaveArticleTitle(title: string) {
   articledb.updateArticle(selectedArticleStore.selectedArticle).then(res => {
-    if (!res.success) console.error(`更新标题失败, ${res.message}`)
+    if (!res.success) $tips.error(`更新标题失败, ${res.message}`)
   })
 }
 
 function saveArticle(text: string, oldText?: string) {
-  console.log(`保存文章 NEW[${text}]\n OLD[${oldText}]`)
   articleBody.value.content = trimAndReduceNewlines(text, { removeBlankLines: true })
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
@@ -100,7 +101,7 @@ function saveArticle(text: string, oldText?: string) {
     bookdb.updateBook(selectedBookStore.selectedBook)
   ]).then(results => {
     if (!results.every(result => result.success)) {
-      console.error('数据储存出现错误', results.map(result => result.message).join('\n'))
+      $tips.error('数据储存出现错误' + results.map(result => result.message).join('\n'))
     }
   })
 
@@ -137,19 +138,19 @@ function openArticle(article: Article) {
     articleBody.value = res
     editorRef.value.resetBody(res.content)
   }).catch(err => {
-    console.error(`获取文章正文失败, ${err.message}`)
+    $tips.error(`获取文章正文失败, ${err.message}`)
   })
 }
 
 function creatreArticle() {
   const newArticle = getDefaultArticle(selectedBookStore.selectedBook.id, articles.value)
-  if (!newArticle) return console.log('获取默认文章失败')
+  if (!newArticle) return $tips.error('获取默认文章失败')
   articledb.createArticle(newArticle).then(res => {
     if (res.success) {
       articles.value.push(newArticle)
       openArticle(articles.value[articles.value.length - 1])
     } else {
-      console.error(`创建文章失败, ${res.message}`)
+      $tips.error(`创建文章失败, ${res.message}`)
     }
   })
 }
@@ -168,7 +169,7 @@ function loadArticles() {
     // 不存在文章，创建新文章
     else creatreArticle()
   }).catch(err => {
-    console.error(`获取文章列表失败, ${err.message}`)
+    $tips.error(`获取文章列表失败, ${err.message}`)
   })
 }
 

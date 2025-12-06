@@ -4,10 +4,12 @@ import router from '@/router.ts'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, setBookMenuPosition, scrollCaretDownIntoView, showTipsPopup, exportTxt } from '@/utils.ts'
+import { countNonWhitespace, getActualLineHeight, getNewChapterName, insertText, isCaretInViewport, newlineToP, scrollCaretIntoView, trimAndReduceNewlines, moveCaretToEndAndScrollToBottom, uid, scrollCaretDownIntoView, showTipsPopup, exportTxt } from '@/utils.ts'
 import { onMounted, ref, onUnmounted, computed } from 'vue'
 import { throttle } from 'lodash-es'
 import { useSettingStore } from '@/stores/SettingStore.ts'
+import ContextMenu from '@/components/ContextMenu.vue'
+
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -22,7 +24,7 @@ const bodyRef = ref<HTMLElement | null>(null)
 /** 编辑区Canvas背景 */
 const bodyBackgroundRef = ref<HTMLCanvasElement | null>(null)
 /** 右键菜单 */
-const articleContextMenuRef = ref<HTMLElement | null>(null)
+const articleContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
 /** 状态栏右侧信息列表 */
@@ -93,16 +95,12 @@ function handleArticleContextmenu(e: MouseEvent) {
 
   const aid = articleItem.dataset.articleId
 
-  if (!articleContextMenuRef) return console.error('articleContextMenuRef is null')
-
-  articleContextMenuRef.value.style.display = 'block'
-  setBookMenuPosition(e, articleContextMenuRef)
-
-  document.addEventListener('click', (e: MouseEvent) => {
-    const target = e.target as HTMLElement
-    if (target.dataset?.type) contextMenuHanders[target.dataset.type](aid)
-    articleContextMenuRef.value.style.display = 'none'
-  }, { once: true })
+  articleContextMenuRef.value.show(e, [
+    { title: '✏️ 编辑', callback: () => contextMenuHanders.edit(aid) },
+    { title: '🗑️ 删除', callback: () => contextMenuHanders.delete(aid) },
+    { title: '📄 导出为TXT', callback: () => contextMenuHanders.exportTxt(aid) },
+    { title: '📋 复制到剪贴板', callback: () => contextMenuHanders.copy(aid) },
+  ])
 }
 
 function handleTextSelect() {
@@ -372,12 +370,13 @@ function loadArticles() {
     </div>
   </div>
   <!-- 右键菜单 -->
-  <div class="context-menu" ref="articleContextMenuRef">
+  <ContextMenu ref="articleContextMenuRef" />
+  <!-- <div class="context-menu" ref="articleContextMenuRef">
     <div class="menu-item" data-type="edit">✏️ 编辑</div>
     <div class="menu-item" data-type="delete">🗑️ 删除</div>
     <div class="menu-item" data-type="exportTxt">📄 导出为TXT</div>
     <div class="menu-item" data-type="copy">📋 复制到剪贴板</div>
-  </div>
+  </div> -->
 </template>
 
 <style scoped>

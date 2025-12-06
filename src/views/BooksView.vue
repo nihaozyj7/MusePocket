@@ -4,8 +4,9 @@ import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
-import { getIconBase64, setBookMenuPosition, uid } from '@/utils.ts'
+import { getIconBase64, uid } from '@/utils.ts'
 import { onMounted, onUnmounted, ref } from 'vue'
+import ContextMenu from '@/components/ContextMenu.vue'
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
 const onHome = ref(true)
@@ -16,7 +17,7 @@ const books = ref<Book[]>([])
 /** 当前用户选中的书籍 */
 const selectedBookStore = useSelectedBookStore()
 /** 书籍右键菜单Ref */
-const bookContextMenuRef = ref<HTMLElement | null>(null)
+const bookContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 /** 单击选中的书籍 */
 const clickSelectedBook = ref<Book | null>(null)
 /** 新书暂存 */
@@ -54,17 +55,8 @@ const bookContextMenuHanders = {
   }
 }
 
-function hiddenBooksMenu() {
-  bookContextMenuRef.value!.style.display = 'none'
-}
-
 onMounted(async () => {
   loadBooks()
-  document.addEventListener('click', hiddenBooksMenu)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', hiddenBooksMenu)
 })
 
 function bookIdEqual(book: Book) {
@@ -76,23 +68,18 @@ function handleBookDoubleClick(book: Book) {
   router.push('/Edit')
 }
 
-async function handleBookItemContentMenuItenClick(e: MouseEvent) {
-  hideBookContextMenu()
-  const type = (e?.target as HTMLElement).dataset.type
-  type && bookContextMenuHanders[type]()
-}
-
-function hideBookContextMenu() {
-  bookContextMenuRef.value!.style.display = 'none'
-  bookContextMenuRef.value?.removeEventListener('click', handleBookItemContentMenuItenClick)
-}
-
 function handleBookItemContextMenu(e: MouseEvent, book: Book) {
   e.preventDefault()
 
   rightSelectedBook = book
-  setBookMenuPosition(e, bookContextMenuRef)
-  bookContextMenuRef.value?.addEventListener('click', handleBookItemContentMenuItenClick)
+
+  bookContextMenuRef.value.show(e, [
+    { title: '📂 打开', callback: bookContextMenuHanders.open },
+    { title: '🗑️ 删除', callback: bookContextMenuHanders.delete },
+    { title: '✏️ 编辑', callback: bookContextMenuHanders.edit },
+    { title: '📄 导出为TXT', callback: bookContextMenuHanders.exportTxt },
+    { title: '💾 下载ZIP备份', callback: bookContextMenuHanders.exportBackup },
+  ])
 }
 
 
@@ -222,13 +209,8 @@ function loadBooks() {
   </div>
 
   <!-- 书籍右键菜单 -->
-  <div class="context-menu" ref="bookContextMenuRef">
-    <div class="menu-item" data-type="open">📂 打开</div>
-    <div class="menu-item" data-type="delete">🗑️ 删除</div>
-    <div class="menu-item" data-type="edit">✏️ 编辑</div>
-    <div class="menu-item" data-type="exportTxt">📄 导出为TXT</div>
-    <div class="menu-item" data-type="exportBackup">💾 导出备份</div>
-  </div>
+  <ContextMenu ref="bookContextMenuRef" />
+
   <!-- 新建弹出层 -->
   <div class="mask" v-if="newBook" @click="newBook = null">
     <div class="window" @click="e => e.stopPropagation()">

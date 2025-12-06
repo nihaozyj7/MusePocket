@@ -151,6 +151,8 @@ function _saveArticle(text: string) {
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
   articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value)
+  selectedBookStore.selectedBook.modifiedTime = Date.now()
+  bookdb.updateBook(selectedBookStore.selectedBook)
   statusBarRight.value.saveState = '已保存'
 }
 

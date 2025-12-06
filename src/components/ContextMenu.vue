@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, type Ref } from 'vue'
+import { ref } from 'vue'
 
 /** 菜单项 */
 export interface MenuItem {
@@ -14,7 +14,7 @@ export interface MenuItem {
 const items = ref<MenuItem[]>([])
 
 /** 状态：是否显示菜单 */
-const isVisible = ref(false)
+const isVisable = ref(false)
 /** 引用：菜单元素 */
 const menuRef = ref<HTMLDivElement | null>(null)
 
@@ -24,7 +24,7 @@ function show(e: MouseEvent, _items: MenuItem[]) {
   items.value = _items
 
   const menu = menuRef.value!
-  isVisible.value = true
+  isVisable.value = true
 
   const menuRect = menu.getBoundingClientRect()
   const menuWidth = menuRect.width
@@ -52,14 +52,14 @@ function show(e: MouseEvent, _items: MenuItem[]) {
 }
 
 function hide() {
-  isVisible.value = false
+  isVisable.value = false
 }
 
 defineExpose({ show, hide })
 </script>
 
 <template>
-  <div class="context-menu" ref="menuRef" :style="{ display: isVisible ? 'block' : 'none' }">
+  <div class="context-menu" ref="menuRef" v-show="isVisable">
     <div v-for="item in items" :key="item.title" class="menu-item" @click="item.callback" :title="item?.tips">
       {{ item.title }}
     </div>

@@ -15,7 +15,7 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 export const uid = _uid
 
 /** 根据图片ID获取图标Base64 URL */
-export function getIconBase64(iconId: string): string {
+export function getImageBase64ByID(id: string): string {
   return '/cover/default.png'
 }
 
@@ -347,8 +347,6 @@ export function showTipsPopup(message: string, timeout = 1500) {
   popup.className = 'popup'
   popup.textContent = message
   document.body.appendChild(popup)
-
-  console.log('showTipsPopup', message)
 
   const handleMouseMove = (e: MouseEvent) => {
     popup.style.left = `${e.clientX + 30}px`

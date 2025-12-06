@@ -4,9 +4,11 @@ import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
-import { getIconBase64, uid } from '@/utils.ts'
+import { getImageBase64ByID, uid } from '@/utils.ts'
 import { onMounted, onUnmounted, ref } from 'vue'
 import ContextMenu from '@/components/ContextMenu.vue'
+import { getDefaultBook } from '@/defaultObjects.ts'
+import CreateBookPopup from '@/components/CreateBookPopup.vue'
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
 const onHome = ref(true)
@@ -20,8 +22,8 @@ const selectedBookStore = useSelectedBookStore()
 const bookContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 /** 单击选中的书籍 */
 const clickSelectedBook = ref<Book | null>(null)
-/** 新书暂存 */
-const newBook = ref<Book | null>(null)
+/** 创建书籍弹出层 */
+const createBookPopupRef = ref<InstanceType<typeof CreateBookPopup> | null>(null)
 
 /** 右键菜单选中的书籍 */
 let rightSelectedBook: Book | null = null
@@ -94,33 +96,22 @@ function goHome() {
 }
 
 function openAddBookDialog() {
-  newBook.value = {
-    id: uid(),
-    title: '新书',
-    author: '作者',
-    description: '这是一本新书，开始你的写作之旅！',
-    coverID: '/default.png',
-    createdTime: Date.now(),
-    modifiedTime: Date.now(),
-    deletedTime: 0
-  }
+  createBookPopupRef.value.show()
 }
 
-function addBook() {
-  if (!newBook.value) return
-
-  bookdb.createBook(newBook.value).then(res => {
+function addBook(book: Book) {
+  bookdb.createBook(book).then(res => {
     if (res.success) {
-      books.value.unshift(newBook.value)
+      books.value.unshift(book)
     } else {
       console.error(`创建书籍失败, ${res.message}`)
     }
-    newBook.value = null
   })
 }
 
 function loadBooks() {
   bookdb.getAllBooks().then(res => {
+    res.sort((a, b) => b.modifiedTime - a.modifiedTime)
     books.value = res
   }).catch(err => {
     console.error(`获取书籍列表失败, ${err.message}`)
@@ -145,7 +136,7 @@ function loadBooks() {
         <!-- 占位符 -->
         <div style="flex: 1;"></div>
         <!-- 新建书籍 -->
-        <button class="button-m" title="创建新书籍" @click="openAddBookDialog">✏️ 新书</button>
+        <button class="button-m" title="创建新书籍" @click="openAddBookDialog">📓 新书</button>
       </div>
       <div class="bookshelf">
         <div class="scroll-container">
@@ -153,7 +144,7 @@ function loadBooks() {
           <div class="book-item" :class="{ 'checked': bookIdEqual(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
             <!-- 封面占位 -->
             <div class="cover">
-              <img :src="getIconBase64(book.coverID)" alt="封面" class="cover-img"></img>
+              <img :src="getImageBase64ByID(book.coverId)" alt="封面" class="cover-img"></img>
             </div>
             <!-- 书籍信息 -->
             <div class="bookInfo">
@@ -212,28 +203,7 @@ function loadBooks() {
   <ContextMenu ref="bookContextMenuRef" />
 
   <!-- 新建弹出层 -->
-  <div class="mask" v-if="newBook" @click="newBook = null">
-    <div class="window" @click="e => e.stopPropagation()">
-      <header>
-        <h3>新建书籍</h3>
-        <button class="close" @click="newBook = null">❌</button>
-      </header>
-      <main>
-        <div class="cover">
-          <img :src="getIconBase64(newBook.coverID)" :alt="newBook.title + '的封面'">
-          <button>更换封面</button>
-        </div>
-        <div class="form">
-          <label for="title">书名</label>
-          <input type="text" id="title" placeholder="请输入书名" v-model="newBook.title">
-          <label for="overview">简介</label>
-          <textarea id="overview" v-model="newBook.description"></textarea>
-          <button @click="addBook">创建</button>
-        </div>
-      </main>
-    </div>
-    <div class="tips">点击空白处关闭</div>
-  </div>
+  <CreateBookPopup ref="createBookPopupRef" @status:save="addBook" />
 </template>
 
 <style scoped>
@@ -444,65 +414,6 @@ main {
   background-color: var(--background-tertiary);
 }
 
-.mask {
-  width: 100%;
-  height: 100%;
-  background-color: #0006;
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.mask .tips {
-  position: absolute;
-  bottom: 1rem;
-  font-size: .8rem;
-  color: var(--text-tertiary);
-}
-
-.window {
-  width: 26rem;
-  height: 15rem;
-  background-color: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-radius: .25rem;
-  overflow: hidden;
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-}
-
-.window header {
-  width: 100%;
-  height: 2rem;
-  background-color: var(--background-tertiary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 .5rem;
-}
-
-.window header * {
-  display: block;
-  line-height: 0;
-  padding: 0;
-  margin: 0;
-}
-
-.window header h3 {
-  font-size: .8rem;
-}
-
-.window main {
-  flex: 1;
-  height: 0;
-  margin: .5rem;
-  display: flex;
-}
 
 .window main .cover {
   height: 100%;

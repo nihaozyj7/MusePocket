@@ -47,7 +47,7 @@ textarea {
 }
 
 .hide {
-  display: none;
+  display: none !important;
 }
 
 button {

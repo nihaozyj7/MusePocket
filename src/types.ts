@@ -36,12 +36,10 @@ export interface Book extends Time {
   id: string
   /** 书名 */
   title: string
-  /** 作者 */
-  author: string
   /** 描述 */
   description: string
   /** 封面图片ID */
-  coverID: string
+  coverId: string
 }
 
 /** 自定义实体属性 */

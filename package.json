@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
+    "diff": "^8.0.2",
+    "diff2html": "^3.4.52",
     "idb": "^8.0.3",
     "lodash-es": "^4.17.21",
+    "nanoid": "^5.1.6",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.24",

@@ -56,7 +56,7 @@ onUnmounted(() => {
 const _emitUpdate = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
   hostory.push(text)
-  emit('update:articleBody', hostory.items[1], hostory.items[0])
+  emit('update:articleBody', hostory.items[0], hostory.items[1])
 }
 /** 节流 触发内容更新事件 */
 const emitUpdate = throttle(_emitUpdate, propts.updateThrottleTime)

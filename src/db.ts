@@ -1,5 +1,6 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { AppDB, Book, Article, ArticleBody, Entity, Status } from './types'
+import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64 } from './types'
+import { uid } from './utils'
 
 const DATABASE_NAME = 'musepocket_db'
 const DATABASE_VERSION = 1
@@ -8,8 +9,7 @@ async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
   return openDB<AppDB>(DATABASE_NAME, DATABASE_VERSION, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('books')) {
-        const store = db.createObjectStore('books', { keyPath: 'id' })
-        store.createIndex('by-author', 'author')
+        db.createObjectStore('books', { keyPath: 'id' })
       }
       if (!db.objectStoreNames.contains('articles')) {
         const store = db.createObjectStore('articles', { keyPath: 'id' })
@@ -22,6 +22,9 @@ async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
         const store = db.createObjectStore('entities', { keyPath: 'id' })
         store.createIndex('by-book', 'bookId')
         store.createIndex('by-type', 'type')
+      }
+      if (!db.objectStoreNames.contains('images')) {
+        db.createObjectStore('images', { keyPath: 'id' })
       }
     },
   })
@@ -458,5 +461,37 @@ export const entitydb = new class {
     const store = db.transaction(['entities'], 'readonly').objectStore('entities')
     const entities = await store.index('by-book').getAll(bookId)
     return includeDeleted ? entities : entities.filter(e => e.deletedTime === 0)
+  }
+}()
+
+/** 图片操作类 */
+export const imagedb = new class {
+  /** 创建图片 */
+  async createImage(img: Blob): Promise<Status> {
+    try {
+      const tx = db.transaction(['images'], 'readwrite')
+      await tx.objectStore('images').add({ id: uid(), base64: img })
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+  /** 获取所有图片 */
+  async getAllImages(): Promise<ImageBase64[]> {
+    const store = db.transaction(['images'], 'readonly').objectStore('images')
+    return store.getAll()
+  }
+
+  /** 删除图片 */
+  async deleteImage(id: string): Promise<Status> {
+    try {
+      const tx = db.transaction(['images'], 'readwrite')
+      await tx.objectStore('images').delete(id)
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
   }
 }()

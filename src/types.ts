@@ -71,10 +71,10 @@ export interface Entity extends Time {
   attrs: EntityAttr[]
 }
 
-/** 图片Base64字符串 */
+/** 获取图片URL */
 export interface ImageBase64 {
   id: string
-  base64: string
+  base64: Blob
 }
 
 /** 数据库结构 */
@@ -104,9 +104,6 @@ export interface AppDB extends DBSchema {
   books: {
     key: string
     value: Book
-    indexes: {
-      'by-author': string
-    }
   }
 
   /** 实体表 */
@@ -117,6 +114,11 @@ export interface AppDB extends DBSchema {
       'by-book': string
       'by-type': string
     }
+  },
+  /** 图片表 */
+  images: {
+    key: string
+    value: ImageBase64
   }
 }
 

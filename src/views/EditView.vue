@@ -89,6 +89,7 @@ function handleSaveArticleTitle(title: string) {
 }
 
 function saveArticle(text: string, oldText?: string) {
+  console.log(`保存文章 NEW[${text}]\n OLD[${oldText}]`)
   articleBody.value.content = trimAndReduceNewlines(text, { removeBlankLines: true })
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)

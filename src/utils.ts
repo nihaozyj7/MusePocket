@@ -1,3 +1,4 @@
+import { customAlphabet } from "nanoid"
 import { useSettingStore } from "./stores/SettingStore"
 
 let _uid: () => string
@@ -12,7 +13,7 @@ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 }
 
 /** 生成一个唯一的 UUID v4 */
-export const uid = _uid
+export const uid = customAlphabet('023456789ABCDEFGHIKLMNOPQRSTUVWXYZ', 10)
 
 /** 根据图片ID获取图标Base64 URL */
 export function getImageBase64ByID(id: string): string {

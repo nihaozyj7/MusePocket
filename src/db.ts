@@ -46,7 +46,7 @@ export const bookdb = new class {
   /** 更新书籍 */
   async updateBook(book: Book): Promise<Status> {
     try {
-      const updated = { ...book, modifiedTime: Date.now() }
+      const updated = { ...book }
       const tx = db.transaction(['books'], 'readwrite')
       await tx.objectStore('books').put(updated)
       await tx.done

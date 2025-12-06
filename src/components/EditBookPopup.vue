@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type PropType } from 'vue'
 import Popup from './Popup.vue'
 import { getDefaultBook } from '@/defaultObjects.ts'
 import type { Book } from '@/types.ts'
 import { getImageBase64ByID } from '@/utils.ts'
+
+type Type = 'create' | 'edit'
+
+const editType = ref<Type>('create')
 
 const emit = defineEmits({
   'status:save': (book: Book) => true
@@ -14,13 +18,19 @@ const popupRef = ref<InstanceType<typeof Popup> | null>(null)
 const book = ref<Book>(getDefaultBook())
 
 function saveBook() {
-  emit('status:save', book.value)
+  emit('status:save', { ...book.value })
   popupRef.value.close()
 }
 
 defineExpose({
-  show: () => {
-    book.value = getDefaultBook()
+  show: (srcBook?: Book, _editType?: Type) => {
+    editType.value = _editType || 'create'
+
+    if (editType.value === 'edit') {
+      book.value = { ...srcBook }
+    } else {
+      book.value = getDefaultBook()
+    }
     popupRef.value.show()
   },
 })
@@ -39,7 +49,12 @@ defineExpose({
         <input type="text" id="title" placeholder="请输入书名" v-model="book.title">
         <label for="overview">简介</label>
         <textarea id="overview" placeholder="请输入书籍简介" v-model="book.description"></textarea>
-        <button @click="saveBook">创建</button>
+
+        <div class="buttons" v-if="editType === 'edit'">
+          <button @click="popupRef.close" style="margin-right: .5rem;">取消</button>
+          <button @click="saveBook">保存修改</button>
+        </div>
+        <button @click="saveBook" v-else>保存修改</button>
       </div>
     </div>
   </Popup>
@@ -47,12 +62,13 @@ defineExpose({
 
 <style scoped>
 .cover {
-  height: 12rem;
-  width: 7.42rem;
+  height: 17.6rem;
+  width: 11rem;
   background-color: var(--background-secondary);
   border-radius: .25rem;
   position: relative;
   overflow: hidden;
+  /* margin: 0 2rem; */
 }
 
 .cover img {
@@ -99,8 +115,12 @@ defineExpose({
   border: 1px solid var(--border-color);
   line-height: 1.5rem;
   margin-top: .5rem;
-  height: 3.5rem;
+  height: 9rem;
   padding: 0 .25rem;
+}
+
+.buttons {
+  display: flex;
 }
 
 .form button {
@@ -110,5 +130,10 @@ defineExpose({
   line-height: 1.9rem;
   border-radius: .25rem;
   color: var(--text-primary);
+}
+
+.form button:first-child {
+  background-color: var(--secondary);
+  width: 8rem;
 }
 </style>

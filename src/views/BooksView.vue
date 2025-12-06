@@ -4,11 +4,11 @@ import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
-import { getImageBase64ByID, uid } from '@/utils.ts'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { getImageBase64ByID } from '@/utils.ts'
+import { onMounted, ref } from 'vue'
 import ContextMenu from '@/components/ContextMenu.vue'
-import { getDefaultBook } from '@/defaultObjects.ts'
-import CreateBookPopup from '@/components/CreateBookPopup.vue'
+import EditBookPopup from '@/components/EditBookPopup.vue'
+
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
 const onHome = ref(true)
@@ -22,8 +22,10 @@ const selectedBookStore = useSelectedBookStore()
 const bookContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 /** 单击选中的书籍 */
 const clickSelectedBook = ref<Book | null>(null)
+/** 编辑书籍弹出层 */
+const updateBookPopupRef = ref<InstanceType<typeof EditBookPopup> | null>(null)
 /** 创建书籍弹出层 */
-const createBookPopupRef = ref<InstanceType<typeof CreateBookPopup> | null>(null)
+const createBookPopupRef = ref<InstanceType<typeof EditBookPopup> | null>(null)
 
 /** 右键菜单选中的书籍 */
 let rightSelectedBook: Book | null = null
@@ -47,7 +49,7 @@ const bookContextMenuHanders = {
     })
   },
   edit() {
-    console.log('右键菜单编辑', rightSelectedBook)
+    updateBookPopupRef.value.show(rightSelectedBook, 'edit')
   },
   exportTxt() {
     console.log('右键菜单导出TXT', rightSelectedBook)
@@ -105,6 +107,18 @@ function addBook(book: Book) {
       books.value.unshift(book)
     } else {
       console.error(`创建书籍失败, ${res.message}`)
+    }
+  })
+}
+
+function updateBook(book: Book) {
+  rightSelectedBook.description = book.description
+  rightSelectedBook.title = book.title
+  rightSelectedBook.coverId = book.coverId
+
+  bookdb.updateBook(rightSelectedBook).then(res => {
+    if (!res.success) {
+      return console.error(`更新书籍失败: ${res.message}`)
     }
   })
 }
@@ -203,7 +217,10 @@ function loadBooks() {
   <ContextMenu ref="bookContextMenuRef" />
 
   <!-- 新建弹出层 -->
-  <CreateBookPopup ref="createBookPopupRef" @status:save="addBook" />
+  <EditBookPopup ref="createBookPopupRef" @status:save="addBook" />
+
+  <!-- 修改书籍弹出层 -->
+  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" />
 </template>
 
 <style scoped>
@@ -390,94 +407,5 @@ main {
 .vertical-text:first-child {
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
-}
-
-.book-context-menu {
-  display: none;
-  position: absolute;
-  top: 10px;
-  left: 1000px;
-  border-radius: .25rem;
-  background-color: var(--background-secondary);
-  border: 1px solid var(--border-color);
-}
-
-.book-context-menu .menu-item {
-  line-height: 1.6rem;
-  padding: .25rem .5rem;
-  width: 100%;
-  cursor: pointer;
-  font-size: .8rem;
-}
-
-.book-context-menu .menu-item:hover {
-  background-color: var(--background-tertiary);
-}
-
-
-.window main .cover {
-  height: 100%;
-  width: 7.42rem;
-  background-color: var(--background-secondary);
-  border-radius: .25rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.window main .cover img {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-
-.window main .cover button {
-  position: absolute;
-  background-color: var(--background-tertiary);
-  height: 2rem;
-  width: 100%;
-  bottom: 0;
-  font-size: .8rem;
-}
-
-.window main .form {
-  flex: 1;
-  width: 0;
-  display: flex;
-  flex-direction: column;
-  padding-left: .5rem;
-}
-
-.window main .form * {
-  width: 100%;
-}
-
-.window main .form label {
-  font-size: .8rem;
-  color: var(--text-secondary);
-}
-
-.window main .form input {
-  border-bottom: 1px solid var(--border-color);
-  padding: .5rem .5rem .5rem 0;
-  margin-bottom: 1rem;
-}
-
-.window main .form textarea {
-  border: 1px solid var(--border-color);
-  line-height: 1.5rem;
-  margin-top: .5rem;
-  height: 3.1rem;
-  padding: 0 .25rem;
-}
-
-.window main .form button {
-  background-color: var(--primary-dark);
-  margin-top: 1rem;
-  height: 1.9rem;
-  line-height: 1.9rem;
-  border-radius: .25rem;
-  color: var(--text-primary);
 }
 </style>

@@ -373,12 +373,6 @@ function loadArticles() {
   </div>
   <!-- 右键菜单 -->
   <ContextMenu ref="articleContextMenuRef" />
-  <!-- <div class="context-menu" ref="articleContextMenuRef">
-    <div class="menu-item" data-type="edit">✏️ 编辑</div>
-    <div class="menu-item" data-type="delete">🗑️ 删除</div>
-    <div class="menu-item" data-type="exportTxt">📄 导出为TXT</div>
-    <div class="menu-item" data-type="copy">📋 复制到剪贴板</div>
-  </div> -->
 </template>
 
 <style scoped>

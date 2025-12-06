@@ -40,6 +40,7 @@ export interface Book extends Time {
   description: string
   /** 封面图片ID */
   coverId: string
+  // 修改书籍元数据，不更新最后 modifiedTime
 }
 
 /** 自定义实体属性 */

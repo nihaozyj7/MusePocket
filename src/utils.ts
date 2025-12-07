@@ -1,17 +1,6 @@
 import { customAlphabet } from "nanoid"
 import { useSettingStore } from "./stores/SettingStore"
 
-let _uid: () => string
-if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-  _uid = () => crypto.randomUUID()
-} else {
-  _uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = Math.random() * 16 | 0
-    const v = c === 'x' ? r : (r & 0x3 | 0x8)
-    return v.toString(16)
-  })
-}
-
 /** 生成一个唯一的 UUID v4 */
 export const uid = customAlphabet('023456789ABCDEFGHIKLMNOPQRSTUVWXYZ', 10)
 
@@ -117,7 +106,7 @@ export function countNonWhitespace(text: string): number {
 }
 
 /**
- * 在当前光标位置插入文本，同时支持换行
+ * 在当前光标位置插入文本（按换行符拆分为独立p标签，避免p嵌套）
  * @param text 要插入的文本，换行用 \n 表示
  */
 export function insertText(text: string) {
@@ -125,51 +114,75 @@ export function insertText(text: string) {
   if (!sel || sel.rangeCount === 0) return
 
   const range = sel.getRangeAt(0)
-  range.deleteContents()
+  // 修复：先将commonAncestorContainer转为Element（处理文本节点等非元素节点）
+  let container: Node = range.commonAncestorContainer
+  // 如果是文本节点/注释节点等，取其父元素
+  const targetElement = container.nodeType === Node.ELEMENT_NODE
+    ? (container as Element)
+    : container.parentElement
 
-  // 将换行符转成 <br> 并创建 DOM 片段
-  const lines = text.split('\n')
-  const frag = document.createDocumentFragment()
+  // 找到光标所在的顶层p标签（确保不处理嵌套p）
+  const targetP = targetElement?.closest('p')
+  if (!targetP) return
 
-  lines.forEach((line, i) => {
-    frag.appendChild(document.createTextNode(line))
-    if (i < lines.length - 1) {
-      frag.appendChild(document.createElement('br'))
+  // 1. 拆分原p标签中光标前后的内容
+  // 光标前内容
+  const beforeRange = document.createRange()
+  beforeRange.setStart(targetP, 0)
+  beforeRange.setEnd(range.startContainer, range.startOffset)
+  const beforeContent = beforeRange.cloneContents()
+
+  // 光标后内容
+  const afterRange = document.createRange()
+  afterRange.setStart(range.endContainer, range.endOffset)
+  afterRange.setEnd(targetP, targetP.childNodes.length)
+  const afterContent = afterRange.cloneContents()
+
+  // 2. 清空原p标签内容，准备重新填充
+  targetP.innerHTML = ''
+
+  // 3. 拆分插入文本为行数组
+  const insertLines = text.split('\n')
+
+  // 4. 处理第一行：原p标签填充「光标前内容 + 插入文本第一行」
+  targetP.appendChild(beforeContent)
+  if (insertLines.length > 0 && insertLines[0]) {
+    targetP.appendChild(document.createTextNode(insertLines[0]))
+  }
+
+  // 记录最后插入的p标签（初始为原p）
+  let lastInsertedP = targetP
+
+  // 5. 处理中间行（除第一行和最后一行的插入行）
+  const middleLines = insertLines.length > 2 ? insertLines.slice(1, -1) : []
+  for (const line of middleLines) {
+    const newP = document.createElement('p')
+    newP.appendChild(document.createTextNode(line))
+    lastInsertedP.after(newP) // 插入到最后一个p后方
+    lastInsertedP = newP
+  }
+
+  // 6. 处理最后一行：「插入文本最后一行 + 光标后内容」
+  if (insertLines.length >= 2) {
+    // 有换行时，最后一行单独创建p并拼接光标后内容
+    const lastLine = insertLines[insertLines.length - 1]
+    const lastP = document.createElement('p')
+    if (lastLine) {
+      lastP.appendChild(document.createTextNode(lastLine))
     }
-  })
+    lastP.appendChild(afterContent)
+    lastInsertedP.after(lastP)
+    lastInsertedP = lastP
+  } else {
+    // 无换行时，光标后内容直接追加到原p
+    targetP.appendChild(afterContent)
+    lastInsertedP = targetP
+  }
 
-  range.insertNode(frag)
-
-  // 光标移动到插入内容末尾
-  range.collapse(false)
-  sel.removeAllRanges()
-  sel.addRange(range)
-}
-
-/**
- * 在当前光标位置插入指定的 DOM 节点
- * @param node 要插入的 DOM 节点
- */
-export function insertNodeAtCursor(node: Node) {
-  const sel = window.getSelection()
-  if (!sel || sel.rangeCount === 0) return
-
-  const range = sel.getRangeAt(0)
-
-  // 删除当前选区内容
-  range.deleteContents()
-
-  // 插入节点
-  // 使用 cloneNode 避免原节点被移动导致不可复用
-  const inserted = node.cloneNode(true)
-  range.insertNode(inserted)
-
-  // 将光标移动到插入节点之后
-  // 创建一个新的 Range 并放置在插入节点之后
+  // 7. 将光标移动到最后一个p标签的内容末尾
   const newRange = document.createRange()
-  newRange.setStartAfter(inserted)
-  newRange.collapse(true)
-
+  newRange.selectNodeContents(lastInsertedP)
+  newRange.collapse(false) // 折叠到选区末尾（光标移到最后）
   sel.removeAllRanges()
   sel.addRange(newRange)
 }
@@ -207,7 +220,7 @@ export function newlineToP(
 ): string {
   const { collapse = false } = options
 
-  if (text === '') return `<p>${ZERO_WIDTH_CHAR}</p>`
+  if (text === '') return `<p> </p>`
 
   // 按换行符分割文本为多行
   let lines = text.split(/\r?\n/)
@@ -253,7 +266,6 @@ export function trimAndReduceNewlines(text: string, options: { removeBlankLines?
   // 移除所有零宽字符（\u200B）——在处理前统一清除，简化后续逻辑
   let cleanedText = text.replace(/\u200B/g, '')
 
-  // 按行拆分
   let lines = cleanedText.split(/\r?\n/)
 
   // 移除空白行：只包含空格、制表符、全角空格、&nbsp; 等不可见字符的行
@@ -261,7 +273,7 @@ export function trimAndReduceNewlines(text: string, options: { removeBlankLines?
     lines = lines.filter(line => {
       // 移除所有空白字符（包括全角空格 \u3000）和 &nbsp;
       // 注意：此时已无 \u200B，但为健壮性也可保留通用空白处理
-      const stripped = line.replace(/[\s\u3000]+/g, '').replace(/&nbsp;/g, '')
+      const stripped = line.replace(/[\s]+/g, '').replace(/&nbsp;/g, '')
       return stripped !== ''
     })
   }
@@ -269,8 +281,6 @@ export function trimAndReduceNewlines(text: string, options: { removeBlankLines?
   // 折叠多余空行：多个连续空行 → 保留一个
   const collapsed: string[] = []
   let prevEmpty = false
-
-
 
   for (const line of lines) {
     const isEmpty = line.trim() === ''
@@ -405,28 +415,6 @@ export function scrollCaretDownIntoView(
   container.scrollBy({ top: scrollOffset, behavior })
 }
 
-/** 在用户的鼠标出弹出一个提示框，鼠标移除后自动消失 */
-export function showTipsPopup(message: string, timeout = 1500) {
-  const popup = document.createElement('div')
-  popup.className = 'popup'
-  popup.textContent = message
-  document.body.appendChild(popup)
-
-  const handleMouseMove = (e: MouseEvent) => {
-    popup.style.left = `${e.clientX + 30}px`
-    popup.style.top = `${e.clientY}px`
-  }
-
-  // 鼠标移动时更新位置
-  document.addEventListener('mousemove', handleMouseMove)
-
-  // 定时移除提示框并解绑事件
-  setTimeout(() => {
-    popup.remove()
-    document.removeEventListener('mousemove', handleMouseMove)
-  }, timeout)
-}
-
 
 /**
  * 导出文本文件（txt）
@@ -498,30 +486,8 @@ export function getQueue<T>(maxLength: number): Queue<T> {
   return new Queue<T>(maxLength)
 }
 
-
 /**
- * 判断光标是否在一个 span[data-key] 内部
- */
-function getCurrentVariableSpan(): HTMLSpanElement | null {
-  const sel = window.getSelection()
-  if (!sel || !sel.rangeCount) return null
-
-  let node: Node | null = sel.focusNode
-  while (node) {
-    if (
-      node.nodeType === Node.ELEMENT_NODE &&
-      (node as HTMLElement).tagName === 'SPAN' &&
-      (node as HTMLElement).hasAttribute('data-key')
-    ) {
-      return node as HTMLSpanElement
-    }
-    node = node.parentNode
-  }
-  return null
-}
-
-/**
- * 插入带 data-key 的 span，并在右边添加零宽度字符
+ * 插入带 data-key 的 span
  */
 export function insertVariableSpan(key: string) {
   const sel = window.getSelection()
@@ -529,84 +495,22 @@ export function insertVariableSpan(key: string) {
 
   const range = sel.getRangeAt(0)
   const span = document.createElement('span')
+  span.setAttribute('contenteditable', 'false')
   span.dataset.key = key
   span.textContent = key
 
-  // 右边加零宽度字符，防止光标被挡住
-  const zwsp = document.createTextNode('\u200B')
-
   const frag = document.createDocumentFragment()
   frag.appendChild(span)
-  frag.appendChild(zwsp)
 
-  range.deleteContents()
   range.insertNode(frag)
 
-  // 光标移动到零宽度字符后面
-  range.setStartAfter(zwsp)
+  range.setStartAfter(span)
   range.collapse(true)
   sel.removeAllRanges()
   sel.addRange(range)
 }
 
-/**
- * 仅退化正在被编辑的 span，而不是所有 span
- */
-export function degradeInvalidVariableSpans(root: HTMLElement) {
-  const editingSpan = getCurrentVariableSpan()
-  if (!editingSpan) return
 
-  const originalKey = editingSpan.getAttribute('data-key') ?? ''
-  let currentText = editingSpan.textContent ?? ''
-
-  // 去掉右侧零宽度字符
-  if (currentText.endsWith('\u200B')) currentText = currentText.slice(0, -1)
-
-  if (originalKey !== currentText) {
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) return
-
-    const range = selection.getRangeAt(0)
-    let offsetInSpan = 0
-
-    // 计算光标在 span 内的偏移
-    if (range.startContainer === editingSpan) {
-      offsetInSpan = range.startOffset
-    } else if (editingSpan.contains(range.startContainer)) {
-      // 光标在 span 的子节点里
-      const walker = document.createTreeWalker(editingSpan, NodeFilter.SHOW_TEXT)
-      let node: Node | null
-      let count = 0
-      while ((node = walker.nextNode())) {
-        if (node === range.startContainer) {
-          offsetInSpan = count + range.startOffset
-          break
-        }
-        count += node.textContent?.length ?? 0
-      }
-    } else {
-      // 光标在 span 外（例如在 zwsp 后面），将光标放在文本末尾
-      offsetInSpan = currentText.length
-    }
-
-    const textNode = document.createTextNode(currentText)
-    editingSpan.replaceWith(textNode)
-
-    // 恢复光标
-    const newRange = document.createRange()
-    const newSelection = window.getSelection()
-    newRange.setStart(textNode, Math.min(offsetInSpan, textNode.length))
-    newRange.collapse(true)
-    newSelection?.removeAllRanges()
-    newSelection?.addRange(newRange)
-  }
-}
-
-/**
- * 提取编辑器内容，保留 span[data-key]，其他文本压缩空格和换行
- * @param container 编辑器容器
- * @returns 清理后的文本+span组合
- */
 /**
  * 提取编辑器内容，保留 span[data-key]，其他文本压缩空格和换行
  * @param container 编辑器容器

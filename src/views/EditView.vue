@@ -9,7 +9,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, exportTxt, getCleanedEditorContent, showTipsPopup, trimAndReduceNewlines } from '@/utils.ts'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines } from '@/utils.ts'
 import { onMounted, ref } from 'vue'
 
 /** 文章列表 */

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, degradeInvalidVariableSpans, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines, ZERO_WIDTH_CHAR } from '@/utils'
+import { countNonWhitespace, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines, ZERO_WIDTH_CHAR } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -146,7 +146,6 @@ function handelBodyInput(e: InputEvent) {
   }
   handleJumpToMiddle()
   emitUpdate()
-  degradeInvalidVariableSpans(bodyRef.value)
 }
 
 /** 文本粘贴时 */

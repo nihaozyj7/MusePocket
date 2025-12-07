@@ -132,4 +132,6 @@ button:hover {
 
 [data-key] {
   color: red;
+  cursor: pointer;
+  user-select: text;
 }

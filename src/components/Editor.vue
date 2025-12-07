@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines, ZERO_WIDTH_CHAR } from '@/utils'
+import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -144,6 +144,16 @@ function handelBodyInput(e: InputEvent) {
   if (bodyRef.value.innerText === "") {
     resetBody()
   }
+
+  const isCursorValid = isCursorInValidNode(bodyRef.value)
+
+  if (!isCursorValid) {
+    // 仅光标位置不合法时才执行修正（性能优化核心）
+    const cursorPos = saveCursorPosition() // 保存光标
+    fixEditorDomLight(bodyRef.value, cursorPos) // 精准修正
+    restoreCursorPosition(cursorPos) // 恢复光标
+  }
+
   handleJumpToMiddle()
   emitUpdate()
 }
@@ -159,25 +169,16 @@ function handleBodyPaste(e: ClipboardEvent) {
 
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
-  if (bodyRef.value.innerText === ZERO_WIDTH_CHAR) {
+  if (bodyRef.value.innerText === ' ') {
     if (e.key === 'Backspace' || e.key === 'Delete') return e.preventDefault()
   }
 
   if (e.key === 'Delete') {
 
   } else if (e.key === 'Backspace') {
-    const sel = window.getSelection()
 
-    if (!sel.isCollapsed) return
-
-    const range = sel.getRangeAt(0)
-    const text = range.startContainer.textContent?.slice(0, range.startOffset)
-    const match = text.match(/[\u200B]+$/)
-    const count = match ? match[0].length : 0
-
-    if (count == 0) return
   } else if (e.ctrlKey && e.key === 'i') {
-    insertVariableSpan('学生成绩dsadasd表')
+    insertVariableSpan('学生成绩表')
   }
 }
 

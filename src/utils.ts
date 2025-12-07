@@ -204,8 +204,6 @@ export function deleteBackward() {
   range.deleteContents()
 }
 
-/** 零宽字符 */
-export const ZERO_WIDTH_CHAR = '\u200B'
 
 /**
  * 将字符串按行转换为 <p> 段落
@@ -220,7 +218,7 @@ export function newlineToP(
 ): string {
   const { collapse = false } = options
 
-  if (text === '') return `<p> </p>`
+  if (text === '') return '<p>&nbsp;</p>'
 
   // 按换行符分割文本为多行
   let lines = text.split(/\r?\n/)
@@ -232,7 +230,6 @@ export function newlineToP(
 
     for (const line of lines) {
       const isEmpty = line.trim() === ''
-
       // 如果当前行为空，并且前一行也是空，则跳过
       if (isEmpty && prevEmpty) continue
 
@@ -243,9 +240,8 @@ export function newlineToP(
     lines = result
   }
 
-  // 将每一行转换为 <p>XXX</p>
   const html = lines
-    .map(line => `<p>${line === '' ? ZERO_WIDTH_CHAR : line}</p>`)
+    .map(line => `<p>${line === '' ? ' ' : line}</p>`)
     .join('')
 
   return html
@@ -559,4 +555,191 @@ export function getCleanedEditorContent(container: HTMLElement): string {
     .join('\n')
 
   return content
+}
+
+
+// @/utils/editorDomFix.ts
+/**
+ * 保存光标位置（轻量操作）
+ * @returns 光标位置信息
+ */
+export function saveCursorPosition(): { container: Node; offset: number; activeP: HTMLParagraphElement | null } | null {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return null
+  const range = sel.getRangeAt(0)
+
+  // 找到光标所在的顶层P节点
+  let container = range.commonAncestorContainer
+  const targetElement = container.nodeType === Node.ELEMENT_NODE
+    ? (container as Element)
+    : container.parentElement
+  const activeP = targetElement?.closest('p')
+
+  return {
+    container: range.startContainer,
+    offset: range.startOffset,
+    activeP: activeP as HTMLParagraphElement | null
+  }
+}
+
+/**
+ * 恢复光标位置
+ * @param pos 光标位置信息
+ */
+export function restoreCursorPosition(pos: ReturnType<typeof saveCursorPosition>) {
+  if (!pos) return
+  const sel = window.getSelection()
+  if (!sel || !pos.activeP) return
+
+  try {
+    const range = document.createRange()
+    // 仅恢复光标到合法的P节点内
+    if (pos.activeP.contains(pos.container)) {
+      range.setStart(pos.container, pos.offset)
+    } else {
+      range.selectNodeContents(pos.activeP)
+      range.collapse(false)
+    }
+    range.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(range)
+  } catch (e) {
+    const range = document.createRange()
+    range.selectNodeContents(pos.activeP)
+    range.collapse(false)
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
+}
+
+/**
+ * 轻量检测：光标是否在合法节点内（P节点内，无非法子节点）
+ * @param bodyRef 编辑区DOM
+ * @returns 是否合法
+ */
+export function isCursorInValidNode(bodyRef: HTMLDivElement | undefined): boolean {
+  if (!bodyRef) return false
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return false
+
+  const range = sel.getRangeAt(0)
+  let container = range.commonAncestorContainer
+  const targetElement = container.nodeType === Node.ELEMENT_NODE
+    ? (container as Element)
+    : container.parentElement
+
+  // 1. 检测光标是否在顶层P内
+  const activeP = targetElement?.closest('p')
+  if (!activeP || !bodyRef.contains(activeP) || bodyRef !== activeP.parentElement) {
+    return false
+  }
+
+  // 2. 检测光标附近是否有非法节点（仅检查P的直接子节点）
+  const invalidNodes = Array.from(activeP.childNodes).filter(node => {
+    if (node.nodeType === Node.TEXT_NODE) return false
+    const el = node as Element
+    return el.tagName !== 'SPAN' // 仅允许SPAN和文本节点
+  })
+
+  return invalidNodes.length === 0
+}
+
+/**
+ * 精准修正：仅修正光标所在P节点 + 顶层非法节点（输入时轻量调用）
+ * @param bodyRef 编辑区DOM
+ * @param cursorPos 光标位置（可选，不传则自动保存/恢复）
+ */
+export function fixEditorDomLight(bodyRef: HTMLDivElement | undefined, cursorPos?: ReturnType<typeof saveCursorPosition>) {
+  if (!bodyRef) return
+  const needRestore = !cursorPos
+  const pos = cursorPos || saveCursorPosition()
+  if (!pos || !pos.activeP) return
+
+  // 标记是否需要修改DOM（减少重排重绘）
+  let needRepaint = false
+
+  // 1. 修正顶层节点：仅body的直接子节点为P
+  Array.from(bodyRef.childNodes).forEach(node => {
+    if (node.nodeName === 'P') return
+    needRepaint = true
+
+    // 文本节点/其他节点 → 包裹成P
+    const text = node.textContent?.trim() || ''
+    const newP = document.createElement('p')
+    newP.textContent = text || '&nbsp;'
+    bodyRef.replaceChild(newP, node)
+  })
+
+  // 2. 修正光标所在P节点（仅清理非法子节点）
+  Array.from(pos.activeP.childNodes).forEach(child => {
+    if (child.nodeType === Node.TEXT_NODE) return
+    const el = child as Element
+    if (el.tagName === 'SPAN') return
+
+    needRepaint = true
+    // 非法节点 → 提取文本替换
+    const textNode = document.createTextNode(child.textContent || '')
+    pos.activeP!.replaceChild(textNode, child)
+  })
+
+  // 3. 合并P内零散文本节点 + 处理空P
+  if (needRepaint) {
+    pos.activeP.normalize()
+    if (pos.activeP.textContent?.trim() === '') {
+      pos.activeP.innerHTML = '&nbsp;'
+    }
+  }
+
+  // 4. 兜底：确保至少有一个P节点
+  if (bodyRef.children.length === 0) {
+    const emptyP = document.createElement('p')
+    emptyP.innerHTML = '&nbsp;'
+    bodyRef.appendChild(emptyP)
+  }
+
+  // 5. 恢复光标（若未传入光标位置）
+  if (needRestore && pos) {
+    restoreCursorPosition(pos)
+  }
+}
+
+/**
+ * 全量修正：失焦时统一修正所有节点（兜底）
+ * @param bodyRef 编辑区DOM
+ */
+export function fixEditorDomFull(bodyRef: HTMLDivElement | undefined) {
+  if (!bodyRef) return
+
+  // 1. 强制所有顶层节点为P
+  Array.from(bodyRef.childNodes).forEach(node => {
+    if (node.nodeName === 'P') return
+
+    const text = node.textContent?.trim() || ''
+    const newP = document.createElement('p')
+    newP.textContent = text || '&nbsp;'
+    bodyRef.replaceChild(newP, node)
+  })
+
+  // 2. 修正所有P节点内的非法子节点
+  Array.from(bodyRef.querySelectorAll('p')).forEach(p => {
+    Array.from(p.childNodes).forEach(child => {
+      if (child.nodeType === Node.TEXT_NODE) return
+      const el = child as Element
+      if (el.tagName === 'SPAN') return
+
+      const textNode = document.createTextNode(child.textContent || '')
+      p.replaceChild(textNode, child)
+    })
+    p.normalize()
+    if (p.textContent?.trim() === '') {
+      p.innerHTML = '&nbsp;'
+    }
+  })
+
+  // 3. 兜底：确保至少有一个P
+  if (bodyRef.children.length === 0) {
+    const emptyP = document.createElement('p')
+    emptyP.innerHTML = '&nbsp;'
+    bodyRef.appendChild(emptyP)
+  }
 }

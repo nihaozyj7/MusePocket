@@ -288,16 +288,20 @@ function loadBooks() {
   border-radius: .25rem;
   padding: .5rem;
   margin: 0 .25rem .25rem .25rem;
+  align-items: center;
 }
 
 .book-item.checked {
   background-color: var(--background-tertiary);
 }
 
+.book-item.checked>div>:nth-child(1) {
+  color: var(--text-primary);
+}
+
 .book-item .cover {
-  height: 8rem;
-  width: 5rem;
-  border-radius: .25rem;
+  height: 6.4rem;
+  width: 4rem;
   margin-right: .5rem;
   overflow: hidden;
 }
@@ -305,6 +309,7 @@ function loadBooks() {
 .book-item .cover img {
   height: 100%;
   width: 100%;
+  border-radius: .25rem;
 }
 
 .bookInfo {
@@ -314,22 +319,26 @@ function loadBooks() {
   width: 0;
 }
 
-.book-item>div>:nth-child(1) {
+.book-item:hover>div>:nth-child(1) {
   color: var(--text-primary);
+}
+
+.book-item>div>:nth-child(1) {
   margin-top: .25rem;
+  transition: color .2s;
 }
 
 .book-item>div>:nth-child(2) {
   font-size: .8rem;
-  margin-top: .6rem;
+  margin-top: .5rem;
 }
 
 .book-item>div>:nth-child(3) {
   font-size: .8rem;
-  margin-top: .6rem;
+  margin-top: .5rem;
   line-height: 1.4rem;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;

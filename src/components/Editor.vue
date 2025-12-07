@@ -155,14 +155,9 @@ function scrollToCursor() {
 /** 文本输入时 */
 function handleBodyInput(e: InputEvent) {
   statusBarRight.value.saveState = '等待保存'
-
-  // 如果内容为空，重置为段落结构
   if (bodyRef.value.innerText === "") {
     resetBody()
   }
-
-  // 确保段落结构
-  ensureParagraphStructure();
 
   const isCursorValid = isCursorInValidNode(bodyRef.value)
 
@@ -177,38 +172,11 @@ function handleBodyInput(e: InputEvent) {
   emitUpdate()
 }
 
-/** 确保编辑器内容的段落结构 */
-function ensureParagraphStructure() {
-  // 获取所有直接子元素
-  const children = Array.from(bodyRef.value.children);
-
-  // 检查是否所有直接子元素都是P标签
-  for (const child of children) {
-    if (child.tagName !== 'P') {
-      // 将非P标签的元素包装到P标签中
-      const p = document.createElement('p');
-      p.innerHTML = child.textContent || '';
-
-      // 替换原元素
-      child.parentNode?.replaceChild(p, child);
-    }
-  }
-
-  // 如果没有子元素且内容不为空，创建一个P标签
-  if (bodyRef.value.children.length === 0 && bodyRef.value.innerHTML.trim() !== '') {
-    const text = bodyRef.value.textContent || '';
-    if (text.trim() !== '') {
-      bodyRef.value.innerHTML = `<p>${text}</p>`;
-    }
-  }
-}
-
 /** 文本粘贴时 */
 function handleBodyPaste(e: ClipboardEvent) {
   e.preventDefault()
   const text = e.clipboardData.getData('text/plain')
   insertText(text)
-  ensureParagraphStructure()
   scrollToCursor()
   _emitUpdate()
 }
@@ -230,7 +198,6 @@ function handleBodyKeydown(e: KeyboardEvent) {
 
 function resetBody(text: string = "") {
   bodyRef.value.innerHTML = newlineToP(text, { collapse: true })
-  ensureParagraphStructure()
 }
 
 function focus() {
@@ -272,7 +239,7 @@ defineExpose({
       <div class="edit scroll-container">
         <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
-        <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef.value)"></canvas>
+        <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>
     </div>
     <!-- 状态栏 -->

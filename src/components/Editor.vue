@@ -10,10 +10,10 @@ interface Props {
   updateThrottleTime: number
 }
 
-const propts = defineProps<Props>()
+const props = defineProps<Props>()
 
 /** 新旧内容 */
-const hostory = getQueue<string>(3)
+const history = getQueue<string>(3)
 /** 编辑区容器 */
 const bodyRef = ref<HTMLDivElement>()
 /** 绘制背景的画布 */
@@ -56,11 +56,11 @@ onUnmounted(() => {
 
 const _emitUpdate = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
-  hostory.push(text)
-  emit('update:articleBody', hostory.items[0], hostory.items[1])
+  history.push(text)
+  emit('update:articleBody', history.items[0], history.items[1])
 }
 /** 节流 触发内容更新事件 */
-const emitUpdate = throttle(_emitUpdate, propts.updateThrottleTime)
+const emitUpdate = throttle(_emitUpdate, props.updateThrottleTime)
 
 /** 光标跳转到中间 节流 */
 const handleJumpToMiddle = throttle(() => {
@@ -70,15 +70,22 @@ const handleJumpToMiddle = throttle(() => {
 /** 监听编辑区大小变化 */
 const handleResize = throttle((entries) => {
   const lineHeight = getActualLineHeight(bodyRef.value)
-  const center = bodyRef.value.parentElement.clientHeight / 2
+  const containerHeight = bodyRef.value.parentElement.clientHeight
+  const center = containerHeight / 2
   const overflow = center - (center % lineHeight)
-  bodyBackgroundRef.value.width = entries[0].contentRect.width
-  bodyBackgroundRef.value.height = entries[0].contentRect.height + overflow
+  const newWidth = entries[0].contentRect.width
+  const newHeight = entries[0].contentRect.height + overflow
 
-  drawBackground(lineHeight, {
-    width: bodyBackgroundRef.value.width,
-    height: bodyBackgroundRef.value.height
-  })
+  // 只在尺寸真正改变时才更新canvas
+  if (bodyBackgroundRef.value.width !== newWidth || bodyBackgroundRef.value.height !== newHeight) {
+    bodyBackgroundRef.value.width = newWidth
+    bodyBackgroundRef.value.height = newHeight
+
+    drawBackground(lineHeight, {
+      width: newWidth,
+      height: newHeight
+    })
+  }
 }, 100)
 
 /** 绘制背景 */
@@ -86,22 +93,29 @@ const drawBackground = (function () {
   let ctx: CanvasRenderingContext2D
 
   return (lineHeight: number, rect: { width: number, height: number }) => {
-    if (!ctx) ctx = bodyBackgroundRef.value.getContext('2d')
+    if (!ctx) {
+      ctx = bodyBackgroundRef.value.getContext('2d')
+    }
 
+    // 清除画布
     ctx.clearRect(0, 0, rect.width, rect.height)
 
+    // 设置画笔样式 - 使用CSS变量以支持主题
     ctx.setLineDash([5, 5])
     ctx.lineDashOffset = 0
 
-    ctx.strokeStyle = '#49505780'
+    // 使用CSS变量获取主题颜色
+    const computedStyle = getComputedStyle(document.documentElement)
+    const theme = computedStyle.getPropertyValue('--theme')
+    ctx.strokeStyle = theme?.trim() === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(73, 80, 87, 0.5)'
     ctx.lineWidth = 1
+
     ctx.beginPath()
 
-    const x = rect.width - (rect.width % 5)
-
-    for (let y = lineHeight; y <= rect.height + lineHeight; y += lineHeight) {
+    // 只绘制可见的线，提高性能
+    for (let y = Math.ceil(lineHeight); y <= rect.height; y += lineHeight) {
       ctx.moveTo(0, y)
-      ctx.lineTo(x, y)
+      ctx.lineTo(rect.width, y)
     }
 
     ctx.stroke()
@@ -139,11 +153,16 @@ function scrollToCursor() {
 }
 
 /** 文本输入时 */
-function handelBodyInput(e: InputEvent) {
+function handleBodyInput(e: InputEvent) {
   statusBarRight.value.saveState = '等待保存'
+
+  // 如果内容为空，重置为段落结构
   if (bodyRef.value.innerText === "") {
     resetBody()
   }
+
+  // 确保段落结构
+  ensureParagraphStructure();
 
   const isCursorValid = isCursorInValidNode(bodyRef.value)
 
@@ -158,11 +177,38 @@ function handelBodyInput(e: InputEvent) {
   emitUpdate()
 }
 
+/** 确保编辑器内容的段落结构 */
+function ensureParagraphStructure() {
+  // 获取所有直接子元素
+  const children = Array.from(bodyRef.value.children);
+
+  // 检查是否所有直接子元素都是P标签
+  for (const child of children) {
+    if (child.tagName !== 'P') {
+      // 将非P标签的元素包装到P标签中
+      const p = document.createElement('p');
+      p.innerHTML = child.textContent || '';
+
+      // 替换原元素
+      child.parentNode?.replaceChild(p, child);
+    }
+  }
+
+  // 如果没有子元素且内容不为空，创建一个P标签
+  if (bodyRef.value.children.length === 0 && bodyRef.value.innerHTML.trim() !== '') {
+    const text = bodyRef.value.textContent || '';
+    if (text.trim() !== '') {
+      bodyRef.value.innerHTML = `<p>${text}</p>`;
+    }
+  }
+}
+
 /** 文本粘贴时 */
 function handleBodyPaste(e: ClipboardEvent) {
   e.preventDefault()
   const text = e.clipboardData.getData('text/plain')
   insertText(text)
+  ensureParagraphStructure()
   scrollToCursor()
   _emitUpdate()
 }
@@ -184,6 +230,7 @@ function handleBodyKeydown(e: KeyboardEvent) {
 
 function resetBody(text: string = "") {
   bodyRef.value.innerHTML = newlineToP(text, { collapse: true })
+  ensureParagraphStructure()
 }
 
 function focus() {
@@ -223,9 +270,9 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handelBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown"></div>
+        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
-        <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
+        <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef.value)"></canvas>
       </div>
     </div>
     <!-- 状态栏 -->

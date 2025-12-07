@@ -4,6 +4,7 @@ import { useSettingStore } from '@/stores/SettingStore'
 import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
+import EntityHover from './EntityHover.vue'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */
@@ -18,6 +19,8 @@ const history = getQueue<string>(3)
 const bodyRef = ref<HTMLDivElement>()
 /** 绘制背景的画布 */
 const bodyBackgroundRef = ref<HTMLCanvasElement>()
+/** 实体悬浮层 */
+const entityHoverRef = ref<InstanceType<typeof EntityHover>>()
 
 /** 配置项 */
 const settingStore = useSettingStore()
@@ -181,6 +184,51 @@ function handleBodyPaste(e: ClipboardEvent) {
   _emitUpdate()
 }
 
+/** 鼠标进入时 */
+function handleBodyMouseover(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (target.dataset.key) {
+    document.addEventListener('mousemove', handleBodyMousemove)
+    console.log(target.dataset.key + '进入')
+    entityHoverRef.value.show({
+      id: '',
+      type: '人物',
+      title: '陈兰玫',
+      bookId: '',
+      description: '陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫',
+      attrs: [],
+      imgID: '/public/cover/default.png',
+      deletedTime: 0,
+      modifiedTime: 0,
+      createdTime: 0
+
+    }, e.clientX + 20, e.clientY)
+  }
+}
+
+/** 鼠标移动时 */
+function handleBodyMousemove(e: MouseEvent) {
+  entityHoverRef.value.move(e.clientX + 20, e.clientY)
+}
+
+/** 鼠标移出时 */
+function handleBodyMouseout(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (target.dataset.key) {
+    console.log(target.dataset.key + '移出')
+    entityHoverRef.value.hide()
+    document.removeEventListener('mousemove', handleBodyMousemove)
+  }
+}
+
+/** 鼠标单击时 */
+function handleBodyClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (target.dataset.key) {
+    console.log(target.dataset.key)
+  }
+}
+
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
   if (bodyRef.value.innerText === ' ') {
@@ -237,7 +285,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown"></div>
+        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>
@@ -256,6 +304,7 @@ defineExpose({
     </div>
   </main>
 
+  <EntityHover ref="entityHoverRef" />
 </template>
 
 <style scoped>

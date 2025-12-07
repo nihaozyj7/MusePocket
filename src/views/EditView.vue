@@ -9,7 +9,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, exportTxt, showTipsPopup, trimAndReduceNewlines } from '@/utils.ts'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, showTipsPopup, trimAndReduceNewlines } from '@/utils.ts'
 import { onMounted, ref } from 'vue'
 
 /** 文章列表 */
@@ -91,7 +91,7 @@ function handleSaveArticleTitle(title: string) {
 }
 
 function saveArticle(text: string, oldText?: string) {
-  articleBody.value.content = trimAndReduceNewlines(text, { removeBlankLines: true })
+  articleBody.value.content = getCleanedEditorContent(editorRef.value.getBody())
   selectedArticleStore.selectedArticle.modifiedTime = Date.now()
   selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
   selectedBookStore.selectedBook.modifiedTime = Date.now()

@@ -602,3 +602,57 @@ export function degradeInvalidVariableSpans(root: HTMLElement) {
   }
 }
 
+/**
+ * 提取编辑器内容，保留 span[data-key]，其他文本压缩空格和换行
+ * @param container 编辑器容器
+ * @returns 清理后的文本+span组合
+ */
+/**
+ * 提取编辑器内容，保留 span[data-key]，其他文本压缩空格和换行
+ * @param container 编辑器容器
+ * @returns 清理后的文本+span组合
+ */
+export function getCleanedEditorContent(container: HTMLElement): string {
+  const result: string[] = []
+
+  /**
+   * 遍历节点
+   * @param node 当前节点
+   */
+  function traverse(node: Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // 压缩空格，去掉首尾换行
+      const text = node.textContent?.replace(/\s+/g, ' ') ?? ''
+      if (text.trim()) {
+        result.push(text)
+      }
+    } else if (
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node as HTMLElement).tagName === 'SPAN' &&
+      (node as HTMLElement).hasAttribute('data-key')
+    ) {
+      // span[data-key] 保留外层 HTML，不遍历子节点
+      result.push((node as HTMLElement).outerHTML)
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 对其他元素递归
+      node.childNodes.forEach(traverse)
+      // 如果是块级元素，末尾加换行
+      const display = window.getComputedStyle(node as Element).display
+      if (display === 'block') {
+        result.push('\n')
+      }
+    }
+  }
+
+  container.childNodes.forEach(traverse)
+
+  // 最后统一处理多行和首尾空格
+  let content = result.join('')
+  content = content
+    .split(/\n+/)        // 多个换行压缩为一个
+    .map(line => line.trim()) // 每行去掉首尾空格
+    .filter(line => line.length > 0) // 去掉空行
+    .join('\n')
+
+  return content
+}

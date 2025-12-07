@@ -160,7 +160,6 @@ function handleBodyPaste(e: ClipboardEvent) {
 
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
-
   if (bodyRef.value.innerText === ZERO_WIDTH_CHAR) {
     if (e.key === 'Backspace' || e.key === 'Delete') return e.preventDefault()
   }
@@ -168,9 +167,18 @@ function handleBodyKeydown(e: KeyboardEvent) {
   if (e.key === 'Delete') {
 
   } else if (e.key === 'Backspace') {
+    const sel = window.getSelection()
 
+    if (!sel.isCollapsed) return
+
+    const range = sel.getRangeAt(0)
+    const text = range.startContainer.textContent?.slice(0, range.startOffset)
+    const match = text.match(/[\u200B]+$/)
+    const count = match ? match[0].length : 0
+
+    if (count == 0) return
   } else if (e.ctrlKey && e.key === 'i') {
-    insertVariableSpan('学生成绩表')
+    insertVariableSpan('学生成绩dsadasd表')
   }
 }
 
@@ -198,7 +206,9 @@ defineExpose({
   /** 获取Body内容 */
   getBodyText,
   /** 设置保存状态说明 */
-  setSaveState
+  setSaveState,
+  /** 获取编辑区REF */
+  getBody() { return bodyRef.value },
 })
 
 </script>

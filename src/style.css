@@ -130,10 +130,10 @@ button:hover {
   font-size: .8rem !important;
 }
 
-[data-key] {
-  color: red;
+[data-entity-id] {
   cursor: pointer;
-  user-select: textgit;
+  user-select: text;
+  text-decoration: underline;
 }
 
 .tu-container .edit .body>p {

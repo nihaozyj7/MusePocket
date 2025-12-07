@@ -193,25 +193,9 @@ function loadBooks() {
           <button style="margin-left: 1rem;">⚙️ 设置</button>
         </div>
       </header>
-      <div class="bottom">
-        <main>
+      <main>
 
-        </main>
-        <div class="stats-panel">
-          <div class="vertical-text">
-            总字数：<span id="wordCount">12</span>
-          </div>
-          <div class="vertical-text">
-            今日码字：<span id="todaySWords">123456789</span>
-          </div>
-          <div class="vertical-text">
-            七日均字：<span id="todaySWords">04564</span>
-          </div>
-          <div class="vertical-text">
-            当月：<span id="todaySWords">123456789</span>
-          </div>
-        </div>
-      </div>
+      </main>
     </div>
   </div>
 
@@ -348,6 +332,8 @@ function loadBooks() {
 
 .right-container {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .toolbar {
@@ -388,35 +374,5 @@ function loadBooks() {
 
 main {
   flex: 1;
-}
-
-.stats-panel {
-  width: 2rem;
-  padding-top: 1rem;
-  border-left: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow-y: hidden;
-}
-
-.vertical-text {
-  writing-mode: vertical-rl;
-  text-orientation: sideways;
-  white-space: nowrap;
-  display: inline-block;
-  font-size: .8rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  line-height: 2rem;
-  user-select: text;
-}
-
-.vertical-text:first-child {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
 }
 </style>

@@ -228,7 +228,7 @@ function loadArticles() {
       </header>
       <div class="bottom">
         <!-- 编辑器 -->
-        <Editor :updateThrottleTime="1000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
+        <Editor :updateThrottleTime="2000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
         <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text">
           <button title="" class="selected">✍️ 取名工具</button>

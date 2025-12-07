@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
+import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 import EntityHover from './EntityHover.vue'
@@ -27,6 +27,9 @@ const settingStore = useSettingStore()
 /** 当前文章 */
 const selectedArticleStore = useSelectedArticleStore()
 
+/** 样式管理 */
+let styleManager: StyleManager
+
 /** 观察者实例 */
 let observer: ResizeObserver
 
@@ -50,11 +53,19 @@ onMounted(() => {
   observer.observe(bodyRef.value)
   document.addEventListener('selectionchange', handleTextSelect)
   settingStore.setEditorWidthMode()
+
+  if (settingStore.enableParagraphSpacing) {
+    styleManager = new StyleManager()
+    styleManager.add('.body>p', {
+      'margin-bottom': settingStore.lineHeight + 'rem'
+    })
+  }
 })
 
 onUnmounted(() => {
-  observer?.disconnect()
+  observer.disconnect()
   document.removeEventListener('selectionchange', handleTextSelect)
+  styleManager?.clear()
 })
 
 const _emitUpdate = () => {
@@ -184,38 +195,45 @@ function handleBodyPaste(e: ClipboardEvent) {
   _emitUpdate()
 }
 
+/** 控制鼠标悬浮多少秒才会显示悬浮层 */
+let hoverTimer: number
+/** 是否已经显示悬浮窗 */
+let isHovering = false
+
 /** 鼠标进入时 */
 function handleBodyMouseover(e: MouseEvent) {
   const target = e.target as HTMLElement
-  if (target.dataset.key) {
-    document.addEventListener('mousemove', handleBodyMousemove)
-    console.log(target.dataset.key + '进入')
-    entityHoverRef.value.show({
-      id: '',
-      type: '人物',
-      title: '陈兰玫',
-      bookId: '',
-      description: '陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫',
-      attrs: [],
-      imgID: '/public/cover/default.png',
-      deletedTime: 0,
-      modifiedTime: 0,
-      createdTime: 0
+  if (target.dataset.entityId) {
+    setTimeout(() => {
+      isHovering = true
+      document.addEventListener('mousemove', handleBodyMousemove)
+      entityHoverRef.value.show({
+        id: '',
+        type: '人物',
+        title: '陈兰玫',
+        bookId: '',
+        description: '陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫',
+        attrs: [],
+        imgID: '/public/cover/default.png',
+        deletedTime: 0,
+        modifiedTime: 0,
+        createdTime: 0
 
-    }, e.clientX + 20, e.clientY)
+      }, e.clientX + 20, e.clientY)
+    })
   }
 }
 
 /** 鼠标移动时 */
 function handleBodyMousemove(e: MouseEvent) {
-  entityHoverRef.value.move(e.clientX + 20, e.clientY)
+  isHovering && entityHoverRef.value.move(e.clientX + 20, e.clientY)
 }
 
 /** 鼠标移出时 */
 function handleBodyMouseout(e: MouseEvent) {
   const target = e.target as HTMLElement
   if (target.dataset.key) {
-    console.log(target.dataset.key + '移出')
+    isHovering = false
     entityHoverRef.value.hide()
     document.removeEventListener('mousemove', handleBodyMousemove)
   }
@@ -239,8 +257,13 @@ function handleBodyKeydown(e: KeyboardEvent) {
 
   } else if (e.key === 'Backspace') {
 
-  } else if (e.ctrlKey && e.key === 'i') {
-    insertVariableSpan('学生成绩表')
+  } else if (e.ctrlKey) {
+    if (e.key === 'i') {
+      insertVariableSpan('学生成绩表', '学生成绩表')
+    } else if (e.key === 's') {
+      _emitUpdate()
+      e.preventDefault()
+    }
   }
 }
 

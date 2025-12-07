@@ -12,6 +12,8 @@ export const useSettingStore = defineStore('setting', {
     editorWidthMode: ref<'auto' | 'fixed'>('auto'),
     /** 行高 */
     lineHeight: 2.5,
+    /** 启用段间距 */
+    enableParagraphSpacing: true,
   }),
 
   getters: {

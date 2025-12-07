@@ -483,17 +483,17 @@ export function getQueue<T>(maxLength: number): Queue<T> {
 }
 
 /**
- * 插入带 data-key 的 span
+ * 插入带 data-entity-id 的 span
  */
-export function insertVariableSpan(key: string) {
+export function insertVariableSpan(id: string, title: string) {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return
 
   const range = sel.getRangeAt(0)
   const span = document.createElement('span')
   span.setAttribute('contenteditable', 'false')
-  span.dataset.key = key
-  span.textContent = key
+  span.dataset.entityId = id
+  span.textContent = title
 
   const frag = document.createDocumentFragment()
   frag.appendChild(span)
@@ -739,5 +739,224 @@ export function fixEditorDomFull(bodyRef: HTMLDivElement | undefined) {
   if (bodyRef.children.length === 0) {
     const emptyP = document.createElement('p')
     bodyRef.appendChild(emptyP)
+  }
+}
+
+
+/**
+ * 一个可维护、可更新、可移除 CSS 规则的轻量级样式管理器。
+ * 所有规则合并到单一 style 标签中，且每个 selector 永远只有一个 CSSStyleRule。
+ * 删除与更新规则基于精确索引而非字符串匹配，保证稳定可靠。
+ */
+export class StyleManager {
+  /** 管理器内部使用的 style 标签 */
+  private styleElement: HTMLStyleElement
+
+  /**
+   * 保存 selector 与其对应的 rule 信息：
+   * index: CSSRule 在 styleSheet 中的索引
+   * declarations: 属性声明表，key 为 "margin-bottom" 形式，value 为字符串值
+   */
+  private rules: Map<
+    string,
+    {
+      index: number
+      declarations: Map<string, string>
+    }
+  >
+
+  /**
+   * 创建或复用 data-style-manager 的 style 标签
+   */
+  constructor() {
+    this.styleElement =
+      document.querySelector<HTMLStyleElement>('style[data-style-manager="true"]') ||
+      (() => {
+        const style = document.createElement('style')
+        style.setAttribute('data-style-manager', 'true')
+        style.type = 'text/css'
+        document.head.appendChild(style)
+        return style
+      })()
+
+    this.rules = new Map()
+  }
+
+  /**
+   * 添加规则（若 selector 已存在，则合并属性并更新 rule，而不是新增多个规则块）
+   * @param selector - CSS 选择器，如 "body > p"
+   * @param styles - 样式对象或 CSS 字符串
+   * @returns 是否插入或更新成功
+   */
+  add(selector: string, styles: Record<string, string> | string): boolean {
+    if (!selector || !styles) return false
+
+    const parsed = this.parseStyles(styles)
+
+    // 已存在规则 → 合并后更新
+    if (this.rules.has(selector)) {
+      const info = this.rules.get(selector)!
+      parsed.forEach((value, prop) => {
+        info.declarations.set(prop, value)
+      })
+      return this.updateCssRule(selector)
+    }
+
+    // 不存在 → 创建新的 rule
+    const declString = [...parsed.entries()]
+      .map(([prop, value]) => `${prop}: ${value}`)
+      .join('; ')
+
+    const sheet = this.styleElement.sheet
+    try {
+      const index = sheet.insertRule(`${selector} { ${declString} }`, sheet.cssRules.length)
+      this.rules.set(selector, {
+        index,
+        declarations: parsed
+      })
+      return true
+    } catch (e) {
+      console.error('添加 CSS 规则失败:', e)
+      return false
+    }
+  }
+
+  /**
+   * 移除整个选择器（基于存储的 index 精确删除）
+   * @param selector - 要移除的 CSS 选择器
+   * @returns 是否成功删除
+   */
+  remove(selector: string): boolean {
+    if (!selector || !this.rules.has(selector)) return false
+
+    const info = this.rules.get(selector)!
+    try {
+      this.styleElement.sheet.deleteRule(info.index)
+    } catch (e) {
+      console.error('删除 CSS 规则失败:', e)
+      return false
+    }
+
+    this.rules.delete(selector)
+    this.reindexRules()
+    return true
+  }
+
+  /**
+   * 移除某条属性（仅修改 rule，不删除整个 block）
+   * @param selector - CSS 选择器
+   * @param property - 属性名，如 marginBottom
+   * @returns 是否成功移除
+   */
+  removeProperty(selector: string, property: string): boolean {
+    if (!selector || !property || !this.rules.has(selector)) return false
+
+    const info = this.rules.get(selector)!
+    const kebab = this.camelToKebab(property)
+
+    if (!info.declarations.has(kebab)) return false
+
+    info.declarations.delete(kebab)
+    return this.updateCssRule(selector)
+  }
+
+  /**
+ * 清空所有已注册的样式规则
+ * 删除全部 CSSStyleRule，并重置内部状态
+ */
+  clear(): void {
+    const sheet = this.styleElement.sheet
+
+    // 从后往前删除，避免索引错乱
+    for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+      sheet.deleteRule(i)
+    }
+
+    // 清空内存记录
+    this.rules.clear()
+  }
+
+  /**
+   * 获取所有规则（调试用）
+   */
+  getRules() {
+    return this.rules
+  }
+
+  /**
+   * 关键函数：基于内存中的 declarations 重写对应 CSSStyleRule
+   * 不创建新的 rule，不依赖 cssText 解析，保证稳定一致
+   * @private
+   */
+  private updateCssRule(selector: string): boolean {
+    const info = this.rules.get(selector)
+    if (!info) return false
+
+    const sheet = this.styleElement.sheet
+    const rule = sheet.cssRules[info.index] as CSSStyleRule
+
+    const cssText = [...info.declarations.entries()]
+      .map(([prop, value]) => `${prop}: ${value}`)
+      .join('; ')
+
+    try {
+      // 重写整个声明块
+      rule.style.cssText = cssText
+      return true
+    } catch (e) {
+      console.error('更新 CSS 规则失败:', e)
+      return false
+    }
+  }
+
+  /**
+   * 在删除 rule 后需要重新计算所有 selector 的 index，以保持准确性
+   * @private
+   */
+  private reindexRules() {
+    const sheet = this.styleElement.sheet
+    for (const [selector, info] of this.rules.entries()) {
+      for (let i = 0; i < sheet.cssRules.length; i++) {
+        const rule = sheet.cssRules[i] as CSSStyleRule
+        if (rule.selectorText === selector) {
+          info.index = i
+          break
+        }
+      }
+    }
+  }
+
+  /**
+   * 解析 styles 为 Map 形式，可统一管理
+   * @private
+   */
+  private parseStyles(styles: Record<string, string> | string): Map<string, string> {
+    const map = new Map<string, string>()
+
+    if (typeof styles === 'string') {
+      styles.split(';').forEach(s => {
+        const part = s.trim()
+        if (!part) return
+        const [prop, value] = part.split(':')
+        if (prop && value) {
+          map.set(prop.trim().toLowerCase(), value.trim())
+        }
+      })
+      return map
+    }
+
+    Object.entries(styles).forEach(([prop, value]) => {
+      map.set(this.camelToKebab(prop), value)
+    })
+
+    return map
+  }
+
+  /**
+   * 将 camelCase 转为 kebab-case
+   * @private
+   */
+  private camelToKebab(input: string): string {
+    return input.replace(/([A-Z])/g, '-$1').toLowerCase()
   }
 }

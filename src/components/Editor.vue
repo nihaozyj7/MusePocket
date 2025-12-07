@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, getActualLineHeight, getQueue, htmlToElement, insertNodeAtCursor, insertText, insertZeroWidthChar, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines } from '@/utils'
+import { countNonWhitespace, degradeInvalidVariableSpans, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, moveCaretToEndAndScrollToBottom, newlineToP, scrollCaretDownIntoView, scrollCaretIntoView, trimAndReduceNewlines, ZERO_WIDTH_CHAR } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -140,13 +140,13 @@ function scrollToCursor() {
 
 /** 文本输入时 */
 function handelBodyInput(e: InputEvent) {
-  const target = e.target as HTMLDivElement
   statusBarRight.value.saveState = '等待保存'
-  if (bodyRef.value.innerText === '') {
-    insertZeroWidthChar()
+  if (bodyRef.value.innerText === "") {
+    resetBody()
   }
   handleJumpToMiddle()
   emitUpdate()
+  degradeInvalidVariableSpans(bodyRef.value)
 }
 
 /** 文本粘贴时 */
@@ -160,33 +160,45 @@ function handleBodyPaste(e: ClipboardEvent) {
 
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
+
+  if (bodyRef.value.innerText === ZERO_WIDTH_CHAR) {
+    if (e.key === 'Backspace' || e.key === 'Delete') return e.preventDefault()
+  }
+
   if (e.key === 'Delete') {
 
   } else if (e.key === 'Backspace') {
 
   } else if (e.ctrlKey && e.key === 'i') {
-    const html = htmlToElement('<i class="color: red;">变量</i>')
-    insertNodeAtCursor(html)
+    insertVariableSpan('学生成绩表')
   }
+}
+
+function resetBody(text: string = "") {
+  bodyRef.value.innerHTML = newlineToP(text, { collapse: true })
+}
+
+function focus() {
+  bodyRef.value.focus()
+}
+
+function getBodyText() {
+  return bodyRef.value.innerText
+}
+
+function setSaveState(state: string) {
+  statusBarRight.value.saveState = state
 }
 
 defineExpose({
   /** 重置编辑区内容 */
-  resetBody(text: string) {
-    bodyRef.value.innerHTML = newlineToP(text, { collapse: true })
-  },
+  resetBody,
   /** 获取焦点 */
-  focus() {
-    bodyRef.value.focus()
-  },
+  focus,
   /** 获取Body内容 */
-  getBodyText() {
-    return bodyRef.value.innerText
-  },
+  getBodyText,
   /** 设置保存状态说明 */
-  setSaveState(state: string) {
-    statusBarRight.value.saveState = state
-  }
+  setSaveState
 })
 
 </script>
@@ -272,11 +284,9 @@ main {
   min-height: calc(50%);
 }
 
-
-.tu-container .edit .body * {
+.tu-container .edit .body {
   color: var(--text-primary);
 }
-
 
 .tu-container .edit canvas {
   position: absolute;

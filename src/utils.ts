@@ -174,12 +174,6 @@ export function insertNodeAtCursor(node: Node) {
   sel.addRange(newRange)
 }
 
-/** 在当前光标处插入一个0宽字符 */
-export function insertZeroWidthChar() {
-  insertNodeAtCursor(htmlToElement('<p>' + ZERO_WIDTH_CHAR + '</p>'))
-}
-
-
 /** 删除光标前的字符 */
 export function deleteBackward() {
   const sel = window.getSelection()
@@ -503,3 +497,108 @@ class Queue<T> {
 export function getQueue<T>(maxLength: number): Queue<T> {
   return new Queue<T>(maxLength)
 }
+
+
+/**
+ * 判断光标是否在一个 span[data-key] 内部
+ */
+function getCurrentVariableSpan(): HTMLSpanElement | null {
+  const sel = window.getSelection()
+  if (!sel || !sel.rangeCount) return null
+
+  let node: Node | null = sel.focusNode
+  while (node) {
+    if (
+      node.nodeType === Node.ELEMENT_NODE &&
+      (node as HTMLElement).tagName === 'SPAN' &&
+      (node as HTMLElement).hasAttribute('data-key')
+    ) {
+      return node as HTMLSpanElement
+    }
+    node = node.parentNode
+  }
+  return null
+}
+
+/**
+ * 插入带 data-key 的 span，并在右边添加零宽度字符
+ */
+export function insertVariableSpan(key: string) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  const span = document.createElement('span')
+  span.dataset.key = key
+  span.textContent = key
+
+  // 右边加零宽度字符，防止光标被挡住
+  const zwsp = document.createTextNode('\u200B')
+
+  const frag = document.createDocumentFragment()
+  frag.appendChild(span)
+  frag.appendChild(zwsp)
+
+  range.deleteContents()
+  range.insertNode(frag)
+
+  // 光标移动到零宽度字符后面
+  range.setStartAfter(zwsp)
+  range.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(range)
+}
+
+/**
+ * 仅退化正在被编辑的 span，而不是所有 span
+ */
+export function degradeInvalidVariableSpans(root: HTMLElement) {
+  const editingSpan = getCurrentVariableSpan()
+  if (!editingSpan) return
+
+  const originalKey = editingSpan.getAttribute('data-key') ?? ''
+  let currentText = editingSpan.textContent ?? ''
+
+  // 去掉右侧零宽度字符
+  if (currentText.endsWith('\u200B')) currentText = currentText.slice(0, -1)
+
+  if (originalKey !== currentText) {
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const range = selection.getRangeAt(0)
+    let offsetInSpan = 0
+
+    // 计算光标在 span 内的偏移
+    if (range.startContainer === editingSpan) {
+      offsetInSpan = range.startOffset
+    } else if (editingSpan.contains(range.startContainer)) {
+      // 光标在 span 的子节点里
+      const walker = document.createTreeWalker(editingSpan, NodeFilter.SHOW_TEXT)
+      let node: Node | null
+      let count = 0
+      while ((node = walker.nextNode())) {
+        if (node === range.startContainer) {
+          offsetInSpan = count + range.startOffset
+          break
+        }
+        count += node.textContent?.length ?? 0
+      }
+    } else {
+      // 光标在 span 外（例如在 zwsp 后面），将光标放在文本末尾
+      offsetInSpan = currentText.length
+    }
+
+    const textNode = document.createTextNode(currentText)
+    editingSpan.replaceWith(textNode)
+
+    // 恢复光标
+    const newRange = document.createRange()
+    const newSelection = window.getSelection()
+    newRange.setStart(textNode, Math.min(offsetInSpan, textNode.length))
+    newRange.collapse(true)
+    newSelection?.removeAllRanges()
+    newSelection?.addRange(newRange)
+  }
+}
+

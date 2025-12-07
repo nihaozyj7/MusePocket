@@ -129,3 +129,7 @@ button:hover {
 .notyf__message {
   font-size: .8rem !important;
 }
+
+[data-key] {
+  color: red;
+}

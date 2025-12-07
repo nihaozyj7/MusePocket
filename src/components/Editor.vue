@@ -302,14 +302,9 @@ main {
   position: relative;
   z-index: 2;
   line-height: 2.5rem;
-  color: var(--text-primary);
   text-indent: 2em;
   white-space: pre-line;
   min-height: calc(50%);
-}
-
-.tu-container .edit .body {
-  color: var(--text-primary);
 }
 
 .tu-container .edit canvas {

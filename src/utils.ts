@@ -218,7 +218,7 @@ export function newlineToP(
 ): string {
   const { collapse = false } = options
 
-  if (text === '') return '<p>&nbsp;</p>'
+  if (text === '') return '<p></p>'
 
   // 按换行符分割文本为多行
   let lines = text.split(/\r?\n/)
@@ -666,7 +666,7 @@ export function fixEditorDomLight(bodyRef: HTMLDivElement | undefined, cursorPos
     // 文本节点/其他节点 → 包裹成P
     const text = node.textContent?.trim() || ''
     const newP = document.createElement('p')
-    newP.textContent = text || '&nbsp;'
+    newP.textContent = text || ''
     bodyRef.replaceChild(newP, node)
   })
 
@@ -686,14 +686,14 @@ export function fixEditorDomLight(bodyRef: HTMLDivElement | undefined, cursorPos
   if (needRepaint) {
     pos.activeP.normalize()
     if (pos.activeP.textContent?.trim() === '') {
-      pos.activeP.innerHTML = '&nbsp;'
+      pos.activeP.innerHTML = ''
     }
   }
 
   // 4. 兜底：确保至少有一个P节点
   if (bodyRef.children.length === 0) {
     const emptyP = document.createElement('p')
-    emptyP.innerHTML = '&nbsp;'
+    emptyP.innerHTML = ''
     bodyRef.appendChild(emptyP)
   }
 
@@ -716,7 +716,7 @@ export function fixEditorDomFull(bodyRef: HTMLDivElement | undefined) {
 
     const text = node.textContent?.trim() || ''
     const newP = document.createElement('p')
-    newP.textContent = text || '&nbsp;'
+    newP.textContent = text || ''
     bodyRef.replaceChild(newP, node)
   })
 
@@ -732,14 +732,12 @@ export function fixEditorDomFull(bodyRef: HTMLDivElement | undefined) {
     })
     p.normalize()
     if (p.textContent?.trim() === '') {
-      p.innerHTML = '&nbsp;'
     }
   })
 
   // 3. 兜底：确保至少有一个P
   if (bodyRef.children.length === 0) {
     const emptyP = document.createElement('p')
-    emptyP.innerHTML = '&nbsp;'
     bodyRef.appendChild(emptyP)
   }
 }

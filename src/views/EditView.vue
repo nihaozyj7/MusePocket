@@ -271,7 +271,6 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" v-if="selectedArticleStore.v" />
         <!-- 工具窗口 -->
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
-          <!-- 分割线用来调整宽度 -->
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
         </div>

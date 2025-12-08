@@ -3,8 +3,9 @@ import { entitydb } from '@/db'
 import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import type { Entity } from '@/types'
-import { computed, onUpdated, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ContextMenu from './ContextMenu.vue'
+import { $tips } from '@/plugins/notyf'
 
 /** 排序方式 */
 const sortMethod = ['按创建时间升序⬆️', '按创建时间降序⬇️', '按更新时间升序⬆️', '按更新时间降序⬇️', '按名称升序⬆️', '按名称降序⬇️'] as const
@@ -30,6 +31,13 @@ const entitys = ref<Entity[]>([])
 /** 当前书籍 */
 const selectedBook = useSelectedBookStore()
 
+onMounted(() => {
+  entitydb.getBookEntities(selectedBook.v.id).then(res => {
+    entitys.value = res || []
+  }).catch(err => {
+    $tips.error('实体获取失败：' + err.message)
+  })
+})
 
 /** 实体右键菜单项 */
 const entityContextMenuItems = [
@@ -96,12 +104,6 @@ const filteredEntitys = computed(() => {
 
 /** 筛选面板是否已打开 */
 const filterOpen = ref(true)
-
-onUpdated(() => {
-  entitydb.getBookEntities(selectedBook.v.id).then(res => {
-    entitys.value = res || []
-  })
-})
 
 /** 处理排序项目的单击事件 */
 function handleSortItemClick(e: MouseEvent) {

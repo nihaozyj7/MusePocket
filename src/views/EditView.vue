@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ContextMenu from '@/components/ContextMenu.vue'
 import Editor from '@/components/Editor.vue'
-import EntityManager from '@/components/EntityManager.vue'
+import EntityManager from '@/components/entity/EntityManager.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'

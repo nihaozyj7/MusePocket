@@ -4,7 +4,7 @@ import { useSettingStore } from '@/stores/SettingStore'
 import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
-import EntityHover from './EntityHover.vue'
+import EntityHover from './entity/EntityHover.vue'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */

@@ -136,3 +136,15 @@ button:hover {
 .tu-container .edit .body>p::before {
   content: '';
 }
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 可选：隐藏整个控件的调节区域 */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}

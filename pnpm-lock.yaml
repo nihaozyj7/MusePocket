@@ -14,9 +14,6 @@ importers:
       diff:
         specifier: ^8.0.2
         version: 8.0.2
-      diff2html:
-        specifier: ^3.4.52
-        version: 3.4.52
       idb:
         specifier: ^8.0.3
         version: 8.0.3
@@ -473,9 +470,6 @@ packages:
       vue:
         optional: true
 
-  abbrev@1.1.1:
-    resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
-
   alien-signals@3.1.1:
     resolution: {integrity: sha512-ogkIWbVrLwKtHY6oOAXaYkAxP+cTH7V5FZ5+Tm4NZFd8VDZ6uNMDrfzqctTZ42eTMCSR3ne3otpcxmqSnFfPYA==}
 
@@ -491,14 +485,6 @@ packages:
 
   defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
-
-  diff2html@3.4.52:
-    resolution: {integrity: sha512-qhMg8/I3sZ4zm/6R/Kh0xd6qG6Vm86w6M+C9W+DuH1V8ACz+1cgEC8/k0ucjv6AGqZWzHm/8G1gh7IlrUqCMhg==}
-    engines: {node: '>=12'}
-
-  diff@7.0.0:
-    resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
-    engines: {node: '>=0.3.1'}
 
   diff@8.0.2:
     resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
@@ -530,14 +516,6 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  highlight.js@11.9.0:
-    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
-    engines: {node: '>=12.0.0'}
-
-  hogan.js@3.0.2:
-    resolution: {integrity: sha512-RqGs4wavGYJWE07t35JQccByczmNUXQT0E12ZYV1VKYu5UiAU9lsos/yBAcf840+zrUQQxgVduCR5/B8nNtibg==}
-    hasBin: true
-
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
@@ -561,10 +539,6 @@ packages:
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
 
-  mkdirp@0.3.0:
-    resolution: {integrity: sha512-OHsdUcVAQ6pOtg5JYWpCBo9W/GySVuwvP9hueRMW7UqshC0tbfzLv8wjySTPm3tfUZ/21CE9E1pJagOA91Pxew==}
-    deprecated: Legacy versions of mkdirp are no longer supported. Please update to mkdirp 1.x. (Note that the API surface has changed to use Promises in 1.x.)
-
   muggle-string@0.4.1:
     resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
 
@@ -576,10 +550,6 @@ packages:
   nanoid@5.1.6:
     resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
     engines: {node: ^18 || >=20}
-    hasBin: true
-
-  nopt@1.0.10:
-    resolution: {integrity: sha512-NWmpvLSqUrgrAC9HCuxEvb+PSloHpqVu+FqcO4eeF2h5qYRhA7ev6KvelyQAKtegUbC6RypJnlEOhd8vloNKYg==}
     hasBin: true
 
   notyf@3.10.0:
@@ -1031,8 +1001,6 @@ snapshots:
       typescript: 5.9.3
       vue: 3.5.25(typescript@5.9.3)
 
-  abbrev@1.1.1: {}
-
   alien-signals@3.1.1: {}
 
   birpc@2.8.0: {}
@@ -1044,15 +1012,6 @@ snapshots:
   csstype@3.2.3: {}
 
   defu@6.1.4: {}
-
-  diff2html@3.4.52:
-    dependencies:
-      diff: 7.0.0
-      hogan.js: 3.0.2
-    optionalDependencies:
-      highlight.js: 11.9.0
-
-  diff@7.0.0: {}
 
   diff@8.0.2: {}
 
@@ -1096,14 +1055,6 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  highlight.js@11.9.0:
-    optional: true
-
-  hogan.js@3.0.2:
-    dependencies:
-      mkdirp: 0.3.0
-      nopt: 1.0.10
-
   hookable@5.5.3: {}
 
   idb@8.0.3: {}
@@ -1121,17 +1072,11 @@ snapshots:
 
   mitt@3.0.1: {}
 
-  mkdirp@0.3.0: {}
-
   muggle-string@0.4.1: {}
 
   nanoid@3.3.11: {}
 
   nanoid@5.1.6: {}
-
-  nopt@1.0.10:
-    dependencies:
-      abbrev: 1.1.1
 
   notyf@3.10.0: {}
 

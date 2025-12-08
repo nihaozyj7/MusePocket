@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, type PropType } from 'vue'
-import Popup from './Popup.vue'
 import { getDefaultBook } from '@/defaultObjects.ts'
 import type { Book } from '@/types.ts'
 import { getImageBase64ByID } from '@/utils.ts'
+import { ref } from 'vue'
+import Popup from './Popup.vue'
 
 type Type = 'create' | 'edit'
 

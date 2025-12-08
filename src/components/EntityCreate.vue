@@ -3,12 +3,13 @@ import { entitydb } from '@/db'
 import { getDefaultEntity, getDefaultEntityAttr } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
+import { trimAndReduceNewlines } from '@/utils'
 import { ref } from 'vue'
 
 /** 当前所处书籍 */
 const selectedBook = useSelectedBookStore()
 /** 新建实体的载体 */
-const newEntity = ref(getDefaultEntity(selectedBook.selectedBook.id))
+const newEntity = ref(getDefaultEntity(selectedBook.v.id))
 
 function handleTypesClick(e: MouseEvent) {
   const target = e.target as HTMLElement
@@ -22,15 +23,25 @@ function addEntityAttr(e: MouseEvent) {
 }
 
 function saveEntity() {
-  if (!newEntity.value.title) {
+  if (!newEntity.value.title.trim()) {
     return $tips.error('请填写实体名称')
-  } else if (!newEntity.value.type) {
+  } else if (!newEntity.value.type.trim()) {
     return $tips.error('请选择实体类型')
   }
 
-  if (newEntity.value.attrs?.some(attr => !attr.title || !attr.value)) {
+  if (newEntity.value.attrs?.some(attr => !attr.title.trim() || !attr.value.trim())) {
     return $tips.error('自定义属性值和名称必须填写')
   }
+
+
+  if (newEntity.value.attrs) newEntity.value.attrs = newEntity.value.attrs.map(attr => {
+    attr.value = trimAndReduceNewlines(attr.value)
+    attr.title = attr.title.trim()
+    return attr
+  })
+
+  newEntity.value.title = newEntity.value.title.trim()
+  newEntity.value.description = trimAndReduceNewlines(newEntity.value.description)
 
   entitydb.createEntity(newEntity.value).then(res => {
     if (res.success) {
@@ -40,7 +51,7 @@ function saveEntity() {
       console.log(res.message)
     }
   })
-  newEntity.value = getDefaultEntity(selectedBook.selectedBook.id)
+  newEntity.value = getDefaultEntity(selectedBook.v.id)
 }
 
 function deleteEntityAttr(index: number) {

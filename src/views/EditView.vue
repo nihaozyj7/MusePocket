@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ContextMenu from '@/components/ContextMenu.vue'
 import Editor from '@/components/Editor.vue'
-import EntityManager from '@/components/entity/EntityManager.vue'
+import EntityManager from '@/components/EntityManager.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -54,12 +54,12 @@ const contextMenuHanders = {
 
       let index = articles.value.findIndex(article => article.id === id) - 1
       articles.value = articles.value.filter(article => article.id !== id)
-      if (selectedArticleStore.selectedArticle.id !== id) return
+      if (selectedArticleStore.v.id !== id) return
 
       if (articles.value.length === 0) {
         creatreArticle()
       } else {
-        selectedArticleStore.selectedArticle = articles.value[Math.max(0, index)]
+        selectedArticleStore.v = articles.value[Math.max(0, index)]
       }
     })
   },
@@ -93,27 +93,27 @@ function handleArticleContextmenu(e: MouseEvent) {
 }
 
 function handleSaveArticleTitle(title: string) {
-  articledb.updateArticle(selectedArticleStore.selectedArticle).then(res => {
+  articledb.updateArticle(selectedArticleStore.v).then(res => {
     if (!res.success) $tips.error(`更新标题失败, ${res.message}`)
   })
 }
 
 function saveArticle(text: string, oldText?: string) {
   articleBody.value.content = getCleanedEditorContent(editorRef.value.getBody())
-  selectedArticleStore.selectedArticle.modifiedTime = Date.now()
-  selectedArticleStore.selectedArticle.wordCount = countNonWhitespace(text)
-  selectedBookStore.selectedBook.modifiedTime = Date.now()
+  selectedArticleStore.v.modifiedTime = Date.now()
+  selectedArticleStore.v.wordCount = countNonWhitespace(text)
+  selectedBookStore.v.modifiedTime = Date.now()
 
   Promise.all([
-    articledb.updateArticle(selectedArticleStore.selectedArticle, articleBody.value),
-    bookdb.updateBook(selectedBookStore.selectedBook)
+    articledb.updateArticle(selectedArticleStore.v, articleBody.value),
+    bookdb.updateBook(selectedBookStore.v)
   ]).then(results => {
     if (!results.every(result => result.success)) {
       $tips.error('数据储存出现错误' + results.map(result => result.message).join('\n'))
     }
   })
 
-  bookdb.updateBook(selectedBookStore.selectedBook)
+  bookdb.updateBook(selectedBookStore.v)
   editorRef.value.setSaveState('✅ 已保存')
 }
 
@@ -124,25 +124,25 @@ function handleArticleClick(e: MouseEvent) {
   const article = articles.value.find(article => article.id === id)
   if (article) {
     saveArticle(editorRef.value.getBodyText())
-    selectedArticleStore.selectedArticle = article
+    selectedArticleStore.v = article
     openArticle(article)
   } else {
-    selectedArticleStore.selectedArticle = null
+    selectedArticleStore.v = null
   }
 }
 
 function isSelected(article: Article) {
-  return selectedArticleStore.selectedArticle && selectedArticleStore.selectedArticle.id === article.id
+  return selectedArticleStore.v && selectedArticleStore.v.id === article.id
 }
 
 function goHome() {
-  selectedBookStore.selectedBook = null
+  selectedBookStore.v = null
   router.push({ path: '/', replace: true })
 }
 
 function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
-    selectedArticleStore.selectedArticle = article
+    selectedArticleStore.v = article
     articleBody.value = res
 
     // 等待编辑器成功加载后再设置内容
@@ -155,7 +155,7 @@ function openArticle(article: Article) {
 }
 
 function creatreArticle() {
-  const newArticle = getDefaultArticle(selectedBookStore.selectedBook.id, articles.value)
+  const newArticle = getDefaultArticle(selectedBookStore.v.id, articles.value)
   if (!newArticle) return $tips.error('获取默认文章失败')
   articledb.createArticle(newArticle).then(res => {
     if (res.success) {
@@ -168,12 +168,12 @@ function creatreArticle() {
 }
 
 function loadArticles() {
-  articledb.getBookArticles(selectedBookStore.selectedBook.id).then(res => {
+  articledb.getBookArticles(selectedBookStore.v.id).then(res => {
     articles.value = res
     articles.value.sort((a, b) => a.createdTime - b.createdTime)
     // 如何存在历史打开的文章，则查找文章列表中是否存在该文章，如果存在则打开
-    const article = selectedArticleStore.selectedArticle
-      && articles.value.find(article => article.id === selectedArticleStore.selectedArticle.id)
+    const article = selectedArticleStore.v
+      && articles.value.find(article => article.id === selectedArticleStore.v.id)
     // 用户离开页面时存在打开的文章，则恢复
     if (article) openArticle(article)
     // 不存在打开的文章，则打开最后一章
@@ -268,7 +268,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
       </header>
       <div class="bottom">
         <!-- 编辑器 -->
-        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" v-if="selectedArticleStore.selectedArticle" />
+        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" v-if="selectedArticleStore.v" />
         <!-- 工具窗口 -->
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <!-- 分割线用来调整宽度 -->

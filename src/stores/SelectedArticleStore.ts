@@ -5,12 +5,12 @@ export const useSelectedArticleStore = defineStore('selectedArticle', {
   persist: true,
 
   state: () => ({
-    selectedArticle: null as Article | null
+    v: null as Article | null
   }),
 
   actions: {
     isSelectedBook(article: Article) {
-      return this.$state.selectedArticle && article.id === this.$state.selectedArticle.id
+      return this.$state.v && article.id === this.$state.v.id
     }
   }
 })

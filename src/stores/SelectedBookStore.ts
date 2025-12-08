@@ -9,12 +9,12 @@ export const useSelectedBookStore = defineStore('selectedBook', {
   },
 
   state: () => ({
-    selectedBook: null as Book | null
+    v: null as Book | null
   }),
 
   actions: {
     isSelectedBook(book: Book) {
-      return this.$state.selectedBook && book.id === this.$state.selectedBook.id
+      return this.$state.v && book.id === this.$state.v.id
     }
   }
 })

@@ -304,7 +304,7 @@ function loadBooks() {
 }
 
 .book-item:hover>div>:nth-child(1) {
-  color: var(--text-primary);
+  color: var(--primary);
 }
 
 .book-item>div>:nth-child(1) {

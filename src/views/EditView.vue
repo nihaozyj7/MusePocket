@@ -10,7 +10,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines } from '@/utils.ts'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor } from '@/utils.ts'
 import { onMounted, ref } from 'vue'
 
 /** 文章列表 */
@@ -38,7 +38,6 @@ const rutilsTitles = ['✍️ 取名工具', '✅ 校对', '📁 实体管理', 
 onMounted(() => {
   loadArticles()
   settingStore.setEditorWidthMode()
-  console.log(settingStore.drawerWidth)
   rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
 })
 
@@ -146,17 +145,8 @@ function openArticle(article: Article) {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
 
-    // 编辑器依赖文章内容而加载，此时可能还未加载成功，因此需等待
-    let count = 0, timer = setInterval(() => {
-      if ((count += 100) > 5000) {
-        clearInterval(timer)
-        return $tips.error('获取文章正文超时')
-      }
-      if (articleBody.value) {
-        editorRef.value.resetBody(res.content)
-        clearInterval(timer)
-      }
-    }, 100)
+    // 等待编辑器成功加载后再设置内容
+    waitFor(() => editorRef.value, () => editorRef.value.resetBody(res.content))
 
   }).catch(err => {
     $tips.error(`获取文章正文失败, ${err.message}`)

@@ -17,10 +17,10 @@ const tips = new Notyf({
 
 
 export const $tips = {
-  success(message: string, timeout = 1500) {
+  success(message: string, timeout = 2000) {
     tips.success({ message, duration: timeout })
   },
-  error(message: string, timeout = 1500) {
+  error(message: string, timeout = 5000) {
     tips.error({ message, duration: timeout })
   }
 }

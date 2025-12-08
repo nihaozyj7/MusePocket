@@ -51,14 +51,15 @@ textarea {
 }
 
 button {
-  transition: opacity 0.2s ease-in-out;
+  transition: opacity, color 0.2s ease-in-out;
   cursor: pointer;
   background-color: transparent;
   font-size: .8rem;
 }
 
 button:hover {
-  opacity: 0.6;
+  opacity: .8;
+  color: var(--primary);
 }
 
 .flex {

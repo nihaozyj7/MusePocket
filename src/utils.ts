@@ -960,3 +960,117 @@ export class StyleManager {
     return input.replace(/([A-Z])/g, '-$1').toLowerCase()
   }
 }
+
+
+/**
+ * 创建一个方法，循环监听一个指定的条件，条件满足后执行成功回调，超时则执行失败回调（可选）
+ * @param condition - 用于判断是否满足执行条件的函数，返回 任意非 假值即为满足条件
+ * @param callback - 条件满足后执行的成功回调函数
+ * @param errorCallback - 可选的失败回调函数，在超时时触发
+ * @param frequency - 监听的间隔时间（毫秒），默认为 100 毫秒
+ * @param timeout - 超时时间（毫秒），默认为 5000 毫秒。若在超时时间内条件未满足，则停止监听
+ */
+export function waitFor(condition: () => any, callback: () => void, errorCallback?: () => void, frequency = 100, timeout = 5000): void {
+  const startTime = Date.now()
+
+  // 立即执行一次检查，避免不必要的延迟
+  if (condition()) {
+    callback()
+    return
+  }
+
+  // 使用 setInterval 循环检查条件
+  const intervalId = setInterval(() => {
+    // 检查是否超时
+    if (Date.now() - startTime >= timeout) {
+      clearInterval(intervalId)
+      // 如果提供了失败回调，则执行它
+      if (errorCallback) {
+        errorCallback()
+      }
+      return
+    }
+
+    // 检查条件是否满足
+    if (condition()) {
+      clearInterval(intervalId)
+      callback()
+    }
+  }, frequency)
+}
+
+
+/**
+ * 检测当前标签页是否为重复打开
+ * - 如果已有同源标签页存在，则在当前（新）标签页中触发 onDuplicate
+ * - 否则正常继续（并且当前页会响应后续的探测）
+ *
+ * 实现要点：
+ * 1. 为每个标签页生成唯一 senderId，用于区分自身发送的消息（避免处理到自己的消息）。
+ * 2. 将「检测完成」与「作为主（primary/守护）节点」的语义分离：
+ *    - detectionFinished: 表示当前标签页已完成“是否重复”的检测（防止多次触发 onDuplicate）。
+ *    - isPrimary: 表示当前标签页在超时后成为主节点（会继续响应后续 PING）。
+ * 3. 无论是否已成为主节点，都必须对收到的 PING 做出响应（回复 PONG），否则会出现竞态导致新标签页收不到 PONG。
+ *
+ * 注意：
+ * - 需要浏览器支持 BroadcastChannel。
+ * - 如果环境不支持 crypto.randomUUID()，会使用简单的降级随机 id。
+ *
+ * @param onDuplicate 在检测到重复时调用（仅在新标签页中触发）
+ * @param channelName 通信频道名
+ */
+export function preventDuplicateTab(onDuplicate: () => void, channelName = 'app-tab-guard'): void {
+  // 生成当前标签页的唯一 id，用来区分来自自己的消息
+  const senderId = typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function'
+    ? (crypto as any).randomUUID()
+    : `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`
+
+  // 广播通道
+  const channel = new BroadcastChannel(channelName)
+
+  // 标记是否已经完成“是否重复”的检测（防止多次触发 onDuplicate）
+  let detectionFinished = false
+
+  // 标记当前标签页是否为主节点（在超时后会设为 true），但是即使是主节点也必须响应 PING
+  let isPrimary = false
+
+  // 监听来自其他标签页的消息
+  channel.onmessage = (event) => {
+    const data = event.data ?? {}
+    // 忽略自己发出的消息
+    if (data?.senderId === senderId) return
+
+    if (data?.type === 'PING') {
+      // 收到 PING → 无论当前是否已完成检测 / 是否为主，都应回复 PONG，告知“有人在”
+      channel.postMessage({ type: 'PONG', senderId })
+    }
+    else if (data?.type === 'PONG') {
+      // 收到 PONG → 说明已有标签页存在（仅在尚未完成检测时触发 onDuplicate）
+      if (!detectionFinished) {
+        detectionFinished = true
+        // 当前上下文是新打开的标签页（收到其他页的回复），触发重复回调
+        try {
+          onDuplicate()
+        } finally {
+          // 触发一次后可以关闭通道（可选）
+          channel.close()
+        }
+      }
+    }
+  }
+
+  // 向频道广播 PING 探测（携带 senderId，方便别的标签页忽略自己发来的消息）
+  channel.postMessage({ type: 'PING', senderId })
+
+  // 设置超时：如果在 timeoutTime 内没收到 PONG，说明没有其他标签页
+  const timeoutTime = 300
+  setTimeout(() => {
+    if (!detectionFinished) {
+      // 没有收到 PONG → 我是第一个（主节点）
+      detectionFinished = true
+      isPrimary = true
+      // 不关闭通道：主节点后续仍需响应其他标签页的 PING
+    }
+  }, timeoutTime)
+}
+

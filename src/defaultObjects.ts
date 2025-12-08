@@ -1,4 +1,4 @@
-import type { Article, Book } from "./types"
+import type { Article, Book, Entity, EntityAttr } from "./types"
 import { getNewChapterName, uid } from "./utils"
 
 export function getDefaultBook(): Book {
@@ -22,5 +22,29 @@ export function getDefaultArticle(bookId: string, articles: Article[]): Article 
     modifiedTime: Date.now(),
     wordCount: 0,
     deletedTime: 0
+  }
+}
+
+
+export function getDefaultEntity(bookId: string): Entity {
+  return {
+    id: uid(),
+    bookId,
+    createdTime: Date.now(),
+    modifiedTime: Date.now(),
+    title: '',
+    type: '',
+    description: '',
+    imgID: '',
+    deletedTime: 0
+  }
+}
+
+
+export function getDefaultEntityAttr(): EntityAttr {
+  return {
+    title: '',
+    value: '',
+    sortIndex: 0
   }
 }

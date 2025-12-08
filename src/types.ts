@@ -68,7 +68,7 @@ export interface Entity extends Time {
   /** 图片ID */
   imgID: string
   /** 自定义属性列表 */
-  attrs: EntityAttr[]
+  attrs?: EntityAttr[]
 }
 
 /** 获取图片URL */

@@ -389,7 +389,7 @@ export const entitydb = new class {
     ent.deletedTime = ent.deletedTime ?? 0
     try {
       const tx = db.transaction(['entities'], 'readwrite')
-      await tx.objectStore('entities').add({ ...ent })
+      await tx.objectStore('entities').add(JSON.parse(JSON.stringify(ent)))
       await tx.done
       return { success: true }
     } catch (err: any) {

@@ -1,21 +1,21 @@
 /* 浅色主题 */
 :root {
   /* 背景色 */
-  --background-primary: #ffffff;
-  --background-secondary: #f8f9fa;
-  --background-tertiary: #e9ecef;
+  --background-primary: #c5c5af;
+  --background-secondary: #c7c7b6;
+  --background-tertiary: #b9b99f;
 
   /* 文字颜色 */
-  --text-primary: #212529;
-  --text-secondary: #495057;
-  --text-tertiary: #6c757d;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-tertiary: #43515e;
 
   /* 主题色 - 蓝绿色系 */
-  --primary: #20c997;
+  --primary: #005b85;
   /* 主要强调色 */
-  --primary-light: #38d9a9;
+  --primary-light: #239271;
   /* 主题色浅色 */
-  --primary-dark: #199d76;
+  --primary-dark: #009b6c;
   /* 主题色深色 */
 
   /* 辅助色 */
@@ -31,7 +31,7 @@
   /* 信息状态 */
 
   /* 边框和分割线 */
-  --border-color: #dee2e6;
+  --border-color: #8da3a7;
   --divider-color: #e9ecef;
 }
 

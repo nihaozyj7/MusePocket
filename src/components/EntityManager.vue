@@ -39,6 +39,12 @@ function addEntityAttr(e: MouseEvent) {
 }
 
 function saveEntity() {
+  if (!newEntity.value.title) {
+    return $tips.error('请填写实体名称')
+  } else if (!newEntity.value.type) {
+    return $tips.error('请选择实体类型')
+  }
+
   entitydb.createEntity(newEntity.value).then(res => {
     if (res.success) {
       $tips.success(`创建成功`)
@@ -62,19 +68,19 @@ function saveEntity() {
     </header>
 
     <!-- 实体列表 -->
-    <div class="list" v-if="selectedTitle === titles[0]">
+    <div class="list" v-show="selectedTitle === titles[0]">
 
     </div>
     <!-- 导入导出 -->
-    <div class="import-export" v-else-if="selectedTitle === titles[1]">
+    <div class="import-export" v-show="selectedTitle === titles[1]">
 
     </div>
     <!-- AI提取 -->
-    <div class="ai-extract" v-else-if="selectedTitle === titles[2]">
+    <div class="ai-extract" v-show="selectedTitle === titles[2]">
 
     </div>
     <!-- 新建实体 -->
-    <div class="new" v-else-if="selectedTitle === titles[3]">
+    <div class="new" v-show="selectedTitle === titles[3]">
       <div class="form">
         <div class="separator">固有属性</div>
         <div class="form-group">
@@ -176,7 +182,7 @@ header>h4 {
   display: flex;
   overflow-y: auto;
   flex-direction: column;
-  border: 1px solid var(--border-color);
+  /* border: 1px solid var(--border-color); */
 }
 
 .form-group {

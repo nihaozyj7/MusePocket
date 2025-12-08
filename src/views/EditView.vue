@@ -273,7 +273,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <!-- 分割线用来调整宽度 -->
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
-          <EntityManager v-if="settingStore.rutilsTitle === rutilsTitles[2]" />
+          <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
         </div>
         <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">

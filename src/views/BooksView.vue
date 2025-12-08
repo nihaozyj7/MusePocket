@@ -34,7 +34,7 @@ let rightSelectedBook: Book | null = null
 /** 书籍的右键菜单功能 */
 const bookContextMenuHanders = {
   open() {
-    selectedBookStore.selectedBook = rightSelectedBook
+    selectedBookStore.v = rightSelectedBook
     router.push('/Edit')
   },
   delete() {
@@ -42,8 +42,8 @@ const bookContextMenuHanders = {
       if (res.success) {
         $tips.success(`删除成功，回收站中可找回`)
         books.value = books.value.filter(book => book.id !== rightSelectedBook.id)
-        if (selectedBookStore.selectedBook === rightSelectedBook) {
-          clickSelectedBook.value = selectedBookStore.selectedBook = null
+        if (selectedBookStore.v === rightSelectedBook) {
+          clickSelectedBook.value = selectedBookStore.v = null
         }
       } else {
         $tips.error(`删除书籍失败, ${res.message}`)
@@ -70,7 +70,7 @@ function bookIdEqual(book: Book) {
 }
 
 function handleBookDoubleClick(book: Book) {
-  selectedBookStore.selectedBook = book
+  selectedBookStore.v = book
   router.push('/Edit')
 }
 
@@ -96,7 +96,7 @@ function handleClickBookItem(book: Book) {
 
 function goHome() {
   onHome.value = true
-  clickSelectedBook.value = selectedBookStore.selectedBook = null
+  clickSelectedBook.value = selectedBookStore.v = null
 }
 
 function openAddBookDialog() {

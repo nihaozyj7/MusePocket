@@ -2,6 +2,7 @@
 import { entitydb } from '@/db'
 import { getDefaultEntity, getDefaultEntityAttr } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
+import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import { trimAndReduceNewlines } from '@/utils'
 import { ref } from 'vue'
@@ -10,6 +11,8 @@ import { ref } from 'vue'
 const selectedBook = useSelectedBookStore()
 /** 新建实体的载体 */
 const newEntity = ref(getDefaultEntity(selectedBook.v.id))
+/** 实体类型整合列表 */
+const entityTypes = useEntityTypesStore()
 
 function handleTypesClick(e: MouseEvent) {
   const target = e.target as HTMLElement
@@ -46,12 +49,14 @@ function saveEntity() {
   entitydb.createEntity(newEntity.value).then(res => {
     if (res.success) {
       $tips.success(`创建成功`)
+      console.log(newEntity.value)
+      entityTypes.add(newEntity.value.type)
+      newEntity.value = getDefaultEntity(selectedBook.v.id)
     } else {
       $tips.error(`创建失败, ${res.message}`)
       console.log(res.message)
     }
   })
-  newEntity.value = getDefaultEntity(selectedBook.v.id)
 }
 
 function deleteEntityAttr(index: number) {
@@ -71,11 +76,8 @@ function deleteEntityAttr(index: number) {
         <label for="entity-type">类型</label>
         <input type="text" id="entity-type" v-model="newEntity.type" placeholder="输入或在下方选取类型" autocomplete="off"></input>
         <div class="types" @click="handleTypesClick">
-          <span>人物</span>
-          <span>物品</span>
-          <span>事件</span>
-          <span>地点</span>
-          <span>其他</span>
+          <span v-for="type in entityTypes.array">{{ type[0] }}</span>
+          <span v-if="entityTypes.array.every(type => type[0] !== '其他')">其他</span>
         </div>
       </div>
       <div class="form-group">

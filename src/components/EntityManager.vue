@@ -4,10 +4,15 @@ import EntityCreate from './EntityCreate.vue'
 import EntityAiExtract from './EntityAiExtract.vue'
 import EntityImportExport from './EntityImportExport.vue'
 import EntityList from './EntityList.vue'
+import { useEntityTypesStore } from '@/stores/EntityTypesStore'
+import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 
 const titles = ['查看', '导入导出', 'AI提取', '新建'] as const
 
 const selectedTitle = ref<typeof titles[number]>('查看')
+
+// 初始化类型
+useEntityTypesStore().init(useSelectedBookStore().v.id)
 
 onMounted(() => {
 

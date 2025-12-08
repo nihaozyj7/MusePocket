@@ -155,7 +155,7 @@ function handleTextSelect() {
 
 /** 文章标题更改时 */
 function handleSaveArticleTitle() {
-  emit('update:articleTitle', selectedArticleStore.selectedArticle.title)
+  emit('update:articleTitle', selectedArticleStore.v.title)
 }
 
 /** 输入框获取焦点时 移动光标到末尾并滚动到底部 */
@@ -304,7 +304,7 @@ defineExpose({
     <div class="tu-container">
       <!-- 文章标题 -->
       <div class="title">
-        <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.selectedArticle.title" @blur="handleSaveArticleTitle"></input>
+        <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.v.title" @blur="handleSaveArticleTitle"></input>
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
@@ -319,7 +319,7 @@ defineExpose({
         <button @click="() => emit('create:article')">➕ 新章节</button>
         <button @click="settingStore.setEditorWidthMode(!settingStore.isAutoWidthMode)" class="margin-left">{{ settingStore.editorWidthModeText }}列宽</button>
       </div>
-      <div class="center">{{ selectedArticleStore.selectedArticle?.wordCount }}</div>
+      <div class="center">{{ selectedArticleStore.v?.wordCount }}</div>
       <div class="right">
         <span class="margin-right" v-if="statusBarRight.selectedWordCount">(已选择:{{ statusBarRight.selectedWordCount }})</span>
         <span>{{ statusBarRight.saveState }}</span>

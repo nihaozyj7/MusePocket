@@ -1,65 +1,69 @@
-/* 浅色主题 */
+/* 浅色主题（仿VSCode Light Modern） */
 :root {
-  /* 背景色 */
-  --background-primary: #c5c5af;
-  --background-secondary: #c7c7b6;
-  --background-tertiary: #b9b99f;
+  /* 背景色 - 还原VSCode浅色调的柔和灰感 */
+  --background-primary: #f8f9fa;
+  --background-secondary: #e9ecef;
+  --background-tertiary: #dee2e6;
 
-  /* 文字颜色 */
-  --text-primary: #000000;
-  --text-secondary: #333333;
-  --text-tertiary: #43515e;
+  /* 文字颜色 - 匹配VSCode浅色系文字对比度 */
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-tertiary: #6c757d;
 
-  /* 主题色 - 蓝绿色系 */
-  --primary: #005b85;
-  /* 主要强调色 */
-  --primary-light: #239271;
-  /* 主题色浅色 */
-  --primary-dark: #009b6c;
-  /* 主题色深色 */
+  /* 主题色 - 蓝绿色系（贴近VSCode的Teal/Blue主题色） */
+  --primary: #007acc;
+  --primary-light: #3391ff;
+  --primary-dark: #005fa3;
 
-  /* 辅助色 */
+  /* 辅助色 - 对齐VSCode的状态色规范 */
   --secondary: #6c757d;
-  /* 次要强调色（灰色） */
   --success: #28a745;
-  /* 成功状态 */
   --warning: #ffc107;
-  /* 警告状态 */
   --danger: #dc3545;
-  /* 危险/错误状态 */
   --info: #17a2b8;
-  /* 信息状态 */
 
-  /* 边框和分割线 */
-  --border-color: #8da3a7;
+  /* 边框和分割线 - 匹配VSCode的边框质感 */
+  --border-color: #ced4da;
   --divider-color: #e9ecef;
+
+  /* 新增：阴影效果（适配浅色模式） */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* 深色主题 */
+/* 深色主题（仿VSCode Dark Modern） */
 [data-theme="dark"] {
-  /* 背景色 */
-  --background-primary: #121212;
-  --background-secondary: #1e1e1e;
-  --background-tertiary: #2d2d2d;
+  /* 背景色 - 还原VSCode深色模式的深灰层级 */
+  --background-primary: #1e1e1e;
+  --background-secondary: #252526;
+  --background-tertiary: #333333;
 
-  /* 文字颜色 */
+  /* 文字颜色 - 匹配VSCode深色系的文字灰度 */
   --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --text-tertiary: #888888;
+  --text-secondary: #cccccc;
+  --text-tertiary: #999999;
 
-  /* 主题色保持一致，但在深色背景下可能需要微调 */
-  --primary: #20c997;
-  --primary-light: #38d9a9;
-  --primary-dark: #199d76;
+  /* 主题色 - 深色模式下VSCode的高亮色调整 */
+  --primary: #2997ff;
+  --primary-light: #52b0ff;
+  --primary-dark: #007acc;
 
-  /* 辅助色在深色模式下适当调整以保证可读性 */
+  /* 辅助色 - 深色模式下提高辨识度 */
   --secondary: #888888;
-  --success: #4caf50;
-  --warning: #ff9800;
-  --danger: #f44336;
-  --info: #29b6f6;
+  --success: #4cd964;
+  --warning: #ffcc00;
+  --danger: #ff5370;
+  --info: #34d0ff;
 
-  /* 边框和分割线 */
-  --border-color: #333333;
-  --divider-color: #2d2d2d;
+  /* 边框和分割线 - 深色模式的低对比度边框 */
+  --border-color: #383838;
+  --divider-color: #2c2c2c;
+
+  /* 新增：阴影效果（适配深色模式） */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }

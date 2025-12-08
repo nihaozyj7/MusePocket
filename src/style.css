@@ -91,14 +91,6 @@ button:hover {
   padding: .25rem;
 }
 
-
-#atomic-tooltip {
-  position: absolute;
-  width: 200px;
-  height: 100px;
-  background-color: red;
-}
-
 .notyf__ripple {
   background-color: transparent !important;
 }

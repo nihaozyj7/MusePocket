@@ -368,7 +368,7 @@ main {
   position: relative;
   height: 0;
   overflow: hide;
-  padding-right: 5px;
+  padding-right: .25rem;
 }
 
 .tu-container .edit .body {

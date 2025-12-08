@@ -30,7 +30,7 @@ router.beforeEach((to, from, next) => {
     useSelectedBookStore().$reset()
   }
 
-  if (useSelectedBookStore().selectedBook) {
+  if (useSelectedBookStore().v) {
     return to.path === '/edit' ? next() : next('/edit')
   } else if (to.path === '/edit') {
     next('/')

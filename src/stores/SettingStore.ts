@@ -14,6 +14,10 @@ export const useSettingStore = defineStore('setting', {
     lineHeight: 2.5,
     /** 启用段间距 */
     enableParagraphSpacing: true,
+    /** 编辑区右侧工具栏展开的抽屉宽度 */
+    drawerWidth: 500,
+    /** 当前侧边栏中正在显示的工具标题 */
+    rutilsTitle: null as string | null,
   }),
 
   getters: {

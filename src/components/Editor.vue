@@ -3,7 +3,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
 import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import EntityHover from './EntityHover.vue'
 
 interface Props {
@@ -28,14 +28,14 @@ const settingStore = useSettingStore()
 const selectedArticleStore = useSelectedArticleStore()
 
 /** 样式管理 */
-let styleManager: StyleManager
+let styleManager = new StyleManager()
 
 /** 观察者实例 */
 let observer: ResizeObserver
 
 /** 状态栏数据 */
 const statusBarRight = ref({
-  saveState: '已保存',
+  saveState: '✅ 已保存',
   selectedWordCount: 0
 })
 
@@ -55,11 +55,11 @@ onMounted(() => {
   settingStore.setEditorWidthMode()
 
   if (settingStore.enableParagraphSpacing) {
-    styleManager = new StyleManager()
     styleManager.add('.body>p', {
       'margin-bottom': settingStore.lineHeight + 'rem'
     })
   }
+  styleManager.add('.body>p', { minHeight: settingStore.lineHeight + 'rem' })
 })
 
 onUnmounted(() => {
@@ -168,7 +168,7 @@ function scrollToCursor() {
 
 /** 文本输入时 */
 function handleBodyInput(e: InputEvent) {
-  statusBarRight.value.saveState = '等待保存'
+  statusBarRight.value.saveState = '⏳ 等待保存'
   if (bodyRef.value.innerText === "") {
     resetBody()
   }
@@ -344,7 +344,7 @@ main {
   flex: 1;
   flex-direction: column;
   height: 0;
-  padding: 2rem;
+  padding: 2rem .5rem;
 }
 
 .tu-container.narrow-margin {
@@ -360,6 +360,7 @@ main {
 
 .tu-container .title input {
   width: 100%;
+  margin: 0 2rem 0 2.2rem;
 }
 
 .tu-container .edit {
@@ -377,6 +378,7 @@ main {
   text-indent: 2em;
   white-space: pre-line;
   min-height: calc(50%);
+  margin: 0 2rem 0 2.2rem;
 }
 
 .tu-container .edit canvas {
@@ -385,6 +387,7 @@ main {
   top: 0;
   left: 0;
   cursor: text;
+  margin: 0 2rem 0 2.2rem;
 }
 
 main .statusbar {

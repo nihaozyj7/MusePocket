@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ContextMenu from '@/components/ContextMenu.vue'
 import Editor from '@/components/Editor.vue'
+import EntityManager from '@/components/EntityManager.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -24,13 +25,21 @@ const articleBody = ref<ArticleBody | null>(null)
 const articleContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
 /** 文本编辑器 */
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
+/** 侧边工具栏 */
+const rutilsRef = ref<HTMLElement | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
 
+const eneityManagerRef = ref<InstanceType<typeof EntityManager> | null>(null)
+
+/** 右边侧栏工具按钮标题 列表 */
+const rutilsTitles = ['✍️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⌨️ 快捷键']
+
 onMounted(() => {
   loadArticles()
-
   settingStore.setEditorWidthMode()
+  console.log(settingStore.drawerWidth)
+  rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
 })
 
 const contextMenuHanders = {
@@ -106,7 +115,7 @@ function saveArticle(text: string, oldText?: string) {
   })
 
   bookdb.updateBook(selectedBookStore.selectedBook)
-  editorRef.value.setSaveState('已保存')
+  editorRef.value.setSaveState('✅ 已保存')
 }
 
 function handleArticleClick(e: MouseEvent) {
@@ -136,9 +145,22 @@ function openArticle(article: Article) {
   articledb.getArticleBody(article.id).then(res => {
     selectedArticleStore.selectedArticle = article
     articleBody.value = res
-    editorRef.value.resetBody(res.content)
+
+    // 编辑器依赖文章内容而加载，此时可能还未加载成功，因此需等待
+    let count = 0, timer = setInterval(() => {
+      if ((count += 100) > 5000) {
+        clearInterval(timer)
+        return $tips.error('获取文章正文超时')
+      }
+      if (articleBody.value) {
+        editorRef.value.resetBody(res.content)
+        clearInterval(timer)
+      }
+    }, 100)
+
   }).catch(err => {
     $tips.error(`获取文章正文失败, ${err.message}`)
+    console.error(err)
   })
 }
 
@@ -170,6 +192,34 @@ function loadArticles() {
     else creatreArticle()
   }).catch(err => {
     $tips.error(`获取文章列表失败, ${err.message}`)
+  })
+}
+
+function HandleUtilsPanelButtonsClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  const title = target?.innerText
+
+  if (title === settingStore.rutilsTitle) {
+    return settingStore.rutilsTitle = null
+  }
+
+  if (rutilsTitles.includes(title)) {
+    settingStore.rutilsTitle = title
+  }
+}
+
+function handleSplitLineMousedown(e: MouseEvent) {
+  let startX = e.clientX
+  const startWidth = settingStore.drawerWidth
+  const handleMousemove = (me: MouseEvent) => {
+    const deltaX = me.clientX - startX
+    settingStore.drawerWidth = Math.min(600, Math.max(startWidth - deltaX, 300))
+    rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
+  }
+  document.addEventListener('mousemove', handleMousemove)
+  document.addEventListener('mouseup', () => {
+    console.log('鼠标抬起')
+    document.removeEventListener('mousemove', handleMousemove)
   })
 }
 
@@ -228,26 +278,22 @@ function loadArticles() {
       </header>
       <div class="bottom">
         <!-- 编辑器 -->
-        <Editor :updateThrottleTime="2000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
+        <Editor :updateThrottleTime="5000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" v-if="selectedArticleStore.selectedArticle" />
+        <!-- 工具窗口 -->
+        <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
+          <!-- 分割线用来调整宽度 -->
+          <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
+          <EntityManager v-if="settingStore.rutilsTitle === rutilsTitles[2]" />
+        </div>
         <!-- 侧边工具栏 -->
-        <div class="utils-panel vertical-text">
-          <button title="" class="selected">✍️ 取名工具</button>
-          <button title="">✅ 校对</button>
-          <button title="">📁 实体管理</button>
-          <button title="">📝 草稿</button>
-          <button title="">📋 大纲</button>
-          <button title="">⌨️ 快捷键</button>
+        <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">
+          <button :class="{ selected: settingStore.rutilsTitle === rt }" v-for="rt in rutilsTitles">{{ rt }}</button>
         </div>
       </div>
     </div>
   </div>
   <!-- 右键菜单 -->
   <ContextMenu ref="articleContextMenuRef" />
-
-  <!-- 悬浮提示 -->
-  <div id="atomic-tooltip">
-    1111
-  </div>
 </template>
 
 <style scoped>
@@ -491,5 +537,17 @@ function loadArticles() {
   font-size: .8rem;
   cursor: pointer;
   flex: 1;
+}
+
+.utils-drawer {
+  display: flex;
+}
+
+.utils-drawer .split-line {
+  width: .5rem;
+  background-color: var(--background-secondary);
+  cursor: col-resize;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
 }
 </style>

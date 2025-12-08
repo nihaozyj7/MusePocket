@@ -138,8 +138,6 @@ button:hover {
 
 .tu-container .edit .body>p {
   color: var(--text-primary);
-  min-height: 100%;
-  min-height: 2.5rem;
 }
 
 .tu-container .edit .body>p::before {

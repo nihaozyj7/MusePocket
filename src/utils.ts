@@ -508,7 +508,7 @@ export function insertVariableSpan(id: string, title: string) {
 
 
 /**
- * 提取编辑器内容，保留 span[data-key]，其他文本压缩空格和换行
+ * 提取编辑器内容，保留 span[data-entityId]，其他文本压缩空格和换行
  * @param container 编辑器容器
  * @returns 清理后的文本+span组合
  */
@@ -529,7 +529,7 @@ export function getCleanedEditorContent(container: HTMLElement): string {
     } else if (
       node.nodeType === Node.ELEMENT_NODE &&
       (node as HTMLElement).tagName === 'SPAN' &&
-      (node as HTMLElement).hasAttribute('data-key')
+      (node as HTMLElement).hasAttribute('data-entity-id')
     ) {
       // span[data-key] 保留外层 HTML，不遍历子节点
       result.push((node as HTMLElement).outerHTML)
@@ -1074,3 +1074,73 @@ export function preventDuplicateTab(onDuplicate: () => void, channelName = 'app-
   }, timeoutTime)
 }
 
+/**
+ * 监听中文输入法状态，并且提供输入回调和输入完成提交回调
+ */
+export class ChineseInputManager {
+  /** 是否正在输入中文 */
+  private _isChineseInput = false;
+  /** 输入缓存 */
+  private _inputCache = [] as string[]
+  // 缓存绑定后的回调（关键：保证 add/remove 引用一致）
+  private _boundOnInput: (e: HTMLElementEventMap['input']) => void
+  private _boundCompositionStart: () => void
+  private _boundCompositionEnd: () => void
+
+  /**
+   * 创建一个中文输入管理器
+   * @param inputCallback 输入回调
+   * @param commitCallback 输入完成提交回调
+   * @param inputElement 要监听的输入元素
+   */
+  constructor(
+    private _inputCallback: (data: string) => void = () => { },
+    private _commitCallback: (data: string) => void = () => { },
+    private _inputElement: HTMLInputElement | HTMLTextAreaElement | null = null
+  ) {
+    // 1. 提前绑定并缓存函数引用
+    this._boundOnInput = this.onInput.bind(this) as (e: HTMLElementEventMap['input']) => void
+    this._boundCompositionStart = this.onCompositionstart.bind(this)
+    this._boundCompositionEnd = this.onCompositionend.bind(this)
+
+    // 2. 非空校验：避免 null 调用 DOM 方法
+    if (!this._inputElement) return
+
+    // 3. 绑定缓存后的函数
+    this._inputElement.addEventListener('input', this._boundOnInput)
+    this._inputElement.addEventListener('compositionstart', this._boundCompositionStart)
+    this._inputElement.addEventListener('compositionend', this._boundCompositionEnd)
+  }
+
+  destroy() {
+    // 4. 非空校验 + 移除缓存的函数引用
+    if (!this._inputElement) return
+
+    this._inputElement.removeEventListener('input', this._boundOnInput)
+    this._inputElement.removeEventListener('compositionstart', this._boundCompositionStart)
+    this._inputElement.removeEventListener('compositionend', this._boundCompositionEnd)
+
+    // 可选：清空引用，帮助 GC 回收
+    this._inputElement = null
+  }
+
+  onInput(e: InputEvent) {
+    if (this._isChineseInput) {
+      this._inputCache.unshift(e.data)
+      this._inputCallback(this._inputCache.join(''))
+      setTimeout(() => {
+        if (this._isChineseInput === false) {
+          this._commitCallback(e.data)
+        }
+      })
+    }
+  }
+
+  onCompositionstart() {
+    this._isChineseInput = true
+  }
+
+  onCompositionend() {
+    this._isChineseInput = false
+  }
+}

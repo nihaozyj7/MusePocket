@@ -10,6 +10,7 @@ import Popup from './Popup.vue'
 import EntityCreate from './EntityCreate.vue'
 import { event_off, event_on } from '@/eventManager'
 import EntityDetail from './EntityDetail.vue'
+import { useEntityStore } from '@/stores/EntitysStore'
 
 /** 排序方式 */
 const sortMethod = ['按创建时间升序⬆️', '按创建时间降序⬇️', '按更新时间升序⬆️', '按更新时间降序⬇️', '按名称升序⬆️', '按名称降序⬇️'] as const
@@ -34,18 +35,18 @@ const entityTypes = useEntityTypesStore()
 /** 用户右键选中的实体 */
 let selectedEntity = ref<Entity | null>(null)
 /** 所有实体 */
-const entitys = ref<Entity[]>([])
+const entityStore = useEntityStore()
 
 /** 当前书籍 */
 const selectedBook = useSelectedBookStore()
 
 const processEntityCreateEvent = (entity: Entity) => {
-  entitys.value.push(entity)
+  entityStore.v.push(entity)
 }
 
 onMounted(() => {
   entitydb.getBookEntities(selectedBook.v.id).then(res => {
-    entitys.value = res || []
+    entityStore.v = res || []
   }).catch(err => {
     $tips.error('实体获取失败：' + err.message)
   })
@@ -78,7 +79,7 @@ const entityContextMenuItems = [
           console.log(selectedEntity.value?.title)
           entityTypes.remove(selectedEntity.value?.type)
           $tips.success('删除成功')
-          entitys.value = entitys.value.filter(en => en.id !== selectedEntity.value?.id)
+          entityStore.v = entityStore.v.filter(en => en.id !== selectedEntity.value?.id)
         } else {
           $tips.error('删除失败：' + res.message)
         }
@@ -101,7 +102,7 @@ const entityContextMenuItems = [
 
 /** 筛选后的实体列表 */
 const filteredEntitys = computed(() => {
-  let es = entitys.value
+  let es = entityStore.v
 
   if (currentFilterTypes.value.length) {
     es = es.filter(e => currentFilterTypes.value.includes(e.type))
@@ -173,9 +174,7 @@ function handleEntityRightClick(e: MouseEvent) {
   const entityId = entityItem.dataset?.id
   if (!entityId) return
 
-  selectedEntity.value = entitys.value.find(en => en.id === entityId)
-
-  console.log(selectedEntity.value)
+  selectedEntity.value = entityStore.v.find(en => en.id === entityId)
 
   entityContextMenuRef.value?.show(e, entityContextMenuItems)
 }

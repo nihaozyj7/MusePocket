@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import { countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
+import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 import EntityHover from './EntityHover.vue'
+import { getDefaultEntity } from '@/defaultObjects'
+import { useSelectedBookStore } from '@/stores/SelectedBookStore'
+import EntityHoverAutoInsert from './EntityHoverAutoInsert.vue'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */
@@ -21,6 +24,8 @@ const bodyRef = ref<HTMLDivElement>()
 const bodyBackgroundRef = ref<HTMLCanvasElement>()
 /** 实体悬浮层 */
 const entityHoverRef = ref<InstanceType<typeof EntityHover>>()
+/** 自动完成悬浮层 */
+const entityHoverAutoInsertRef = ref<InstanceType<typeof EntityHoverAutoInsert>>()
 
 /** 配置项 */
 const settingStore = useSettingStore()
@@ -32,6 +37,8 @@ let styleManager = new StyleManager()
 
 /** 观察者实例 */
 let observer: ResizeObserver
+
+let chineseInputManager: ChineseInputManager
 
 /** 状态栏数据 */
 const statusBarRight = ref({
@@ -48,6 +55,7 @@ const emit = defineEmits({
   'create:article': () => true
 })
 
+
 onMounted(() => {
   observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
@@ -60,6 +68,12 @@ onMounted(() => {
     })
   }
   styleManager.add('.body>p', { minHeight: settingStore.lineHeight + 'rem' })
+
+  chineseInputManager = new ChineseInputManager(
+    () => { },
+    handleChineseInputMethodSubmission,
+    bodyRef.value as HTMLInputElement
+  )
 })
 
 onUnmounted(() => {
@@ -101,6 +115,10 @@ const handleResize = throttle((entries) => {
     })
   }
 }, 100)
+
+const handleChineseInputMethodSubmission = (data: string) => {
+  console.log('data', data)
+}
 
 /** 绘制背景 */
 const drawBackground = (function () {
@@ -166,6 +184,7 @@ function scrollToCursor() {
   }, 50)
 }
 
+
 /** 文本输入时 */
 function handleBodyInput(e: InputEvent) {
   statusBarRight.value.saveState = '⏳ 等待保存'
@@ -196,15 +215,17 @@ function handleBodyPaste(e: ClipboardEvent) {
 }
 
 /** 控制鼠标悬浮多少秒才会显示悬浮层 */
-let hoverTimer: number
+let hoverTimer = 500
 /** 是否已经显示悬浮窗 */
 let isHovering = false
+/** 鼠标悬浮延迟定时器 */
+let hoverTimerId: number | null = null
 
 /** 鼠标进入时 */
 function handleBodyMouseover(e: MouseEvent) {
   const target = e.target as HTMLElement
   if (target.dataset.entityId) {
-    setTimeout(() => {
+    hoverTimerId = setTimeout(() => {
       isHovering = true
       document.addEventListener('mousemove', handleBodyMousemove)
       entityHoverRef.value.show({
@@ -220,7 +241,7 @@ function handleBodyMouseover(e: MouseEvent) {
         createdTime: 0
 
       }, e.clientX + 20, e.clientY)
-    })
+    }, hoverTimer)
   }
 }
 
@@ -232,7 +253,8 @@ function handleBodyMousemove(e: MouseEvent) {
 /** 鼠标移出时 */
 function handleBodyMouseout(e: MouseEvent) {
   const target = e.target as HTMLElement
-  if (target.dataset.key) {
+  if (target.dataset.entityId) {
+    clearTimeout(hoverTimerId)
     isHovering = false
     entityHoverRef.value.hide()
     document.removeEventListener('mousemove', handleBodyMousemove)
@@ -247,15 +269,61 @@ function handleBodyClick(e: MouseEvent) {
   }
 }
 
+
+let chars = '', ichars = [] as string[]
+
+function getCaretRect(): DOMRect | null {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return null
+
+  const range = sel.getRangeAt(0)
+  if (range.collapsed === false) return null
+
+  const rect = range.getClientRects()[0]
+  return rect || null
+}
+
+/** 处理输入 @ 时弹出实体自动完成列表 */
+function autoComplete(e: InputEvent) {
+
+  if (!e.data) return
+
+  if (e.data === '@') {
+    chars = e.data
+    const { x, y } = getCaretRect()
+    entityHoverAutoInsertRef.value.show(x, y)
+    return
+  }
+
+  if (chars === '') return
+
+  chars += e.data
+
+  const { x, y } = getCaretRect()
+  console.log('xx: ', chars.substring(1))
+  entityHoverAutoInsertRef.value.update(chars.substring(1))
+  entityHoverAutoInsertRef.value.move(x, y)
+}
+
+
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
+
   if (bodyRef.value.innerText === ' ') {
     if (e.key === 'Backspace' || e.key === 'Delete') return e.preventDefault()
   }
 
-  if (e.key === 'Delete') {
+  if (e.key === 'Backspace') {
 
-  } else if (e.key === 'Backspace') {
+    if (chars) {
+      chars = chars.slice(0, -1)
+      const { x, y } = getCaretRect()
+      entityHoverAutoInsertRef.value.update(chars.substring(1))
+      entityHoverAutoInsertRef.value.move(x, y)
+    }
+
+    // 将要删除 @ 时隐藏自动完成列表
+    if (chars === '@') entityHoverAutoInsertRef.value.hide()
 
   } else if (e.ctrlKey) {
     if (e.key === 'i') {
@@ -308,7 +376,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
+        <div class="body" @beforeinput="autoComplete" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>
@@ -325,9 +393,12 @@ defineExpose({
         <span>{{ statusBarRight.saveState }}</span>
       </div>
     </div>
+    <!-- 实体信息浮窗 -->
+    <EntityHover ref="entityHoverRef" />
+    <!-- 自动完成悬浮层 -->
+    <EntityHoverAutoInsert ref="entityHoverAutoInsertRef" />
   </main>
 
-  <EntityHover ref="entityHoverRef" />
 </template>
 
 <style scoped>

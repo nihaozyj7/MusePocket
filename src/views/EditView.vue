@@ -6,6 +6,7 @@ import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
 import router from '@/router.ts'
+import { useEntityStore } from '@/stores/EntitysStore'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
@@ -39,6 +40,7 @@ onMounted(() => {
   loadArticles()
   settingStore.setEditorWidthMode()
   rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
+  useEntityStore().load(selectedBookStore.v.id)
 })
 
 const contextMenuHanders = {

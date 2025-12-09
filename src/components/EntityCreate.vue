@@ -42,7 +42,7 @@ onMounted(() => {
 })
 
 if (props.isUpdateMode) {
-  newEntity.value = props.entity as Entity
+  newEntity.value = JSON.parse(JSON.stringify(props.entity)) as Entity
 }
 
 function handleTypesClick(e: MouseEvent) {

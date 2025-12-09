@@ -53,33 +53,41 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function show(x?: number, y?: number) {
+  if (!entityStore.v || entityStore.v.length === 0 || x === undefined || y === undefined) return
+
   isVisible.value = true
-  if (x !== undefined && y !== undefined) move(x, y)
+
+  move(x + 10, y)
 
   document.addEventListener('keydown', onKeydown)
   document.addEventListener('click', () => hide())
+  entitys.value = entityStore.v
   selectedIndex.value = 0
 }
 
 function move(x: number, y: number) {
-  hoverRef.value.style.left = `${x}px`
+  hoverRef.value.style.left = `${x + 10}px`
   hoverRef.value.style.top = `${y}px`
-  entitys.value = entityStore.v
 }
 
 function update(chars: string) {
+  console.log(`筛选条件: ${chars}`)
+
   if (chars === '') {
     entitys.value = entityStore.v
   } else {
     entitys.value = entityStore.v.filter(entity => entity.title.includes(chars))
+    console.log('筛选结果', entitys.value)
   }
-  if (entitys.value.length === 0) emit('close', null)
+
+  if (entitys.value.length === 0) hide()
 }
 
 function hide(ent?: Entity) {
   isVisible.value = false
   entity.value = null
   selectedIndex.value = -1
+  entitys.value = []
   emit('close', ent || null)
   document.removeEventListener('keydown', onKeydown)
 }
@@ -91,7 +99,10 @@ defineExpose({ show, move, update, hide })
 <template>
   <!-- 展示实体信息 -->
   <div class="entity-box" ref="hoverRef" v-show="isVisible">
-    <div class="item" :class="{ selected: selectedIndex === index }" @click="hide(entity)" v-for="entity, index in entitys" :key="entity.id">{{ entity.title }}</div>
+    <div class="item" :class="{ selected: selectedIndex === index }" @click="hide(entity)" v-for="entity, index in entitys" :key="entity.id">
+      <span>{{ entity.type }}</span>
+      <h5>{{ entity.title }}</h5>
+    </div>
     <!-- 用户输入时的实体信息悬浮窗 -->
     <EntityHover ref="entityInfoRef" />
   </div>
@@ -121,6 +132,24 @@ defineExpose({ show, move, update, hide })
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+  display: flex;
+}
+
+.item span {
+  color: var(--text-secondary);
+  background-color: var();
+  color: var(--danger);
+  width: 0.8rem;
+  overflow: hidden;
+  margin-right: .5rem;
+}
+
+.item h4 {
+  flex: 1;
+  width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .selected {

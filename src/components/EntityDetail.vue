@@ -34,9 +34,9 @@ const props = defineProps<{ entity: Entity }>()
   /* 布局结构清晰 */
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
   /* 控制各区块间距 */
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
@@ -71,8 +71,8 @@ const props = defineProps<{ entity: Entity }>()
   margin: 0;
   font-size: 0.95em;
   line-height: 1.6;
-  color: inherit;
-  /* 不设颜色，由父级或主题控制 */
+  font-size: .8rem;
+  color: var(--text-tertiary)
 }
 
 .attributes {
@@ -86,16 +86,19 @@ const props = defineProps<{ entity: Entity }>()
   list-style: none;
   padding: 0;
   margin: 0;
-  margin-top: 1rem;
 }
 
 .attributes li {
   display: flex;
   justify-content: space-between;
-  padding: 0.75rem 0;
   border-bottom: 1px solid var(--border-color);
   /* 分隔线，可选 */
-  gap: 1rem;
+  gap: .5rem;
+  padding: .25rem 0;
+}
+
+.attributes li:last-child {
+  border-bottom: none;
 }
 
 .attr-title,
@@ -107,14 +110,14 @@ const props = defineProps<{ entity: Entity }>()
 
 /* 自适应宽度，避免溢出 */
 .attr-title {
-  flex: 0 0 30%;
+  flex: 0 0 5rem;
   /* 固定宽度，可调 */
-  text-align: left;
+  text-align: right;
 }
 
 .attr-value {
   flex: 1;
   /* 占满剩余空间 */
-  text-align: right;
+  text-align: left;
 }
 </style>

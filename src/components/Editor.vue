@@ -285,15 +285,28 @@ const handleChineseInputMethodSubmission = (data: string) => {
   }
 }
 
+const hoverMove = (data?: string) => {
+  const { x, y } = getCaretRect()
+  data && entityHoverAutoInsertRef.value.update(data.substring(1))
+  entityHoverAutoInsertRef.value.move(x, y)
+}
+
 /** 处理输入 @ 时弹出实体自动完成列表 */
 function autoComplete(e: InputEvent) {
 
-  if (!e.data || chineseInputManager.isChineseInput) return
+  if (!e.data) return
+
+  if (chineseInputManager.isChineseInput && chars) {
+    hoverMove()
+    return
+  }
 
   if (e.data === '@') {
     chars = e.data
-    const { x, y } = getCaretRect()
-    entityHoverAutoInsertRef.value.show(x, y)
+    setTimeout(() => {
+      const { x, y } = getCaretRect()
+      entityHoverAutoInsertRef.value.show(x, y)
+    }, 100)
     return
   }
 
@@ -301,9 +314,7 @@ function autoComplete(e: InputEvent) {
 
   chars += e.data
 
-  const { x, y } = getCaretRect()
-  entityHoverAutoInsertRef.value.update(chars.substring(1))
-  entityHoverAutoInsertRef.value.move(x, y)
+  hoverMove(chars)
 }
 
 /** 在文本框中按下按键时 */
@@ -314,15 +325,15 @@ function handleBodyKeydown(e: KeyboardEvent) {
 
     if (chars) {
       chars = chars.slice(0, -1)
-      const { x, y } = getCaretRect()
-      entityHoverAutoInsertRef.value.update(chars.substring(1))
-      entityHoverAutoInsertRef.value.move(x, y)
+      hoverMove(chars)
     }
   } else if (e.ctrlKey) {
     if (e.key === 's') {
       _emitUpdate()
       e.preventDefault()
     }
+  } else if (e.key === 'Tab') {
+    e.preventDefault()
   }
 }
 

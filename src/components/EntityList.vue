@@ -3,9 +3,13 @@ import { entitydb } from '@/db'
 import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import type { Entity } from '@/types'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import ContextMenu from './ContextMenu.vue'
 import { $tips } from '@/plugins/notyf'
+import Popup from './Popup.vue'
+import EntityCreate from './EntityCreate.vue'
+import { event_off, event_on } from '@/eventManager'
+import EntityDetail from './EntityDetail.vue'
 
 /** 排序方式 */
 const sortMethod = ['按创建时间升序⬆️', '按创建时间降序⬇️', '按更新时间升序⬆️', '按更新时间降序⬇️', '按名称升序⬆️', '按名称降序⬇️'] as const
@@ -17,6 +21,10 @@ const currentFilterTypes = ref<string[]>([])
 
 /** 右键菜单 */
 const entityContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+/** 编辑弹出层 */
+const editEntityPopupRef = ref<InstanceType<typeof Popup> | null>(null)
+/** 实体详情弹出层 */
+const showEntityPopupRef = ref<InstanceType<typeof Popup> | null>(null)
 
 /** 搜索输入框值 */
 const searchValue = ref('')
@@ -31,12 +39,21 @@ const entitys = ref<Entity[]>([])
 /** 当前书籍 */
 const selectedBook = useSelectedBookStore()
 
+const processEntityCreateEvent = (entity: Entity) => {
+  entitys.value.push(entity)
+}
+
 onMounted(() => {
   entitydb.getBookEntities(selectedBook.v.id).then(res => {
     entitys.value = res || []
   }).catch(err => {
     $tips.error('实体获取失败：' + err.message)
   })
+  event_on('entity-create-success', processEntityCreateEvent)
+})
+
+onUnmounted(() => {
+  event_off('entity-create-success', processEntityCreateEvent)
 })
 
 /** 实体右键菜单项 */
@@ -44,19 +61,28 @@ const entityContextMenuItems = [
   {
     title: '👁️ 查看详情',
     callback() {
-      console.log('查看详情')
+      showEntityPopupRef.value?.show()
     }
   },
   {
     title: '✏️ 编辑',
     callback() {
-      console.log('编辑')
+      editEntityPopupRef.value?.show()
     }
   },
   {
     title: '🗑️ 删除',
     callback() {
-      console.log('删除')
+      entitydb.deleteEntity(selectedEntity.value?.id).then(res => {
+        if (res.success) {
+          console.log(selectedEntity.value?.title)
+          entityTypes.remove(selectedEntity.value?.type)
+          $tips.success('删除成功')
+          entitys.value = entitys.value.filter(en => en.id !== selectedEntity.value?.id)
+        } else {
+          $tips.error('删除失败：' + res.message)
+        }
+      })
     }
   },
   {
@@ -144,14 +170,46 @@ function handleEntityRightClick(e: MouseEvent) {
 
   if (!entityItem) return
 
-  console.log(target)
-
   const entityId = entityItem.dataset?.id
   if (!entityId) return
 
+  selectedEntity.value = entitys.value.find(en => en.id === entityId)
+
+  console.log(selectedEntity.value)
+
   entityContextMenuRef.value?.show(e, entityContextMenuItems)
-  selectedEntity.value = entitys.value.find(e => e.id === entityId)
 }
+
+/** 处理用户提交编辑的事件 */
+function handleEntityUpdate(entity: Entity) {
+  if (entity.type !== selectedEntity.value?.type) {
+    entityTypes.remove(selectedEntity.value?.type)
+    entityTypes.add(entity.type)
+  }
+
+  selectedEntity.value.title = entity.title
+  selectedEntity.value.description = entity.description
+  selectedEntity.value.imgID = entity.imgID
+  selectedEntity.value.type = entity.type
+  selectedEntity.value.attrs = entity.attrs
+  selectedEntity.value.modifiedTime = Date.now()
+
+  entitydb.updateEntity(selectedEntity.value).then(res => {
+    if (res.success) {
+      $tips.success('更新成功')
+    } else {
+      $tips.error('更新失败：' + res.message)
+    }
+    editEntityPopupRef.value?.close()
+  })
+}
+
+/** item项被点击时 */
+function handleItemClick(entity: Entity) {
+  selectedEntity.value = entity
+  entityContextMenuItems[0].callback()
+}
+
 </script>
 
 <template>
@@ -161,7 +219,7 @@ function handleEntityRightClick(e: MouseEvent) {
         <div class="current-filter-conditions">
           <span class="sort" v-if="currentSortMethod">{{ currentSortMethod }}</span>
           <span class="type" v-for="type in currentFilterTypes">{{ type }}</span>
-          <span v-if="!currentSortMethod && !currentFilterTypes.length">点点击此处进行排序和筛选 ➡️</span>
+          <span v-if="!currentSortMethod && !currentFilterTypes.length">点此处排序和筛选 😀</span>
         </div>
         <span v-if="filterOpen">🔼</span>
         <span v-else>🔽</span>
@@ -184,13 +242,23 @@ function handleEntityRightClick(e: MouseEvent) {
       </div>
     </div>
     <div class="items">
-      <div class="item" v-for="entity in filteredEntitys" :data-id="entity.id" @contextmenu="handleEntityRightClick">
+      <div class="item" :key="entity.id" v-for="entity in filteredEntitys" :data-id="entity.id" @contextmenu="handleEntityRightClick" @click="handleItemClick(entity)">
         <h4 :title="entity.title">{{ entity.title }}</h4>
         <span :title="entity.type">{{ entity.type }}</span>
         <p>{{ entity.description }}</p>
       </div>
     </div>
     <ContextMenu ref="entityContextMenuRef" />
+    <!-- 实体编辑 -->
+    <Popup ref="editEntityPopupRef" v-if="selectedEntity" mask title="✍️ 编辑属性">
+      <div style="width: 30rem;max-height: 60rem !important; overflow-y: auto;">
+        <EntityCreate isUpdateMode :entity="selectedEntity" @submit="handleEntityUpdate" :key="selectedEntity.id" />
+      </div>
+    </Popup>
+    <!-- 实体详情 -->
+    <Popup ref="showEntityPopupRef" mask mask-closable title="👀 实体详情">
+      <EntityDetail :key="selectedEntity.id" :entity="selectedEntity" v-if="selectedEntity" />
+    </Popup>
   </div>
 </template>
 

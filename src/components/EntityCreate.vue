@@ -1,11 +1,31 @@
 <script setup lang="ts">
 import { entitydb } from '@/db'
 import { getDefaultEntity, getDefaultEntityAttr } from '@/defaultObjects'
+import { event_emit } from '@/eventManager'
 import { $tips } from '@/plugins/notyf'
 import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
+import type { Entity } from '@/types'
 import { trimAndReduceNewlines } from '@/utils'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+
+const emit = defineEmits(['submit'])
+
+const props = defineProps({
+  /**
+   * 组件类型，分为创建模式和修改模式，默认为创建模式
+   * 处于修改模式时，需要传入一个实体对象，用于修改
+   */
+  isUpdateMode: {
+    type: Boolean,
+    default: false
+  },
+  /** 实体对象，当 isCreateMode === false 时，需要传入否则无法工作*/
+  entity: {
+    type: Object,
+    default: null
+  }
+})
 
 /** 当前所处书籍 */
 const selectedBook = useSelectedBookStore()
@@ -13,6 +33,17 @@ const selectedBook = useSelectedBookStore()
 const newEntity = ref(getDefaultEntity(selectedBook.v.id))
 /** 实体类型整合列表 */
 const entityTypes = useEntityTypesStore()
+
+onMounted(() => {
+  // 修改模式时，需要传入一个实体对象
+  if (props.isUpdateMode && props.entity === null) {
+    throw new Error('实体创建模式下，必须传入一个实体对象')
+  }
+})
+
+if (props.isUpdateMode) {
+  newEntity.value = props.entity as Entity
+}
 
 function handleTypesClick(e: MouseEvent) {
   const target = e.target as HTMLElement
@@ -46,10 +77,14 @@ function saveEntity() {
   newEntity.value.title = newEntity.value.title.trim()
   newEntity.value.description = trimAndReduceNewlines(newEntity.value.description)
 
+  if (props.isUpdateMode) {
+    return emit('submit', { ...newEntity.value })
+  }
+
   entitydb.createEntity(newEntity.value).then(res => {
     if (res.success) {
       $tips.success(`创建成功`)
-      console.log(newEntity.value)
+      event_emit('entity-create-success', newEntity.value)
       entityTypes.add(newEntity.value.type)
       newEntity.value = getDefaultEntity(selectedBook.v.id)
     } else {
@@ -100,7 +135,7 @@ function deleteEntityAttr(index: number) {
       </div>
     </div>
     <div class="form-group">
-      <button @click="saveEntity" class="save-button">保存实体</button>
+      <button @click="saveEntity" class="save-button">{{ props.isUpdateMode ? "提交修改" : "保存实体" }}</button>
     </div>
   </div>
 </template>
@@ -174,6 +209,7 @@ function deleteEntityAttr(index: number) {
 .types {
   display: flex;
   margin-top: .25rem;
+  flex-wrap: wrap;
 }
 
 .types span {
@@ -181,7 +217,7 @@ function deleteEntityAttr(index: number) {
   border-radius: .25rem;
   background-color: var(--background-tertiary);
   font-size: .8rem;
-  margin: .25rem;
+  margin: .25rem .25rem 0 0;
   cursor: pointer;
 }
 

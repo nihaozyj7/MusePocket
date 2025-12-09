@@ -256,6 +256,7 @@ watch(
   align-items: center;
   cursor: pointer;
   background-color: #0005;
+  z-index: 999;
 }
 
 .tips {

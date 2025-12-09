@@ -387,6 +387,7 @@ export const entitydb = new class {
   /** 创建实体 */
   async createEntity(ent: Entity): Promise<Status> {
     ent.deletedTime = ent.deletedTime ?? 0
+    ent?.attrs.sort((a, b) => a.sortIndex - b.sortIndex)
     try {
       const tx = db.transaction(['entities'], 'readwrite')
       await tx.objectStore('entities').add(JSON.parse(JSON.stringify(ent)))
@@ -401,8 +402,9 @@ export const entitydb = new class {
   async updateEntity(ent: Entity): Promise<Status> {
     try {
       const updated = { ...ent, modifiedTime: Date.now() }
+      updated?.attrs.sort((a, b) => a.sortIndex - b.sortIndex)
       const tx = db.transaction(['entities'], 'readwrite')
-      await tx.objectStore('entities').put(updated)
+      await tx.objectStore('entities').put(JSON.parse(JSON.stringify(updated)))
       await tx.done
       return { success: true }
     } catch (err: any) {

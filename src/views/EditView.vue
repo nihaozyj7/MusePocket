@@ -208,9 +208,8 @@ function handleSplitLineMousedown(e: MouseEvent) {
   }
   document.addEventListener('mousemove', handleMousemove)
   document.addEventListener('mouseup', () => {
-    console.log('鼠标抬起')
     document.removeEventListener('mousemove', handleMousemove)
-  })
+  }, { once: true })
 }
 
 </script>
@@ -538,5 +537,10 @@ function handleSplitLineMousedown(e: MouseEvent) {
   cursor: col-resize;
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
+}
+
+::v-deep(.utils-drawer>*:nth-child(2)) {
+  flex: 1;
+  width: 0;
 }
 </style>

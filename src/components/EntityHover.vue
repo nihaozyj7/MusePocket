@@ -40,7 +40,7 @@ defineExpose({
 <template>
   <!-- 展示实体信息 -->
   <div class="entity-box" ref="hoverRef" v-show="isVisible">
-    <div class="image" v-if="entity && entity.imgID">
+    <div class="image" v-if="entity && entity.imgID.length > 5">
       <img :src="entity.imgID" />
     </div>
     <div class="info" v-if="entity">

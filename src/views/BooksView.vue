@@ -206,7 +206,7 @@ function loadBooks() {
   <EditBookPopup ref="createBookPopupRef" @status:save="addBook" />
 
   <!-- 修改书籍弹出层 -->
-  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" />
+  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" title="✍️ 修改书籍信息" />
 </template>
 
 <style scoped>

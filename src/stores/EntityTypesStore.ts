@@ -37,8 +37,10 @@ export const useEntityTypesStore = defineStore('entityTypesStore', {
      */
     remove(entityType: string) {
       if (!this._v.has(entityType)) return
-      this._v[entityType] -= 1
-      if (this._v[entityType] <= 0) {
+
+      this._v.set(entityType, this._v.get(entityType) - 1)
+
+      if (this._v.get(entityType) <= 0) {
         this._v.delete(entityType)
       }
     },

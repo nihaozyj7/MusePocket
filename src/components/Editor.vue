@@ -327,10 +327,22 @@ function handleBodyKeydown(e: KeyboardEvent) {
 }
 
 function entityHoverAutoInsertClose(entity: Entity) {
-  chars = ''
-  if (entity) {
-    insertVariableSpan(entity.id, entity.title)
+  if (!entity) {
+    chars = ''
+    return
   }
+
+  // 删除@符号和已输入的字符
+  const sel = window.getSelection()
+  if (sel && sel.rangeCount > 0) {
+    const range = sel.getRangeAt(0)
+    // 向前删除已输入的字符长度（包括@）
+    range.setStart(range.startContainer, range.startOffset - chars.length)
+    range.deleteContents()
+  }
+
+  chars = ''
+  insertVariableSpan(entity.id, entity.title)
 }
 
 function resetBody(text: string = "") {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SettingPopup from '@/components/SettingPopup.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -9,7 +10,7 @@ import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor } from '@/utils.ts'
-import { onMounted, ref, shallowRef, defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, onMounted, ref } from 'vue'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -32,6 +33,10 @@ const editorRef = ref(null)
 const rutilsRef = ref<HTMLElement | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
+
+/** 设置弹出层 */
+const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
+
 
 const eneityManagerRef = ref(null)
 
@@ -282,7 +287,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
           </div>
           <button title="章节的历史操作记录">🕒 历史</button>
           <button title="导出备份文件和从备份文件导入">💾 导入导出</button>
-          <button title="软件设置">⚙️ 配置</button>
+          <button title="软件设置" @click="settingPopupRef.show">⚙️ 配置</button>
         </div>
       </header>
       <div class="bottom">
@@ -302,6 +307,8 @@ function handleSplitLineMousedown(e: MouseEvent) {
   </div>
   <!-- 右键菜单 -->
   <ContextMenu ref="articleContextMenuRef" />
+  <!-- 设置弹出层 -->
+  <SettingPopup ref="settingPopupRef" />
 </template>
 
 <style scoped>

@@ -307,7 +307,6 @@ header>h3 {
 main {
   flex: 1;
   height: 0;
-  margin: 0.5rem;
   display: flex;
 }
 

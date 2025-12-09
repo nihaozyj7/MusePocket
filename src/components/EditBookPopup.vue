@@ -68,7 +68,7 @@ defineExpose({
   border-radius: .25rem;
   position: relative;
   overflow: hidden;
-  /* margin: 0 2rem; */
+  margin: .5rem;
 }
 
 .cover img {

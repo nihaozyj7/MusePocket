@@ -8,6 +8,8 @@ import EntityHover from './EntityHover.vue'
 import { getDefaultEntity } from '@/defaultObjects'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import EntityHoverAutoInsert from './EntityHoverAutoInsert.vue'
+import { useEntityStore } from '@/stores/EntitysStore'
+import type { Entity } from '@/types'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */
@@ -26,6 +28,8 @@ const bodyBackgroundRef = ref<HTMLCanvasElement>()
 const entityHoverRef = ref<InstanceType<typeof EntityHover>>()
 /** 自动完成悬浮层 */
 const entityHoverAutoInsertRef = ref<InstanceType<typeof EntityHoverAutoInsert>>()
+/** 实体列表 */
+const entityStore = useEntityStore()
 
 /** 配置项 */
 const settingStore = useSettingStore()
@@ -80,6 +84,7 @@ onUnmounted(() => {
   observer.disconnect()
   document.removeEventListener('selectionchange', handleTextSelect)
   styleManager?.clear()
+  chineseInputManager.destroy()
 })
 
 const _emitUpdate = () => {
@@ -115,10 +120,6 @@ const handleResize = throttle((entries) => {
     })
   }
 }, 100)
-
-const handleChineseInputMethodSubmission = (data: string) => {
-  console.log('data', data)
-}
 
 /** 绘制背景 */
 const drawBackground = (function () {
@@ -187,6 +188,8 @@ function scrollToCursor() {
 
 /** 文本输入时 */
 function handleBodyInput(e: InputEvent) {
+  autoComplete(e)
+
   statusBarRight.value.saveState = '⏳ 等待保存'
   if (bodyRef.value.innerText === "") {
     resetBody()
@@ -220,28 +223,19 @@ let hoverTimer = 500
 let isHovering = false
 /** 鼠标悬浮延迟定时器 */
 let hoverTimerId: number | null = null
+/** 上次悬浮层关闭的时间，如果小于 hoverTimer ，则无需等待，直接显示 */
+let lastTimer = 0
 
 /** 鼠标进入时 */
 function handleBodyMouseover(e: MouseEvent) {
   const target = e.target as HTMLElement
+  const _ht = (Date.now() - lastTimer < hoverTimer) ? 0 : hoverTimer
   if (target.dataset.entityId) {
     hoverTimerId = setTimeout(() => {
       isHovering = true
       document.addEventListener('mousemove', handleBodyMousemove)
-      entityHoverRef.value.show({
-        id: '',
-        type: '人物',
-        title: '陈兰玫',
-        bookId: '',
-        description: '陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫陈兰玫',
-        attrs: [],
-        imgID: '/public/cover/default.png',
-        deletedTime: 0,
-        modifiedTime: 0,
-        createdTime: 0
-
-      }, e.clientX + 20, e.clientY)
-    }, hoverTimer)
+      entityHoverRef.value.show(entityStore.v.find(e => e.id === target.dataset.entityId), e.clientX + 20, e.clientY)
+    }, _ht)
   }
 }
 
@@ -257,6 +251,7 @@ function handleBodyMouseout(e: MouseEvent) {
     clearTimeout(hoverTimerId)
     isHovering = false
     entityHoverRef.value.hide()
+    lastTimer = Date.now()
     document.removeEventListener('mousemove', handleBodyMousemove)
   }
 }
@@ -269,9 +264,6 @@ function handleBodyClick(e: MouseEvent) {
   }
 }
 
-
-let chars = '', ichars = [] as string[]
-
 function getCaretRect(): DOMRect | null {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return null
@@ -283,10 +275,20 @@ function getCaretRect(): DOMRect | null {
   return rect || null
 }
 
+let chars = ''
+
+/** 中文输入提交时 */
+const handleChineseInputMethodSubmission = (data: string) => {
+  if (chars) {
+    chars += data
+    entityHoverAutoInsertRef.value.update(chars.substring(1))
+  }
+}
+
 /** 处理输入 @ 时弹出实体自动完成列表 */
 function autoComplete(e: InputEvent) {
 
-  if (!e.data) return
+  if (!e.data || chineseInputManager.isChineseInput) return
 
   if (e.data === '@') {
     chars = e.data
@@ -300,20 +302,15 @@ function autoComplete(e: InputEvent) {
   chars += e.data
 
   const { x, y } = getCaretRect()
-  console.log('xx: ', chars.substring(1))
   entityHoverAutoInsertRef.value.update(chars.substring(1))
   entityHoverAutoInsertRef.value.move(x, y)
 }
 
-
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
-
-  if (bodyRef.value.innerText === ' ') {
-    if (e.key === 'Backspace' || e.key === 'Delete') return e.preventDefault()
-  }
-
   if (e.key === 'Backspace') {
+
+    if (chars === '@') entityHoverAutoInsertRef.value.hide()
 
     if (chars) {
       chars = chars.slice(0, -1)
@@ -321,17 +318,18 @@ function handleBodyKeydown(e: KeyboardEvent) {
       entityHoverAutoInsertRef.value.update(chars.substring(1))
       entityHoverAutoInsertRef.value.move(x, y)
     }
-
-    // 将要删除 @ 时隐藏自动完成列表
-    if (chars === '@') entityHoverAutoInsertRef.value.hide()
-
   } else if (e.ctrlKey) {
-    if (e.key === 'i') {
-      insertVariableSpan('学生成绩表', '学生成绩表')
-    } else if (e.key === 's') {
+    if (e.key === 's') {
       _emitUpdate()
       e.preventDefault()
     }
+  }
+}
+
+function entityHoverAutoInsertClose(entity: Entity) {
+  chars = ''
+  if (entity) {
+    insertVariableSpan(entity.id, entity.title)
   }
 }
 
@@ -376,7 +374,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" @beforeinput="autoComplete" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
+        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>
@@ -396,7 +394,7 @@ defineExpose({
     <!-- 实体信息浮窗 -->
     <EntityHover ref="entityHoverRef" />
     <!-- 自动完成悬浮层 -->
-    <EntityHoverAutoInsert ref="entityHoverAutoInsertRef" />
+    <EntityHoverAutoInsert ref="entityHoverAutoInsertRef" @close="entityHoverAutoInsertClose" />
   </main>
 
 </template>

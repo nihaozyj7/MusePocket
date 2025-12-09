@@ -1079,7 +1079,7 @@ export function preventDuplicateTab(onDuplicate: () => void, channelName = 'app-
  */
 export class ChineseInputManager {
   /** 是否正在输入中文 */
-  private _isChineseInput = false;
+  public isChineseInput = false;
   /** 输入缓存 */
   private _inputCache = [] as string[]
   // 缓存绑定后的回调（关键：保证 add/remove 引用一致）
@@ -1125,11 +1125,11 @@ export class ChineseInputManager {
   }
 
   onInput(e: InputEvent) {
-    if (this._isChineseInput) {
+    if (this.isChineseInput) {
       this._inputCache.unshift(e.data)
       this._inputCallback(this._inputCache.join(''))
       setTimeout(() => {
-        if (this._isChineseInput === false) {
+        if (this.isChineseInput === false) {
           this._commitCallback(e.data)
         }
       })
@@ -1137,10 +1137,10 @@ export class ChineseInputManager {
   }
 
   onCompositionstart() {
-    this._isChineseInput = true
+    this.isChineseInput = true
   }
 
   onCompositionend() {
-    this._isChineseInput = false
+    this.isChineseInput = false
   }
 }

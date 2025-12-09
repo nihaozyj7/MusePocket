@@ -5,10 +5,12 @@ import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
 import { getImageBase64ByID } from '@/utils.ts'
-import { onMounted, ref } from 'vue'
-import ContextMenu from '@/components/ContextMenu.vue'
-import EditBookPopup from '@/components/EditBookPopup.vue'
+import { onMounted, ref, defineAsyncComponent } from 'vue'
 import { $tips } from '@/plugins/notyf'
+
+// 懒加载组件
+const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
+const EditBookPopup = defineAsyncComponent(() => import('@/components/EditBookPopup.vue'))
 
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
@@ -20,13 +22,13 @@ const books = ref<Book[]>([])
 /** 当前用户选中的书籍 */
 const selectedBookStore = useSelectedBookStore()
 /** 书籍右键菜单Ref */
-const bookContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+const bookContextMenuRef = ref(null)
 /** 单击选中的书籍 */
 const clickSelectedBook = ref<Book | null>(null)
 /** 编辑书籍弹出层 */
-const updateBookPopupRef = ref<InstanceType<typeof EditBookPopup> | null>(null)
+const updateBookPopupRef = ref(null)
 /** 创建书籍弹出层 */
-const createBookPopupRef = ref<InstanceType<typeof EditBookPopup> | null>(null)
+const createBookPopupRef = ref(null)
 
 /** 右键菜单选中的书籍 */
 let rightSelectedBook: Book | null = null

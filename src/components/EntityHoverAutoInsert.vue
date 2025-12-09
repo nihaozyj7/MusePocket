@@ -38,7 +38,7 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowUp') {
     if (selectedIndex.value > 0) selectedIndex.value--
     else if (selectedIndex.value <= 0) selectedIndex.value = entitys.value.length - 1
-    console.log(selectedIndex.value)
+    e.preventDefault()
   } else if (e.key === 'ArrowDown') {
     if (selectedIndex.value < entitys.value.length - 1) selectedIndex.value++
     else if (selectedIndex.value >= entitys.value.length - 1) selectedIndex.value = 0

@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// 导入组件
-import Books from './views/BooksView.vue'
-import Edit from './views/EditView.vue'
+// 导入组件 (懒加载)
+const Books = () => import('./views/BooksView.vue')
+const Edit = () => import('./views/EditView.vue')
 import { useSelectedBookStore } from './stores/SelectedBookStore'
 
 // 定义路由规则

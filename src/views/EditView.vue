@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import ContextMenu from '@/components/ContextMenu.vue'
-import Editor from '@/components/Editor.vue'
-import EntityManager from '@/components/EntityManager.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -12,7 +9,12 @@ import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor } from '@/utils.ts'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, shallowRef, defineAsyncComponent } from 'vue'
+
+// 懒加载组件
+const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
+const Editor = defineAsyncComponent(() => import('@/components/Editor.vue'))
+const EntityManager = defineAsyncComponent(() => import('@/components/EntityManager.vue'))
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -23,15 +25,15 @@ const selectedBookStore = useSelectedBookStore()
 /** 当前打开的文章的内容 */
 const articleBody = ref<ArticleBody | null>(null)
 /** 右键菜单 */
-const articleContextMenuRef = ref<InstanceType<typeof ContextMenu> | null>(null)
+const articleContextMenuRef = ref(null)
 /** 文本编辑器 */
-const editorRef = ref<InstanceType<typeof Editor> | null>(null)
+const editorRef = ref(null)
 /** 侧边工具栏 */
 const rutilsRef = ref<HTMLElement | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
 
-const eneityManagerRef = ref<InstanceType<typeof EntityManager> | null>(null)
+const eneityManagerRef = ref(null)
 
 /** 右边侧栏工具按钮标题 列表 */
 const rutilsTitles = ['✍️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⌨️ 快捷键']
@@ -74,7 +76,9 @@ const contextMenuHanders = {
     })
   },
   copy(id: string) {
-    navigator.clipboard.writeText(trimAndReduceNewlines(editorRef.value.getBodyText()))
+    if (editorRef.value) {
+      navigator.clipboard.writeText(trimAndReduceNewlines(editorRef.value.getBodyText()))
+    }
     $tips.success('已复制')
   },
 }
@@ -100,7 +104,13 @@ function handleSaveArticleTitle(title: string) {
   })
 }
 
-function saveArticle(text: string, oldText?: string) {
+async function saveArticle(text: string, oldText?: string) {
+  // 等待编辑器组件加载完成
+  if (!editorRef.value) {
+    console.error('Editor component not loaded')
+    return
+  }
+
   articleBody.value.content = getCleanedEditorContent(editorRef.value.getBody())
   selectedArticleStore.v.modifiedTime = Date.now()
   selectedArticleStore.v.wordCount = countNonWhitespace(text)
@@ -116,16 +126,20 @@ function saveArticle(text: string, oldText?: string) {
   })
 
   bookdb.updateBook(selectedBookStore.v)
-  editorRef.value.setSaveState('✅ 已保存')
+  if (editorRef.value) {
+    editorRef.value.setSaveState('✅ 已保存')
+  }
 }
 
-function handleArticleClick(e: MouseEvent) {
+async function handleArticleClick(e: MouseEvent) {
   const articleItem = e.target instanceof Element ? (e.target as Element).closest<HTMLElement>('.article-item') : null
   if (!articleItem) return
   const id = articleItem.dataset.articleId
   const article = articles.value.find(article => article.id === id)
   if (article) {
-    saveArticle(editorRef.value.getBodyText())
+    if (editorRef.value) {
+      saveArticle(editorRef.value.getBodyText())
+    }
     selectedArticleStore.v = article
     openArticle(article)
   } else {
@@ -148,7 +162,11 @@ function openArticle(article: Article) {
     articleBody.value = res
 
     // 等待编辑器成功加载后再设置内容
-    waitFor(() => editorRef.value, () => editorRef.value.resetBody(res.content))
+    waitFor(() => editorRef.value, () => {
+      if (editorRef.value) {
+        editorRef.value.resetBody(res.content)
+      }
+    })
 
   }).catch(err => {
     $tips.error(`获取文章正文失败, ${err.message}`)

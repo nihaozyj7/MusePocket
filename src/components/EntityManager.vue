@@ -7,7 +7,7 @@ import EntityList from './EntityList.vue'
 import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 
-const titles = ['查看', '导入导出', 'AI提取', '新建'] as const
+const titles = ['查看', '导入导出', '提取&合并', '新建'] as const
 
 const selectedTitle = ref<typeof titles[number]>('查看')
 

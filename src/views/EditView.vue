@@ -773,8 +773,8 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 }
 
 .utils-panel {
-  width: 3rem;
-  padding-top: .3rem;
+  width: 2.7rem;
+  padding-top: .5rem;
   border-left: 1px solid var(--border-color);
   background-color: var(--background-secondary);
   overflow-y: hidden;
@@ -792,10 +792,10 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 
 .utils-panel button {
   background-color: var(--background-tertiary);
-  padding: 0.25rem 0.5rem;
+  padding: .5rem .1rem .5rem .25rem !important;
   border-radius: 0.25rem;
   margin-bottom: 0.5rem;
-  margin-right: 0.3rem;
+  margin-right: 0.5rem;
   border: 1px solid var(--border-color);
 }
 

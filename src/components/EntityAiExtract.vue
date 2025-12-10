@@ -153,7 +153,7 @@ async function startExtraction() {
 
     // 3. 调用AI
     progress.value = '正在调用AI...'
-    const userContent = `请从以下文章中提取实体信息，返回JSON格式的数组。每个实体包含：title(名称), type(类型), description(描述), attrs(自定义属性数组，每个属性包含title和value)。不需要包含id、bookId、时间等字段。
+    const userContent = `请从以下文章中提取实体信息，返回JSON格式的数组。每个实体包含：title(名称), type(类型), description(描述), attrs(自定义属性数组，每个属性包含title和value)。。
 
 文章内容：
 ${articleContents.join('\n\n')}`
@@ -825,7 +825,7 @@ function cancelMerge() {
 
 .btn-extract {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background-color: var(--primary);
   color: white;
   border: none;
@@ -907,7 +907,7 @@ function cancelMerge() {
 
 .btn-merge {
   width: 100%;
-  padding: 0.75rem;
+  padding: .5rem;
   background-color: #10b981;
   color: white;
   border: none;

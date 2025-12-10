@@ -223,7 +223,7 @@ function handleFileChange(event: Event) {
 }
 
 .btn-primary {
-  padding: 0.6rem 1.2rem;
+  padding: .25rem .5rem;
   background-color: var(--primary);
   color: white;
   border: none;

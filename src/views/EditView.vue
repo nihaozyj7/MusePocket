@@ -6,6 +6,7 @@ import HistorySidebar from '@/components/HistorySidebar.vue'
 import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import DraftManager from '@/components/DraftManager.vue'
 import OutlineNavigator from '@/components/OutlineNavigator.vue'
+import Editor from '@/components/Editor.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -21,7 +22,6 @@ import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
-const Editor = defineAsyncComponent(() => import('@/components/Editor.vue'))
 const EntityManager = defineAsyncComponent(() => import('@/components/EntityManager.vue'))
 const RecycleBinArticlePopup = defineAsyncComponent(() => import('@/components/RecycleBinArticlePopup.vue'))
 
@@ -563,7 +563,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
       </header>
       <div class="bottom">
         <!-- 编辑器 -->
-        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" v-if="selectedArticleStore.v" />
+        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
         <!-- 工具窗口 -->
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>

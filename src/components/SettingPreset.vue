@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getDefaultSettingsPreset } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
+import { $confirm } from '@/plugins/confirm'
 import { useSettingsPresetsStore } from '@/stores/PresetsStore'
 import { useSettingStore } from '@/stores/SettingStore'
 import type { SettingsPreset } from '@/types'
@@ -38,8 +39,8 @@ function saveCurrentAsPreset() {
   $tips.success('当前设置已保存为配置预设')
 }
 
-function applyPreset(preset: SettingsPreset) {
-  if (confirm(`确定要应用配置预设“${preset.title}”吗？这将覆盖当前的基础设置。`)) {
+async function applyPreset(preset: SettingsPreset) {
+  if (await $confirm(`确定要应用配置预设“${preset.title}”吗？这将覆盖当前的基础设置。`)) {
     settingStore.baseSettings = JSON.parse(JSON.stringify(preset.settings))
     settingStore.applyBaseSettings()
     $tips.success('配置预设已应用')

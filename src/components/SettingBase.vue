@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useSettingStore } from '@/stores/SettingStore'
 import type { GridLineStyle } from '@/types'
+import { $confirm } from '@/plugins/confirm'
 
 const props = defineProps<{ title: string }>()
 const settingStore = useSettingStore()
@@ -29,8 +30,8 @@ const handleImageUpload = () => {
 }
 
 // 重置设置
-const resetSettings = () => {
-  if (confirm('确定要重置所有基础设置为默认值吗？')) {
+const resetSettings = async () => {
+  if (await $confirm('确定要重置所有基础设置为默认值吗？')) {
     settingStore.resetBaseSettings()
   }
 }

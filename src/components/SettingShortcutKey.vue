@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useSettingStore } from '@/stores/SettingStore'
+import { $confirm } from '@/plugins/confirm'
 import type { ShortcutKeys } from '@/types'
 
 const props = defineProps<{ title: string }>()
@@ -51,8 +52,8 @@ const handleBlur = () => {
 }
 
 // 重置到默认值
-const resetToDefault = () => {
-  if (confirm('确定要重置所有快捷键为默认值吗？')) {
+const resetToDefault = async () => {
+  if (await $confirm('确定要重置所有快捷键为默认值吗？')) {
     settingStore.resetShortcutKeys()
   }
 }

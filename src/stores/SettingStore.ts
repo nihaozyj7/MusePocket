@@ -307,6 +307,16 @@ export const useSettingStore = defineStore('setting', {
       this.shortcutKeys[key] = value
     },
 
+    /** 重置快捷键为默认值 */
+    resetShortcutKeys() {
+      this.shortcutKeys = {
+        save: 'Ctrl+S',
+        format: 'Ctrl+Shift+F',
+        find: 'Ctrl+F',
+        replace: 'Ctrl+H'
+      }
+    },
+
     /** 重置基础设置为默认值 */
     resetBaseSettings() {
       this.baseSettings = getDefaultBaseSettings()

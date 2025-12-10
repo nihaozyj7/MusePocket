@@ -111,13 +111,16 @@ async function startExtraction() {
     // 如果需要携带已有实体
     if (includeExistingEntities.value && entityStore.v.length > 0) {
       progress.value = '正在加载已有实体...'
-      const existingEntities = entityStore.v.map(e => ({
-        title: e.title,
-        type: e.type,
-        description: e.description,
-        attrs: e.attrs
-      }))
-      systemPrompt += `\n\n当前已存在的实体（供参考，可以合并或补充）：\n${JSON.stringify(existingEntities, null, 2)}`
+      // 压缩实体信息:只保留必要字段,去除空值
+      const existingEntities = entityStore.v.map(e => {
+        const compressed: any = { t: e.title, ty: e.type }
+        if (e.description) compressed.d = e.description
+        if (e.attrs && e.attrs.length > 0) {
+          compressed.a = e.attrs.map(attr => ({ t: attr.title, v: attr.value }))
+        }
+        return compressed
+      })
+      systemPrompt += `\n\n已有实体(t=标题,ty=类型,d=描述,a=属性[t=名,v=值]):\n${JSON.stringify(existingEntities)}`
     }
 
     // 3. 调用AI

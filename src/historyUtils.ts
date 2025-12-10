@@ -305,4 +305,59 @@ export class HistoryManager {
       canRedo: this.canRedo()
     }
   }
+
+  /**
+   * 获取所有撤销栈的 diffs（用于持久化）
+   */
+  getUndoStack(): DiffOperation[][] {
+    return [...this.undoStack]
+  }
+}
+
+/**
+ * 从基础版本通过应用多个 diff 重建文本
+ */
+export function reconstructText(baseText: string, diffs: DiffOperation[][]): string {
+  let text = baseText
+  for (const diffSet of diffs) {
+    text = applyDiff(text, diffSet)
+  }
+  return text
+}
+
+/**
+ * 计算两个文本之间的可视化 diff
+ */
+export interface VisualDiff {
+  type: 'added' | 'removed' | 'unchanged'
+  content: string
+  lineNumber?: number
+}
+
+export function computeVisualDiff(oldText: string, newText: string): VisualDiff[] {
+  const result: VisualDiff[] = []
+  const oldLines = oldText.split('\n')
+  const newLines = newText.split('\n')
+
+  const maxLen = Math.max(oldLines.length, newLines.length)
+
+  for (let i = 0; i < maxLen; i++) {
+    const oldLine = oldLines[i]
+    const newLine = newLines[i]
+
+    if (oldLine === newLine) {
+      if (oldLine !== undefined) {
+        result.push({ type: 'unchanged', content: oldLine, lineNumber: i + 1 })
+      }
+    } else {
+      if (oldLine !== undefined) {
+        result.push({ type: 'removed', content: oldLine, lineNumber: i + 1 })
+      }
+      if (newLine !== undefined) {
+        result.push({ type: 'added', content: newLine, lineNumber: i + 1 })
+      }
+    }
+  }
+
+  return result
 }

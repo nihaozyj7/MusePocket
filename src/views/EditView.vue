@@ -2,6 +2,7 @@
 import SettingPopup from '@/components/SettingPopup.vue'
 import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
 import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
+import HistorySidebar from '@/components/HistorySidebar.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -48,11 +49,13 @@ const insertSnippetPopupRef = ref<InstanceType<typeof InsertSnippetPopup> | null
 /** 历史记录弹出层 */
 const historyViewPopupRef = ref<InstanceType<typeof HistoryViewPopup> | null>(null)
 
+/** 历史记录侧栏 */
+const historySidebarRef = ref<InstanceType<typeof HistorySidebar> | null>(null)
 
 const eneityManagerRef = ref(null)
 
 /** 右边侧栏工具按钮标题 列表 */
-const rutilsTitles = ['✍️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⌨️ 快捷键']
+const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⏱️ 历史版本']
 
 onMounted(() => {
   loadArticles()
@@ -145,6 +148,11 @@ async function saveArticle(text: string, oldText?: string) {
   if (editorRef.value) {
     editorRef.value.setSaveState('✅ 已保存')
   }
+
+  // 更新历史侧栏的当前文本
+  if (historySidebarRef.value) {
+    historySidebarRef.value.setCurrentText(text)
+  }
 }
 
 async function handleArticleClick(e: MouseEvent) {
@@ -181,8 +189,12 @@ function openArticle(article: Article) {
     waitFor(() => editorRef.value, () => {
       if (editorRef.value) {
         editorRef.value.resetBody(res.content)
-        // 初始化历史记录
+        // 初始化历史记录（会自动加载历史列表）
         historyStore.initArticle(article.id, res.content || '')
+        // 更新历史侧栏的当前文本
+        if (historySidebarRef.value) {
+          historySidebarRef.value.setCurrentText(res.content || '')
+        }
       }
     })
 
@@ -218,6 +230,19 @@ function handleRedo() {
 /** 显示历史记录弹窗 */
 function showHistoryPopup() {
   historyViewPopupRef.value?.show()
+}
+
+/** 从历史版本恢复 */
+function handleRestoreFromHistory(text: string) {
+  if (editorRef.value) {
+    editorRef.value.resetBody(text)
+    // 触发保存
+    saveArticle(text)
+    // 更新历史侧栏的当前文本
+    if (historySidebarRef.value) {
+      historySidebarRef.value.setCurrentText(text)
+    }
+  }
 }
 
 function creatreArticle() {
@@ -341,6 +366,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
+          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
         </div>
         <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">

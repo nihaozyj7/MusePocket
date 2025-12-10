@@ -12,13 +12,16 @@ interface HistoryState {
   currentArticleId: string | null
   /** 每个文章的序号计数器 */
   sequenceCounters: Map<string, number>
+  /** 当前文章的历史记录列表（用于界面展示） */
+  currentHistories: DBHistoryRecord[]
 }
 
 export const useHistoryStore = defineStore('history', {
   state: (): HistoryState => ({
     managers: new Map(),
     currentArticleId: null,
-    sequenceCounters: new Map()
+    sequenceCounters: new Map(),
+    currentHistories: []
   }),
 
   getters: {
@@ -75,6 +78,9 @@ export const useHistoryStore = defineStore('history', {
           manager.reset(initialText)
         }
       }
+
+      // 加载历史记录列表
+      await this.refreshHistories()
     },
 
     /**
@@ -114,6 +120,23 @@ export const useHistoryStore = defineStore('history', {
     },
 
     /**
+     * 刷新当前文章的历史记录列表
+     */
+    async refreshHistories() {
+      if (!this.currentArticleId) {
+        this.currentHistories = []
+        return
+      }
+
+      try {
+        this.currentHistories = await historydb.getArticleHistories(this.currentArticleId)
+      } catch (err) {
+        console.error('加载历史记录列表失败:', err)
+        this.currentHistories = []
+      }
+    },
+
+    /**
      * 记录文本变更
      */
     async recordChange(newText: string) {
@@ -128,6 +151,9 @@ export const useHistoryStore = defineStore('history', {
 
       // 保存到数据库
       await this.saveChangeToDB(this.currentArticleId, oldText, newText)
+
+      // 刷新历史记录列表
+      await this.refreshHistories()
     },
 
     /**
@@ -186,6 +212,9 @@ export const useHistoryStore = defineStore('history', {
      */
     clearArticleHistory(articleId: string) {
       this.managers.delete(articleId)
+      if (this.currentArticleId === articleId) {
+        this.currentHistories = []
+      }
     },
 
     /**
@@ -194,6 +223,7 @@ export const useHistoryStore = defineStore('history', {
     clearAll() {
       this.managers.clear()
       this.currentArticleId = null
+      this.currentHistories = []
     },
 
     /**

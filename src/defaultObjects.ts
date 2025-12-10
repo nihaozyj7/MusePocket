@@ -1,3 +1,5 @@
+import { type OpenAiParams } from './apis/index'
+import type { Prompt } from './stores/PromptsStore'
 import type { Article, Book, Entity, EntityAttr } from "./types"
 import { getNewChapterName, uid } from "./utils"
 
@@ -46,5 +48,23 @@ export function getDefaultEntityAttr(): EntityAttr {
     title: '',
     value: '',
     sortIndex: 0
+  }
+}
+
+export function getDefaultModel(): OpenAiParams {
+  return {
+    note: '',
+    baseUrl: '',
+    apiKey: '',
+    model: '',
+  }
+}
+
+
+export function getDefaultPrompt(): Prompt {
+  return {
+    id: uid(),
+    title: '',
+    prompt: ''
   }
 }

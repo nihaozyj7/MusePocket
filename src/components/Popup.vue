@@ -96,7 +96,7 @@ function close() {
   emit('close')
 }
 
-defineExpose({ show, close })
+defineExpose({ show, close, hide: close })
 
 /** 遮罩点击：仅当 mask && maskClosable 时触发 close */
 function onMaskClick() {

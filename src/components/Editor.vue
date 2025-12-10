@@ -395,6 +395,8 @@ defineExpose({
   setSaveState,
   /** 获取编辑区REF */
   getBody() { return bodyRef.value },
+  /** 手动触发输入处理（用于外部插入内容后触发保存） */
+  handleInput() { _emitUpdate() },
 })
 
 </script>

@@ -521,7 +521,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
         <!-- 面包屑 -->
         <div class="breadcrumb">
           <span style="font-size: 1.2rem; display: block; margin-top: -.3rem;">📖</span>
-          <button style="padding: .5rem .1rem .5rem .5rem;" title="书籍信息">斗破苍穹</button>
+          <span>{{ selectedBookStore.v?.title }}</span>
         </div>
         <!-- 工具按钮 -->
         <div class="tools">
@@ -730,13 +730,14 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   align-items: center;
   margin-left: 0.5rem;
   background-color: var(--background-tertiary);
-  padding: 0.25rem;
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
 
 .button-group button {
   font-size: 1rem;
+  padding: 0.19rem;
+  margin: 0;
 }
 
 .button-group button:disabled {

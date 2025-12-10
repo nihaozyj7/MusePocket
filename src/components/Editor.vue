@@ -54,8 +54,8 @@ const statusBarRight = ref({
 })
 
 const emit = defineEmits({
-  /** 编辑器内容更新, 传入新内容和更新前的旧内容 */
-  'update:articleBody': (nc: string, oc?: string) => true,
+  /** 编辑器内容更新, 传入新内容和更新前的旧内容, skipHistory表示是否跳过历史记录 */
+  'update:articleBody': (nc: string, oc?: string, skipHistory?: boolean) => true,
   /** 文章标题更新 */
   'update:articleTitle': (title: string) => true,
   /** 新建章节 */
@@ -383,32 +383,44 @@ function entityHoverAutoInsertClose(entity: Entity) {
 }
 
 /** 撤销操作 */
-function handleUndo() {
-  const newText = historyStore.undo()
+async function handleUndo() {
+  console.log('开始执行撤销操作')
+  const newText = await historyStore.undo()
+  console.log('撤销操作返回的新文本:', newText)
   if (newText !== null && typeof newText === 'string') {
-    console.log('撤销：更新编辑器内容为:', newText.substring(0, 50) + '...')
+    console.log('撤销：更新编辑器内容为:', newText.substring(0, 100) + '...')
     const cursorPos = saveCursorPosition()
+    console.log('保存的光标位置:', cursorPos)
     resetBody(newText)
     setTimeout(() => {
+      console.log('尝试恢复光标位置')
       restoreCursorPosition(cursorPos)
     }, 0)
     // 触发保存到数据库，不创建新的历史记录
     emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
+  } else {
+    console.log('撤销操作未返回有效文本')
   }
 }
 
 /** 重做操作 */
-function handleRedo() {
-  const newText = historyStore.redo()
+async function handleRedo() {
+  console.log('开始执行重做操作')
+  const newText = await historyStore.redo()
+  console.log('重做操作返回的新文本:', newText)
   if (newText !== null && typeof newText === 'string') {
-    console.log('重做：更新编辑器内容为:', newText.substring(0, 50) + '...')
+    console.log('重做：更新编辑器内容为:', newText.substring(0, 100) + '...')
     const cursorPos = saveCursorPosition()
+    console.log('保存的光标位置:', cursorPos)
     resetBody(newText)
     setTimeout(() => {
+      console.log('尝试恢复光标位置')
       restoreCursorPosition(cursorPos)
     }, 0)
     // 触发保存到数据库，不创建新的历史记录
     emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
+  } else {
+    console.log('重做操作未返回有效文本')
   }
 }
 

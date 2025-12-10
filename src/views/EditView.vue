@@ -162,6 +162,8 @@ function handleSaveArticleTitle(title: string) {
 }
 
 async function saveArticle(text: string, oldText?: string, skipHistory: boolean = false) {
+  console.log('saveArticle 被调用，text:', text.substring(0, 100) + '...', 'skipHistory:', skipHistory)
+
   // 等待编辑器组件加载完成
   if (!editorRef.value) {
     console.error('Editor component not loaded')

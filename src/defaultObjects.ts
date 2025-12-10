@@ -1,6 +1,6 @@
 import { type OpenAiParams } from './apis/index'
 import type { Prompt } from './stores/PromptsStore'
-import type { Article, Book, Entity, EntityAttr } from "./types"
+import type { Article, Book, Entity, EntityAttr, Preset, BaseSettings } from "./types"
 import { getNewChapterName, uid } from "./utils"
 
 export function getDefaultBook(): Book {
@@ -66,5 +66,38 @@ export function getDefaultPrompt(): Prompt {
     id: uid(),
     title: '',
     prompt: ''
+  }
+}
+
+export function getDefaultPreset(): Preset {
+  return {
+    id: uid(),
+    title: '',
+    settings: getDefaultBaseSettings()
+  }
+}
+
+export function getDefaultBaseSettings(): BaseSettings {
+  return {
+    baseFontSize: 16,
+    editorFontSize: 1,
+    autoSaveInterval: 3,
+    lineHeight: 2.5,
+    enableParagraphSpacing: true,
+    entityStyle: {
+      underline: true,
+      underlineColor: '#2997ff',
+      background: false,
+      backgroundColor: '#2997ff20',
+      textColor: false,
+      color: '#2997ff'
+    },
+    usePlainTextPaste: false,
+    insertEntityAsPlainText: false,
+    enableGridLines: false,
+    gridLineStyle: 'dashed',
+    enableBackgroundImage: false,
+    backgroundImage: '',
+    editorBackgroundOpacity: 0.9
   }
 }

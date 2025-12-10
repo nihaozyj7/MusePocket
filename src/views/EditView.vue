@@ -282,7 +282,6 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <!-- 工具按钮 -->
         <div class="tools">
           <button title="设置段落间距和字体等">🔤 段落和字体</button>
-          <button title="设置背景">🎨 背景</button>
           <button title="对当前文章进行排版">✨ 一键排版</button>
           <button title="插入">📋 插入预设</button>
           <button title="查找与替换">🔍 查找替换</button>

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ShortcutKeys, BaseSettings } from '@/types'
 import { StyleManager } from '@/utils'
+import { getDefaultBaseSettings } from '@/defaultObjects'
 
 // 全局样式管理器实例
 let styleManager: StyleManager | null = null
@@ -243,9 +244,9 @@ export const useSettingStore = defineStore('setting', {
       const editMain = document.querySelector('.right-container .bottom main') as HTMLElement
       // BooksView 的主内容区
       const booksMain = document.querySelector('.left-container .right-container main') as HTMLElement
-      
+
       const mains = [editMain, booksMain].filter(m => m)
-      
+
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
         // 启用背景图片时，给内容区设置半透明背景
         const opacity = this.baseSettings.editorBackgroundOpacity
@@ -308,28 +309,7 @@ export const useSettingStore = defineStore('setting', {
 
     /** 重置基础设置为默认值 */
     resetBaseSettings() {
-      this.baseSettings = {
-        baseFontSize: 16,
-        editorFontSize: 1,
-        autoSaveInterval: 3,
-        lineHeight: 2.5,
-        enableParagraphSpacing: true,
-        entityStyle: {
-          underline: true,
-          underlineColor: '#2997ff',
-          background: false,
-          backgroundColor: '#2997ff20',
-          textColor: false,
-          color: '#2997ff'
-        },
-        usePlainTextPaste: false,
-        insertEntityAsPlainText: false,
-        enableGridLines: false,
-        gridLineStyle: 'dashed',
-        enableBackgroundImage: false,
-        backgroundImage: '',
-        editorBackgroundOpacity: 0.9
-      }
+      this.baseSettings = getDefaultBaseSettings()
       this.applyBaseSettings()
     }
   }

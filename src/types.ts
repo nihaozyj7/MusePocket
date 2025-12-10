@@ -184,3 +184,13 @@ export interface BaseSettings {
   /** 编辑区背景透明度（0-1） */
   editorBackgroundOpacity: number
 }
+
+/** 预设配置项 */
+export interface Preset {
+  /** 预设ID */
+  id: string
+  /** 预设名称 */
+  title: string
+  /** 预设设置内容 */
+  settings: BaseSettings
+}

@@ -24,7 +24,7 @@ export const useSettingStore = defineStore('setting', {
     /** 文章编辑器宽度模式 */
     editorWidthMode: ref<'auto' | 'fixed'>('auto'),
     /** 编辑区右侧工具栏展开的抽屉宽度 */
-    drawerWidth: 500,
+    drawerWidth: 400,
     /** 当前侧边栏中正在显示的工具标题 */
     rutilsTitle: null as string | null,
     /** 快捷键配置 */
@@ -52,7 +52,7 @@ export const useSettingStore = defineStore('setting', {
       },
       usePlainTextPaste: false,
       insertEntityAsPlainText: false,
-      enableGridLines: false,
+      enableGridLines: true,
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
       backgroundImage: ''

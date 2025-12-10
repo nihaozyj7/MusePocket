@@ -131,6 +131,14 @@ export interface AppDB extends DBSchema {
       'by-sequence': number
     }
   }
+  /** 草稿表 */
+  drafts: {
+    key: string
+    value: Draft
+    indexes: {
+      'by-book': string
+    }
+  }
 }
 
 export type Status = { success: boolean; message?: string }
@@ -245,18 +253,44 @@ export interface HistoryRecord {
   isSnapshot: boolean
 }
 
-/** 数据库中的历史记录项（序列化存储） */
+/** 数据库中的历史记录项(序列化存储) */
 export interface DBHistoryRecord extends Time {
   /** 记录ID */
   id: string
   /** 文章ID */
   articleId: string
-  /** 相对于前一版本的差异（JSON字符串） */
+  /** 相对于前一版本的差异(JSON字符串) */
   diffsJson: string
-  /** 完整内容（首个版本或定期快照） */
+  /** 完整内容(首个版本或定期快照) */
   fullContent?: string
   /** 是否为快照版本 */
   isSnapshot: boolean
-  /** 序号（用于排序） */
+  /** 序号(用于排序) */
   sequence: number
+}
+
+/** 草稿 */
+export interface Draft extends Time {
+  /** 草稿ID */
+  id: string
+  /** 所属书籍ID */
+  bookId: string
+  /** 草稿标题 */
+  title: string
+  /** 草稿内容 */
+  content: string
+  /** 是否为自动保存 */
+  isAutoSave: boolean
+}
+
+/** 大纲项 */
+export interface OutlineItem {
+  /** 标题文本 */
+  text: string
+  /** 标题级别(1-6) */
+  level: number
+  /** 在文档中的位置 */
+  position: number
+  /** 子标题 */
+  children?: OutlineItem[]
 }

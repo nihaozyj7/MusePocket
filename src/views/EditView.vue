@@ -4,6 +4,8 @@ import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
 import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
 import HistorySidebar from '@/components/HistorySidebar.vue'
 import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
+import DraftManager from '@/components/DraftManager.vue'
+import OutlineNavigator from '@/components/OutlineNavigator.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -299,6 +301,22 @@ async function handleRestoreFromHistory(text: string) {
   }
 }
 
+/** 大纲插入 */
+function handleOutlineInsert(markdown: string) {
+  if (editorRef.value) {
+    // 获取当前编辑器内容
+    const currentContent = editorRef.value.getBodyText()
+    // 插入markdown到当前光标位置或末尾
+    insertText(markdown + '\n\n')
+    // 触发保存
+    setTimeout(() => {
+      if (editorRef.value) {
+        editorRef.value.handleInput()
+      }
+    }, 100)
+  }
+}
+
 function creatreArticle() {
   const newArticle = getDefaultArticle(selectedBookStore.v.id, articles.value)
   if (!newArticle) return $tips.error('获取默认文章失败')
@@ -533,6 +551,8 @@ function handleDrop(e: DragEvent, targetIndex: number) {
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
+          <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[3]" :bookId="selectedBookStore.v?.id || ''" />
+          <OutlineNavigator v-show="settingStore.rutilsTitle === rutilsTitles[4]" :articleId="selectedArticleStore.v?.id || ''" @insert="handleOutlineInsert" />
           <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
         </div>
         <!-- 侧边工具栏 -->

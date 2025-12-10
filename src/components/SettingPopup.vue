@@ -8,6 +8,7 @@ import SettingPreset from './SettingPreset.vue'
 import SettingTextSnippet from './SettingTextSnippet.vue'
 import SettingShortcutKey from './SettingShortcutKey.vue'
 import SettingRegarding from './SettingRegarding.vue'
+import SettingImage from './SettingImage.vue'
 
 
 const popupRef = ref<InstanceType<typeof Popup>>()
@@ -19,6 +20,7 @@ const paths = [
   { name: '文本预设', icon: '📋' },
   { name: '配置预设', icon: '📦' },
   { name: '快捷键', icon: '⌨️' },
+  { name: '图片管理', icon: '🖼️' },
   { name: '关于', icon: 'ℹ️' }
 ] as const
 
@@ -51,7 +53,9 @@ defineExpose({
 
         <SettingShortcutKey :title="paths[5].name" v-else-if="defPath === paths[5].name" />
 
-        <SettingRegarding :title="paths[6].name" v-else-if="defPath === paths[6].name" />
+        <SettingImage :title="paths[6].name" v-else-if="defPath === paths[6].name" />
+
+        <SettingRegarding :title="paths[7].name" v-else-if="defPath === paths[7].name" />
       </div>
     </div>
   </Popup>
@@ -193,7 +197,7 @@ textarea {
 
 /* 通用按钮样式 */
 button {
-  padding: 0.5rem 1rem;
+  padding: .25rem .5rem;
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   background-color: var(--background-tertiary);

@@ -2,8 +2,10 @@
 import { getDefaultBook } from '@/defaultObjects.ts'
 import type { Book } from '@/types.ts'
 import { getImageBase64ByID } from '@/utils.ts'
-import { ref } from 'vue'
+import { ref, defineAsyncComponent, computed } from 'vue'
 import Popup from './Popup.vue'
+
+const SelectCoverPopup = defineAsyncComponent(() => import('./SelectCoverPopup.vue'))
 
 type Type = 'create' | 'edit'
 
@@ -14,12 +16,31 @@ const emit = defineEmits({
 })
 
 const popupRef = ref<InstanceType<typeof Popup> | null>(null)
+const selectCoverPopupRef = ref<InstanceType<typeof SelectCoverPopup> | null>(null)
 
 const book = ref<Book>(getDefaultBook())
+const coverUrl = ref<string>('')
 
 function saveBook() {
   emit('status:save', { ...book.value })
   popupRef.value.close()
+}
+
+/** 打开封面选择器 */
+function openCoverSelector() {
+  selectCoverPopupRef.value?.show(book.value.coverId)
+}
+
+/** 处理封面选择 */
+async function handleCoverSelected(coverId: string) {
+  book.value.coverId = coverId
+  // 更新封面预览
+  coverUrl.value = await getImageBase64ByID(coverId)
+}
+
+/** 加载封面图片 */
+async function loadCoverImage() {
+  coverUrl.value = await getImageBase64ByID(book.value.coverId)
 }
 
 defineExpose({
@@ -31,6 +52,10 @@ defineExpose({
     } else {
       book.value = getDefaultBook()
     }
+
+    // 加载封面图片
+    loadCoverImage()
+
     popupRef.value.show()
   },
 })
@@ -41,8 +66,8 @@ defineExpose({
   <Popup title="📓 新书" ref="popupRef">
     <div style="width: 30rem; display: flex; align-items: center;">
       <div class="cover">
-        <img :src="getImageBase64ByID(book.coverId)" :alt="`${book.title}的封面`"></img>
-        <button>更换封面</button>
+        <img :src="coverUrl" :alt="`${book.title}的封面`"></img>
+        <button @click="openCoverSelector">更换封面</button>
       </div>
       <div class="form">
         <label for="title">书名</label>
@@ -58,6 +83,9 @@ defineExpose({
       </div>
     </div>
   </Popup>
+
+  <!-- 封面选择弹窗 -->
+  <SelectCoverPopup ref="selectCoverPopupRef" @select="handleCoverSelected" />
 </template>
 
 <style scoped>
@@ -82,7 +110,6 @@ defineExpose({
 .cover button {
   position: absolute;
   background-color: var(--background-tertiary);
-  height: 2rem;
   width: 100%;
   bottom: 0;
   font-size: .8rem;
@@ -103,11 +130,12 @@ defineExpose({
 .form label {
   font-size: .8rem;
   color: var(--text-secondary);
+  margin-bottom: .5rem;
 }
 
 .form input {
   border-bottom: 1px solid var(--border-color);
-  padding: .5rem .5rem .5rem 0;
+  padding: .5rem;
   margin-bottom: 1rem;
 }
 
@@ -116,7 +144,7 @@ defineExpose({
   line-height: 1.5rem;
   margin-top: .5rem;
   height: 9rem;
-  padding: 0 .25rem;
+  padding: .5rem;
 }
 
 .buttons {
@@ -126,7 +154,6 @@ defineExpose({
 .form button {
   background-color: var(--primary-dark);
   margin-top: 1rem;
-  height: 1.9rem;
   line-height: 1.9rem;
   border-radius: .25rem;
   color: var(--text-primary);

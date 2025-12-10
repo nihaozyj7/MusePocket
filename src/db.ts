@@ -526,12 +526,13 @@ export const entitydb = new class {
 /** 图片操作类 */
 export const imagedb = new class {
   /** 创建图片 */
-  async createImage(img: Blob): Promise<Status> {
+  async createImage(img: Blob): Promise<Status & { id?: string }> {
     try {
+      const imageId = uid()
       const tx = db.transaction(['images'], 'readwrite')
-      await tx.objectStore('images').add({ id: uid(), base64: img })
+      await tx.objectStore('images').add({ id: imageId, base64: img })
       await tx.done
-      return { success: true }
+      return { success: true, id: imageId }
     } catch (err: any) {
       return { success: false, message: err.message }
     }

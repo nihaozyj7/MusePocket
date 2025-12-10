@@ -13,6 +13,8 @@ const popupRef = ref<InstanceType<typeof Popup> | null>(null)
 const deletedBooks = ref<Book[]>([])
 /** 加载状态 */
 const loading = ref(false)
+/** 封面图片URL缓存 */
+const bookCoverUrls = ref<Map<string, string>>(new Map())
 
 /** 恢复书籍成功事件 */
 const emit = defineEmits<{
@@ -39,11 +41,28 @@ async function loadDeletedBooks() {
     const allBooks = await bookdb.getAllBooks(true)
     deletedBooks.value = allBooks.filter(b => b.deletedTime !== 0)
       .sort((a, b) => b.deletedTime - a.deletedTime)
+
+    // 加载封面图片
+    await loadBookCovers()
   } catch (err: any) {
     $tips.error(`获取回收站失败: ${err.message}`)
   } finally {
     loading.value = false
   }
+}
+
+/** 加载书籍封面 */
+async function loadBookCovers() {
+  bookCoverUrls.value.clear()
+  for (const book of deletedBooks.value) {
+    const url = await getImageBase64ByID(book.coverId)
+    bookCoverUrls.value.set(book.id, url)
+  }
+}
+
+/** 获取书籍封面URL */
+function getBookCoverUrl(bookId: string): string {
+  return bookCoverUrls.value.get(bookId) || '/cover/default.png'
 }
 
 /** 恢复书籍 */
@@ -99,7 +118,7 @@ async function handleClearAll() {
   }
 
   loading.value = false
-  
+
   if (failCount === 0) {
     $tips.success(`已清空回收站，共删除 ${successCount} 本书籍`)
     deletedBooks.value = []
@@ -144,11 +163,7 @@ function formatDate(timestamp: number): string {
         <div class="info">
           共 {{ deletedBooks.length }} 本已删除的书籍
         </div>
-        <button 
-          class="button-danger" 
-          @click="handleClearAll"
-          :disabled="deletedBooks.length === 0 || loading"
-        >
+        <button class="button-danger" @click="handleClearAll" :disabled="deletedBooks.length === 0 || loading">
           🗑️ 清空回收站
         </button>
       </div>
@@ -163,12 +178,8 @@ function formatDate(timestamp: number): string {
           <p>回收站是空的</p>
         </div>
         <div v-else class="book-list">
-          <div 
-            v-for="book in deletedBooks" 
-            :key="book.id" 
-            class="book-item"
-          >
-            <img :src="getImageBase64ByID(book.coverId)" class="book-cover" />
+          <div v-for="book in deletedBooks" :key="book.id" class="book-item">
+            <img :src="getBookCoverUrl(book.id)" class="book-cover" />
             <div class="book-info">
               <h4 class="book-title">{{ book.title }}</h4>
               <p class="book-desc">{{ book.description || '暂无描述' }}</p>
@@ -178,18 +189,10 @@ function formatDate(timestamp: number): string {
               </div>
             </div>
             <div class="book-actions">
-              <button 
-                class="button-primary" 
-                @click="handleRestore(book)"
-                :disabled="loading"
-              >
+              <button class="button-primary" @click="handleRestore(book)" :disabled="loading">
                 ♻️ 恢复
               </button>
-              <button 
-                class="button-danger" 
-                @click="handlePermanentDelete(book)"
-                :disabled="loading"
-              >
+              <button class="button-danger" @click="handlePermanentDelete(book)" :disabled="loading">
                 ❌ 永久删除
               </button>
             </div>

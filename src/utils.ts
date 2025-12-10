@@ -1,12 +1,55 @@
 import { customAlphabet } from "nanoid"
 import { useSettingStore } from "./stores/SettingStore"
+import { imagedb } from "./db"
 
 /** 生成一个唯一的 UUID v4 */
 export const uid = customAlphabet('023456789ABCDEFGHIKLMNOPQRSTUVWXYZ', 10)
 
+/** 图片缓存 */
+const imageCache = new Map<string, string>()
+
 /** 根据图片ID获取图标Base64 URL */
-export function getImageBase64ByID(id: string): string {
+export async function getImageBase64ByID(id: string): Promise<string> {
+  if (!id) return '/cover/default.png'
+
+  // 检查缓存
+  if (imageCache.has(id)) {
+    return imageCache.get(id)!
+  }
+
+  try {
+    const images = await imagedb.getAllImages()
+    const image = images.find(img => img.id === id)
+
+    if (image) {
+      const url = URL.createObjectURL(image.base64)
+      imageCache.set(id, url)
+      return url
+    }
+  } catch (err) {
+    console.error('获取图片失败:', err)
+  }
+
   return '/cover/default.png'
+}
+
+/** 清除图片缓存（删除图片后调用） */
+export function clearImageCache(id?: string) {
+  if (id) {
+    const url = imageCache.get(id)
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+    imageCache.delete(id)
+  } else {
+    // 清除所有缓存
+    imageCache.forEach(url => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url)
+      }
+    })
+    imageCache.clear()
+  }
 }
 
 
@@ -70,10 +113,10 @@ export const getActualLineHeight = (() => {
   let settingStore: { lineHeight: number }
 
   return (e: Element) => {
-    if (!settingStore) settingStore = useSettingStore()
+    if (!settingStore) settingStore = useSettingStore().baseSettings
 
     if (lineHeight === undefined || lineHeight !== settingStore.lineHeight) {
-      lineHeight = useSettingStore().lineHeight
+      lineHeight = useSettingStore().baseSettings.lineHeight
       element = e
       result = _getActualLineHeight(element)
       return result

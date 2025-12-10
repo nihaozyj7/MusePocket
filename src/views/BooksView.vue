@@ -65,6 +65,8 @@ let rightSelectedBook: Book | null = null
 
 /** 每本书的统计信息缓存 */
 const booksStatsCache = ref<Record<string, { wordCount: number, articleCount: number }>>({})
+/** 封面图片URL缓存 */
+const bookCoverUrls = ref<Map<string, string>>(new Map())
 
 /** 书籍的右键菜单功能 */
 const bookContextMenuHanders = {
@@ -182,9 +184,25 @@ async function loadBooks() {
 
     // 加载每本书的统计信息
     await loadBooksStats()
+
+    // 加载封面图片
+    await loadBookCovers()
   } catch (err: any) {
     $tips.error(`获取书籍列表失败, ${err.message}`)
   }
+}
+
+/** 加载书籍封面 */
+async function loadBookCovers() {
+  for (const book of books.value) {
+    const url = await getImageBase64ByID(book.coverId)
+    bookCoverUrls.value.set(book.id, url)
+  }
+}
+
+/** 获取书籍封面URL */
+function getBookCoverUrl(bookId: string): string {
+  return bookCoverUrls.value.get(bookId) || '/cover/default.png'
 }
 
 /** 加载所有书籍的统计信息 */
@@ -323,7 +341,7 @@ function openArticle(article: any) {
           <div class="book-item" :class="{ 'checked': bookIdEqual(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
             <!-- 封面占位 -->
             <div class="cover">
-              <img :src="getImageBase64ByID(book.coverId)" alt="封面" class="cover-img"></img>
+              <img :src="getBookCoverUrl(book.id)" alt="封面" class="cover-img"></img>
             </div>
             <!-- 书籍信息 -->
             <div class="bookInfo">
@@ -389,7 +407,7 @@ function openArticle(article: any) {
             <h3 class="section-title">📌 最近活动</h3>
             <div class="recent-books">
               <div v-for="book in books.slice(0, 5)" :key="book.id" class="recent-book-item" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
-                <img :src="getImageBase64ByID(book.coverId)" class="recent-book-cover" />
+                <img :src="getBookCoverUrl(book.id)" class="recent-book-cover" />
                 <div class="recent-book-info">
                   <h4>{{ book.title }}</h4>
                   <p class="book-time">{{ formatTime(book.modifiedTime) }}更新</p>
@@ -404,7 +422,7 @@ function openArticle(article: any) {
           <div v-if="clickSelectedBook" class="detail-content">
             <!-- 书籍头部信息 -->
             <div class="book-header">
-              <img :src="getImageBase64ByID(clickSelectedBook.coverId)" class="detail-cover" />
+              <img :src="getBookCoverUrl(clickSelectedBook.id)" class="detail-cover" />
               <div class="book-header-info">
                 <h2>{{ clickSelectedBook.title }}</h2>
                 <p class="book-desc">{{ clickSelectedBook.description || '暂无描述' }}</p>

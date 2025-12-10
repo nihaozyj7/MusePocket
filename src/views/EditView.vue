@@ -113,14 +113,22 @@ const contextMenuHanders = {
       if (!res.success) return console.error(`删除文章失败, ${res.message}`)
       $tips.success('删除成功')
 
+      // 先计算索引（在删除前）
       let index = articles.value.findIndex(article => article.id === id) - 1
+      // 从列表中移除被删除的文章
       articles.value = articles.value.filter(article => article.id !== id)
+
+      // 如果删除的不是当前选中的文章，直接返回
       if (selectedArticleStore.v.id !== id) return
 
+      // 如果删除后没有文章了，创建新文章
       if (articles.value.length === 0) {
         creatreArticle()
       } else {
-        selectedArticleStore.v = articles.value[Math.max(0, index)]
+        // 选择前一个文章（如果索引<0则选择第一个）
+        const nextArticle = articles.value[Math.max(0, index)]
+        // 重要：调用 openArticle 来加载文章内容，而不是仅仅设置 selectedArticleStore.v
+        openArticle(nextArticle)
       }
     })
   },

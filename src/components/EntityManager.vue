@@ -89,7 +89,6 @@ header>h4 {
   padding: 0.25rem 0.5rem;
   border-right: 1px solid var(--border-color);
   border-radius: 0;
-  background-color: transparent;
 }
 
 .buttons button:last-child {

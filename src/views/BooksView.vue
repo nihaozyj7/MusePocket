@@ -12,6 +12,7 @@ import { articledb, entitydb } from '@/db.ts'
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
 const EditBookPopup = defineAsyncComponent(() => import('@/components/EditBookPopup.vue'))
+const RecycleBinBookPopup = defineAsyncComponent(() => import('@/components/RecycleBinBookPopup.vue'))
 
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
@@ -30,6 +31,8 @@ const clickSelectedBook = ref<Book | null>(null)
 const updateBookPopupRef = ref(null)
 /** 创建书籍弹出层 */
 const createBookPopupRef = ref(null)
+/** 书籍回收站弹出层 */
+const recycleBinBookPopupRef = ref(null)
 /** 书籍统计数据 */
 const bookStats = ref<{
   totalBooks: number
@@ -145,6 +148,18 @@ function addBook(book: Book) {
       $tips.error(`创建书籍失败, ${res.message}`)
     }
   })
+}
+
+/** 打开书籍回收站 */
+function openRecycleBin() {
+  recycleBinBookPopupRef.value?.show()
+}
+
+/** 处理书籍恢复 */
+function handleBookRestored(book: Book) {
+  // 重新加载书籍列表
+  loadBooks()
+  $tips.success(`书籍《${book.title}》已恢复`)
 }
 
 function updateBook(book: Book) {
@@ -296,7 +311,7 @@ function openArticle(article: any) {
         <!-- 导入导出 -->
         <button class="button-m" title="导入导出">📥 导入导出</button>
         <!-- 回收站 -->
-        <button class="button-m" title="回收站">🗑 回收站</button>
+        <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
         <!-- 占位符 -->
         <div style="flex: 1;"></div>
         <!-- 新建书籍 -->
@@ -468,6 +483,9 @@ function openArticle(article: any) {
 
   <!-- 修改书籍弹出层 -->
   <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" title="✍️ 修改书籍信息" />
+
+  <!-- 书籍回收站弹出层 -->
+  <RecycleBinBookPopup ref="recycleBinBookPopupRef" @restored="handleBookRestored" />
 </template>
 
 <style scoped>

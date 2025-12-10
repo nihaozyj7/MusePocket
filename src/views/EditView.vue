@@ -20,6 +20,7 @@ import { defineAsyncComponent, onMounted, ref } from 'vue'
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
 const Editor = defineAsyncComponent(() => import('@/components/Editor.vue'))
 const EntityManager = defineAsyncComponent(() => import('@/components/EntityManager.vue'))
+const RecycleBinArticlePopup = defineAsyncComponent(() => import('@/components/RecycleBinArticlePopup.vue'))
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -51,6 +52,9 @@ const historyViewPopupRef = ref<InstanceType<typeof HistoryViewPopup> | null>(nu
 
 /** 历史记录侧栏 */
 const historySidebarRef = ref<InstanceType<typeof HistorySidebar> | null>(null)
+
+/** 文章回收站弹出层 */
+const recycleBinArticlePopupRef = ref(null)
 
 const eneityManagerRef = ref(null)
 
@@ -294,6 +298,18 @@ function loadArticles() {
   })
 }
 
+/** 打开文章回收站 */
+function openRecycleBin() {
+  recycleBinArticlePopupRef.value?.show(selectedBookStore.v.id)
+}
+
+/** 处理文章恢复 */
+function handleArticleRestored(article: Article) {
+  // 重新加载文章列表
+  loadArticles()
+  $tips.success(`文章《${article.title}》已恢复`)
+}
+
 function HandleUtilsPanelButtonsClick(e: MouseEvent) {
   const target = e.target as HTMLElement
   const title = target?.innerText
@@ -337,7 +353,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <!-- 自定义 -->
         <button class="button-m" title="自定义">🛠️ 自定义</button>
         <!-- 回收站 -->
-        <button class="button-m" title="回收站">🗑 回收站</button>
+        <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
         <!-- 新建书籍 -->
         <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
       </div>
@@ -401,6 +417,8 @@ function handleSplitLineMousedown(e: MouseEvent) {
   <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
   <!-- 历史记录弹出层 -->
   <HistoryViewPopup ref="historyViewPopupRef" @restore="() => { }" />
+  <!-- 文章回收站弹出层 -->
+  <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
 </template>
 
 <style scoped>

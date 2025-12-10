@@ -135,3 +135,50 @@ export interface ShortcutKeys {
   /** 替换快捷键 */
   replace: string
 }
+
+/** 实体样式配置 */
+export interface EntityStyle {
+  /** 是否启用下划线 */
+  underline: boolean
+  /** 下划线颜色 */
+  underlineColor: string
+  /** 是否启用背景色 */
+  background: boolean
+  /** 背景色 */
+  backgroundColor: string
+  /** 是否启用文字色 */
+  textColor: boolean
+  /** 文字颜色 */
+  color: string
+}
+
+/** 网格线样式 */
+export type GridLineStyle = 'dashed' | 'solid'
+
+/** 基础设置配置 */
+export interface BaseSettings {
+  /** 基准尺寸（px） */
+  baseFontSize: number
+  /** 编辑区文字尺寸（rem） */
+  editorFontSize: number
+  /** 自动保存间隔（秒） */
+  autoSaveInterval: number
+  /** 字体行高（倍数） */
+  lineHeight: number
+  /** 启用段间距 */
+  enableParagraphSpacing: boolean
+  /** 实体样式 */
+  entityStyle: EntityStyle
+  /** 复制粘贴使用纯文本 */
+  usePlainTextPaste: boolean
+  /** 插入实体时使用普通文本 */
+  insertEntityAsPlainText: boolean
+  /** 启用网格线 */
+  enableGridLines: boolean
+  /** 网格线样式 */
+  gridLineStyle: GridLineStyle
+  /** 启用背景图片 */
+  enableBackgroundImage: boolean
+  /** 背景图片（base64或URL） */
+  backgroundImage: string
+}

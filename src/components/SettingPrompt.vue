@@ -8,6 +8,7 @@ const props = defineProps<{ title: string }>()
 
 const prompts = usePromptsStore()
 const newPrompt = ref(getDefaultPrompt())
+const isFormExpanded = ref(false)
 
 function add() {
   if (newPrompt.value.title.trim() === '' || newPrompt.value.prompt.trim() === '') {
@@ -36,11 +37,18 @@ function remove(prompt: Prompt) {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <div class="form-section">
-        <textarea placeholder="提示词内容" v-model="newPrompt.prompt"></textarea>
-        <div class="form-actions">
-          <input type="text" placeholder="提示词标题" v-model="newPrompt.title">
-          <button @click="add">添加提示词</button>
+      <!-- 折叠表单区域 -->
+      <div class="form-section" :class="{ collapsed: !isFormExpanded }">
+        <div class="form-header" @click="isFormExpanded = !isFormExpanded">
+          <span class="form-title">{{ isFormExpanded ? '📝 新增提示词' : '➕ 新增提示词' }}</span>
+          <span class="toggle-icon">{{ isFormExpanded ? '▼' : '▶' }}</span>
+        </div>
+        <div class="form-body" v-show="isFormExpanded">
+          <textarea placeholder="提示词内容" v-model="newPrompt.prompt"></textarea>
+          <div class="form-actions">
+            <input type="text" placeholder="提示词标题" v-model="newPrompt.title">
+            <button @click="add">添加提示词</button>
+          </div>
         </div>
       </div>
       <div class="items-list">
@@ -63,14 +71,62 @@ function remove(prompt: Prompt) {
 }
 
 .form-section {
-  padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.form-section textarea {
+.form-section.collapsed {
+  background-color: transparent;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.form-header:hover {
+  background-color: var(--background-tertiary);
+}
+
+.form-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle-icon {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.form-body {
+  padding: 0 1rem 1rem 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-body textarea {
   width: 100%;
   margin-bottom: 0.75rem;
 }

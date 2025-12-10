@@ -10,6 +10,7 @@ const props = defineProps<{ title: string }>()
 const modelStore = useModelsStore()
 
 const newModel = ref(getDefaultModel())
+const isFormExpanded = ref(false)
 
 function addModel() {
   if (!newModel.value.model) {
@@ -47,35 +48,42 @@ function copy(text: string) {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <div class="form-section">
-        <div class="form-row">
+      <!-- 折叠表单区域 -->
+      <div class="form-section" :class="{ collapsed: !isFormExpanded }">
+        <div class="form-header" @click="isFormExpanded = !isFormExpanded">
+          <span class="form-title">{{ isFormExpanded ? '📝 添加新模型' : '➕ 添加新模型' }}</span>
+          <span class="toggle-icon">{{ isFormExpanded ? '▼' : '▶' }}</span>
+        </div>
+        <div class="form-body" v-show="isFormExpanded">
+          <div class="form-row">
+            <div class="form-item">
+              <label>
+                <span class="label-text">模型名称</span>
+                <input type="text" placeholder="模型名称" v-model="newModel.model" />
+              </label>
+            </div>
+            <div class="form-item" style="flex: 2;">
+              <label>
+                <span class="label-text">备注</span>
+                <input type="text" placeholder="备注 & 描述信息" v-model="newModel.note" />
+              </label>
+            </div>
+          </div>
           <div class="form-item">
             <label>
-              <span class="label-text">模型名称</span>
-              <input type="text" placeholder="模型名称" v-model="newModel.model" />
+              <span class="label-text">请求地址</span>
+              <input type="text" placeholder="示例：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" v-model="newModel.baseUrl" />
             </label>
           </div>
-          <div class="form-item" style="flex: 2;">
+          <div class="form-item">
             <label>
-              <span class="label-text">备注</span>
-              <input type="text" placeholder="备注 & 描述信息" v-model="newModel.note" />
+              <span class="label-text">密钥</span>
+              <input type="text" placeholder="密钥 ApiKey" v-model="newModel.apiKey" />
             </label>
           </div>
-        </div>
-        <div class="form-item">
-          <label>
-            <span class="label-text">请求地址</span>
-            <input type="text" placeholder="示例：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" v-model="newModel.baseUrl" />
-          </label>
-        </div>
-        <div class="form-item">
-          <label>
-            <span class="label-text">密钥</span>
-            <input type="text" placeholder="密钥 ApiKey" v-model="newModel.apiKey" />
-          </label>
-        </div>
-        <div class="form-actions">
-          <button class="add-btn" @click="addModel">添加新模型</button>
+          <div class="form-actions">
+            <button class="add-btn" @click="addModel">添加新模型</button>
+          </div>
         </div>
       </div>
 
@@ -103,11 +111,59 @@ function copy(text: string) {
 }
 
 .form-section {
-  padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.form-section.collapsed {
+  background-color: transparent;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.form-header:hover {
+  background-color: var(--background-tertiary);
+}
+
+.form-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle-icon {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.form-body {
+  padding: 0 1rem 1rem 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-row {

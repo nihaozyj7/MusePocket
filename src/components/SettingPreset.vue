@@ -12,6 +12,7 @@ const props = defineProps<{ title: string }>()
 const presetsStore = useSettingsPresetsStore()
 const settingStore = useSettingStore()
 const newPreset = ref(getDefaultSettingsPreset())
+const isFormExpanded = ref(false)
 
 function add() {
   if (newPreset.value.title.trim() === '') {
@@ -59,12 +60,19 @@ async function applyPreset(preset: SettingsPreset) {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <div class="form-section">
-        <div class="form-item">
-          <input type="text" placeholder="配置预设名称" v-model="newPreset.title">
-          <button @click="saveCurrentAsPreset">保存当前设置为预设</button>
+      <!-- 折叠表单区域 -->
+      <div class="form-section" :class="{ collapsed: !isFormExpanded }">
+        <div class="form-header" @click="isFormExpanded = !isFormExpanded">
+          <span class="form-title">{{ isFormExpanded ? '📝 保存为配置预设' : '➕ 保存为配置预设' }}</span>
+          <span class="toggle-icon">{{ isFormExpanded ? '▼' : '▶' }}</span>
         </div>
-        <div class="tip">💡 提示：输入配置预设名称后，点击“保存当前设置为预设”按钮，将当前的基础设置保存为配置预设。</div>
+        <div class="form-body" v-show="isFormExpanded">
+          <div class="form-item">
+            <input type="text" placeholder="配置预设名称" v-model="newPreset.title">
+            <button @click="saveCurrentAsPreset">保存当前设置为预设</button>
+          </div>
+          <div class="tip">💡 提示：输入配置预设名称后，点击“保存当前设置为预设”按钮，将当前的基础设置保存为配置预设。</div>
+        </div>
       </div>
       <div class="items-list">
         <div class="preset-card" v-for="preset in presetsStore.v" :key="preset.id">
@@ -95,11 +103,59 @@ async function applyPreset(preset: SettingsPreset) {
 }
 
 .form-section {
-  padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.form-section.collapsed {
+  background-color: transparent;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.form-header:hover {
+  background-color: var(--background-tertiary);
+}
+
+.form-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggle-icon {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.form-body {
+  padding: 0 1rem 1rem 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-item {

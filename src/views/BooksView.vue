@@ -5,8 +5,9 @@ import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Book } from '@/types.ts'
 import { getImageBase64ByID } from '@/utils.ts'
-import { onMounted, ref, defineAsyncComponent } from 'vue'
+import { onMounted, ref, defineAsyncComponent, computed } from 'vue'
 import { $tips } from '@/plugins/notyf'
+import { articledb, entitydb } from '@/db.ts'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -29,9 +30,38 @@ const clickSelectedBook = ref<Book | null>(null)
 const updateBookPopupRef = ref(null)
 /** 创建书籍弹出层 */
 const createBookPopupRef = ref(null)
+/** 书籍统计数据 */
+const bookStats = ref<{
+  totalBooks: number
+  totalWords: number
+  recentUpdated: number
+}>({
+  totalBooks: 0,
+  totalWords: 0,
+  recentUpdated: 0
+})
+/** 当前选中书籍的详细统计 */
+const selectedBookStats = ref<{
+  articleCount: number
+  deletedArticleCount: number
+  totalWords: number
+  entityCount: number
+  entityTypes: Record<string, number>
+  articles: any[]
+}>({
+  articleCount: 0,
+  deletedArticleCount: 0,
+  totalWords: 0,
+  entityCount: 0,
+  entityTypes: {},
+  articles: []
+})
 
 /** 右键菜单选中的书籍 */
 let rightSelectedBook: Book | null = null
+
+/** 每本书的统计信息缓存 */
+const booksStatsCache = ref<Record<string, { wordCount: number, articleCount: number }>>({})
 
 /** 书籍的右键菜单功能 */
 const bookContextMenuHanders = {
@@ -64,7 +94,8 @@ const bookContextMenuHanders = {
 }
 
 onMounted(async () => {
-  loadBooks()
+  await loadBooks()
+  await loadBookStats()
 })
 
 function bookIdEqual(book: Book) {
@@ -91,9 +122,10 @@ function handleBookItemContextMenu(e: MouseEvent, book: Book) {
 }
 
 
-function handleClickBookItem(book: Book) {
+async function handleClickBookItem(book: Book) {
   onHome.value = false
   clickSelectedBook.value = book
+  await loadSelectedBookStats(book)
 }
 
 function goHome() {
@@ -127,13 +159,127 @@ function updateBook(book: Book) {
   })
 }
 
-function loadBooks() {
-  bookdb.getAllBooks().then(res => {
+async function loadBooks() {
+  try {
+    const res = await bookdb.getAllBooks()
     res.sort((a, b) => b.modifiedTime - a.modifiedTime)
     books.value = res
-  }).catch(err => {
+
+    // 加载每本书的统计信息
+    await loadBooksStats()
+  } catch (err: any) {
     $tips.error(`获取书籍列表失败, ${err.message}`)
+  }
+}
+
+/** 加载所有书籍的统计信息 */
+async function loadBooksStats() {
+  for (const book of books.value) {
+    const articles = await articledb.getBookArticles(book.id)
+    const wordCount = articles.reduce((sum, art) => sum + (art.wordCount || 0), 0)
+    booksStatsCache.value[book.id] = {
+      wordCount,
+      articleCount: articles.length
+    }
+  }
+}
+
+/** 获取书籍统计信息 */
+function getBookStats(bookId: string) {
+  return booksStatsCache.value[bookId] || { wordCount: 0, articleCount: 0 }
+}
+
+/** 加载总览统计数据 */
+async function loadBookStats() {
+  try {
+    const allBooks = books.value
+    bookStats.value.totalBooks = allBooks.length
+
+    // 计算总字数和最近更新数
+    let totalWords = 0
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    let recentCount = 0
+
+    for (const book of allBooks) {
+      const articles = await articledb.getBookArticles(book.id)
+      totalWords += articles.reduce((sum, art) => sum + (art.wordCount || 0), 0)
+
+      if (book.modifiedTime > oneWeekAgo) {
+        recentCount++
+      }
+    }
+
+    bookStats.value.totalWords = totalWords
+    bookStats.value.recentUpdated = recentCount
+  } catch (err: any) {
+    console.error('加载统计数据失败:', err)
+  }
+}
+
+/** 加载选中书籍的详细统计 */
+async function loadSelectedBookStats(book: Book) {
+  try {
+    // 获取文章列表
+    const articles = await articledb.getBookArticles(book.id, true)
+    const activeArticles = articles.filter(a => a.deletedTime === 0)
+    const deletedArticles = articles.filter(a => a.deletedTime !== 0)
+
+    // 计算总字数
+    const totalWords = activeArticles.reduce((sum, art) => sum + (art.wordCount || 0), 0)
+
+    // 获取实体统计
+    const entities = await entitydb.getBookEntities(book.id)
+    const entityTypes: Record<string, number> = {}
+    entities.forEach(entity => {
+      if (!entityTypes[entity.type]) {
+        entityTypes[entity.type] = 0
+      }
+      entityTypes[entity.type]++
+    })
+
+    selectedBookStats.value = {
+      articleCount: activeArticles.length,
+      deletedArticleCount: deletedArticles.length,
+      totalWords,
+      entityCount: entities.length,
+      entityTypes,
+      articles: activeArticles.sort((a, b) => b.modifiedTime - a.modifiedTime)
+    }
+  } catch (err: any) {
+    console.error('加载书籍统计失败:', err)
+  }
+}
+
+/** 格式化时间显示 */
+function formatTime(timestamp: number): string {
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+
+  if (days === 0) return '今天'
+  if (days === 1) return '昨天'
+  if (days < 7) return `${days}天前`
+  if (days < 30) return `${Math.floor(days / 7)}周前`
+  if (days < 365) return `${Math.floor(days / 30)}个月前`
+  return `${Math.floor(days / 365)}年前`
+}
+
+/** 格式化日期 */
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
   })
+}
+
+/** 打开文章编辑器 */
+function openArticle(article: any) {
+  // TODO: 跳转到编辑器并加载文章
+  console.log('打开文章:', article)
 }
 
 </script>
@@ -167,7 +313,7 @@ function loadBooks() {
             <!-- 书籍信息 -->
             <div class="bookInfo">
               <h4>{{ book.title }}</h4>
-              <p>1584字 | 更新5天</p>
+              <p>{{ getBookStats(book.id).wordCount }}字 | {{ formatTime(book.modifiedTime) }}更新</p>
               <p>{{ book.description }}</p>
             </div>
           </div>
@@ -196,7 +342,120 @@ function loadBooks() {
         </div>
       </header>
       <main>
+        <!-- 总览界面 -->
+        <div v-if="onHome" class="overview">
+          <!-- 统计卡片 -->
+          <div class="stats-cards">
+            <div class="stat-card">
+              <div class="stat-icon">📚</div>
+              <div class="stat-info">
+                <div class="stat-label">书籍总数</div>
+                <div class="stat-value">{{ bookStats.totalBooks }}</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">✍️</div>
+              <div class="stat-info">
+                <div class="stat-label">总字数</div>
+                <div class="stat-value">{{ (bookStats.totalWords / 10000).toFixed(1) }}万</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🔥</div>
+              <div class="stat-info">
+                <div class="stat-label">本周活跃</div>
+                <div class="stat-value">{{ bookStats.recentUpdated }}</div>
+              </div>
+            </div>
+          </div>
 
+          <!-- 最近活动 -->
+          <div class="recent-section">
+            <h3 class="section-title">📌 最近活动</h3>
+            <div class="recent-books">
+              <div v-for="book in books.slice(0, 5)" :key="book.id" class="recent-book-item" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
+                <img :src="getImageBase64ByID(book.coverId)" class="recent-book-cover" />
+                <div class="recent-book-info">
+                  <h4>{{ book.title }}</h4>
+                  <p class="book-time">{{ formatTime(book.modifiedTime) }}更新</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 书籍详情界面 -->
+        <div v-else class="book-detail">
+          <div v-if="clickSelectedBook" class="detail-content">
+            <!-- 书籍头部信息 -->
+            <div class="book-header">
+              <img :src="getImageBase64ByID(clickSelectedBook.coverId)" class="detail-cover" />
+              <div class="book-header-info">
+                <h2>{{ clickSelectedBook.title }}</h2>
+                <p class="book-desc">{{ clickSelectedBook.description || '暂无描述' }}</p>
+                <div class="book-meta">
+                  <span>📅 创建于 {{ formatDate(clickSelectedBook.createdTime) }}</span>
+                  <span>🕒 最近更新 {{ formatTime(clickSelectedBook.modifiedTime) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 统计数据面板 -->
+            <div class="detail-stats">
+              <div class="detail-stat-item">
+                <div class="detail-stat-value">{{ selectedBookStats.articleCount }}</div>
+                <div class="detail-stat-label">文章数</div>
+              </div>
+              <div class="detail-stat-item">
+                <div class="detail-stat-value">{{ (selectedBookStats.totalWords / 10000).toFixed(1) }}万</div>
+                <div class="detail-stat-label">总字数</div>
+              </div>
+              <div class="detail-stat-item">
+                <div class="detail-stat-value">{{ selectedBookStats.entityCount }}</div>
+                <div class="detail-stat-label">实体数</div>
+              </div>
+              <div class="detail-stat-item" v-if="selectedBookStats.deletedArticleCount > 0">
+                <div class="detail-stat-value warning">{{ selectedBookStats.deletedArticleCount }}</div>
+                <div class="detail-stat-label">已删除</div>
+              </div>
+            </div>
+
+            <!-- 实体分类统计 -->
+            <div v-if="Object.keys(selectedBookStats.entityTypes).length > 0" class="entity-types-section">
+              <h3 class="section-title">🎭 实体分类</h3>
+              <div class="entity-types">
+                <div v-for="(count, type) in selectedBookStats.entityTypes" :key="type" class="entity-type-tag">
+                  {{ type }} ({{ count }})
+                </div>
+              </div>
+            </div>
+
+            <!-- 文章列表 -->
+            <div class="articles-section">
+              <div class="section-header">
+                <h3 class="section-title">📝 文章列表</h3>
+                <button class="button-m" @click="console.log('创建文章')">✨ 新建文章</button>
+              </div>
+              <div v-if="selectedBookStats.articles.length === 0" class="empty-state">
+                <div class="empty-icon">📄</div>
+                <p>还没有文章，点击上方按钮创建第一篇文章吧~</p>
+              </div>
+              <div v-else class="articles-list">
+                <div v-for="article in selectedBookStats.articles" :key="article.id" class="article-item" @click="openArticle(article)">
+                  <div class="article-main">
+                    <h4 class="article-title">{{ article.title }}</h4>
+                    <div class="article-meta">
+                      <span>{{ article.wordCount || 0 }} 字</span>
+                      <span>•</span>
+                      <span>{{ formatTime(article.modifiedTime) }}更新</span>
+                    </div>
+                  </div>
+                  <button class="article-action" @click.stop="console.log('文章操作', article)">⋯</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -376,5 +635,308 @@ function loadBooks() {
 
 main {
   flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: var(--background-primary);
+}
+
+/* ====== 总览页面样式 ====== */
+.overview {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+  transition: all .2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: .85rem;
+  color: var(--text-secondary);
+  margin-bottom: .25rem;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.recent-section {
+  margin-top: 2rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.recent-books {
+  display: grid;
+  gap: .75rem;
+}
+
+.recent-book-item {
+  display: flex;
+  align-items: center;
+  padding: .75rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.recent-book-item:hover {
+  background-color: var(--background-tertiary);
+  border-color: var(--primary);
+}
+
+.recent-book-cover {
+  width: 3rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: .25rem;
+  margin-right: 1rem;
+}
+
+.recent-book-info {
+  flex: 1;
+}
+
+.recent-book-info h4 {
+  font-size: 1rem;
+  margin-bottom: .25rem;
+  color: var(--text-primary);
+}
+
+.book-time {
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+/* ====== 书籍详情页面样式 ====== */
+.book-detail {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.book-header {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+}
+
+.detail-cover {
+  width: 8rem;
+  height: 12rem;
+  object-fit: cover;
+  border-radius: .5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+}
+
+.book-header-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.book-header-info h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: .75rem;
+  color: var(--text-primary);
+}
+
+.book-desc {
+  font-size: .95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.book-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.detail-stat-item {
+  padding: 1.25rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.detail-stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: .25rem;
+}
+
+.detail-stat-value.warning {
+  color: var(--warning, #f59e0b);
+}
+
+.detail-stat-label {
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+.entity-types-section {
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+}
+
+.entity-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+
+.entity-type-tag {
+  padding: .4rem .75rem;
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  font-size: .85rem;
+  color: var(--text-primary);
+  transition: all .2s;
+}
+
+.entity-type-tag:hover {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.articles-section {
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: .5rem;
+  border: 1px solid var(--border-color);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: .5;
+}
+
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.article-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--background-tertiary);
+  border-radius: .5rem;
+  cursor: pointer;
+  transition: all .2s;
+  border: 1px solid transparent;
+}
+
+.article-item:hover {
+  background-color: var(--background-primary);
+  border-color: var(--primary);
+}
+
+.article-main {
+  flex: 1;
+}
+
+.article-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: .5rem;
+}
+
+.article-meta {
+  display: flex;
+  gap: .5rem;
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+.article-action {
+  padding: .5rem 1rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+.article-item:hover .article-action {
+  opacity: 1;
 }
 </style>

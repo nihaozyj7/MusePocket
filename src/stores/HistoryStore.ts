@@ -87,16 +87,28 @@ export const useHistoryStore = defineStore('history', {
           totalCount: 1
         })
 
+        console.log('初始化新文章:', articleId)
+
         // 从数据库加载历史记录
         await this.loadHistoriesFromDB(articleId, initialText)
       } else {
         // 如果状态已存在，更新快照
         const articleState = this.articleStates.get(articleId)!
         articleState.lastSnapshot = initialText
+        console.log('切换到已存在的文章:', articleId, '当前索引:', articleState.currentIndex, '总数:', articleState.totalCount)
       }
 
       // 加载历史记录列表
       await this.refreshHistories()
+
+      const state = this.articleStates.get(articleId)
+      console.log('文章初始化完成:', {
+        articleId,
+        currentIndex: state?.currentIndex,
+        totalCount: state?.totalCount,
+        canUndo: this.canUndo,
+        canRedo: this.canRedo
+      })
     },
 
     /**
@@ -105,6 +117,8 @@ export const useHistoryStore = defineStore('history', {
     async loadHistoriesFromDB(articleId: string, initialText: string) {
       try {
         const records = await historydb.getArticleHistories(articleId)
+        console.log('从数据库加载历史记录:', records.length, '条')
+
         if (records.length === 0) return
 
         // 更新序号计数器
@@ -123,6 +137,12 @@ export const useHistoryStore = defineStore('history', {
           } else {
             articleState.lastSnapshot = initialText
           }
+
+          console.log('历史记录加载完成:', {
+            totalCount: articleState.totalCount,
+            currentIndex: articleState.currentIndex,
+            maxSequence
+          })
         }
       } catch (err) {
         console.error('加载历史记录失败:', err)
@@ -162,13 +182,22 @@ export const useHistoryStore = defineStore('history', {
      */
     async recordChange(newText: string) {
       const articleState = this.currentState
-      if (!articleState || !this.currentArticleId) return
+      if (!articleState || !this.currentArticleId) {
+        console.log('记录变更失败 - 缺少状态')
+        return
+      }
 
       const oldText = articleState.lastSnapshot
-      if (newText === oldText) return
+      if (newText === oldText) {
+        console.log('文本未变化，跳过记录')
+        return
+      }
+
+      console.log('记录变更，当前索引:', articleState.currentIndex, '总数:', articleState.totalCount)
 
       // 如果不在最新位置（说明用户回退后编辑），需要丢弃后面的历史
       if (articleState.currentIndex < articleState.totalCount - 1) {
+        console.log('回退后编辑，删除后面的历史')
         // 删除索引位置之后的所有历史记录
         await this.deleteHistoriesAfterIndex(this.currentArticleId, articleState.currentIndex)
         // 重置 totalCount
@@ -182,6 +211,8 @@ export const useHistoryStore = defineStore('history', {
       articleState.lastSnapshot = newText
       articleState.currentIndex++
       articleState.totalCount++
+
+      console.log('变更记录完成，新索引:', articleState.currentIndex, '新总数:', articleState.totalCount)
 
       // 刷新历史记录列表
       await this.refreshHistories()
@@ -268,10 +299,18 @@ export const useHistoryStore = defineStore('history', {
      */
     async undo(): Promise<string | null> {
       const articleState = this.currentState
-      if (!articleState || !this.currentArticleId || !this.canUndo) return null
+      if (!articleState || !this.currentArticleId || !this.canUndo) {
+        console.log('撤销失败 - 状态检查:', {
+          hasState: !!articleState,
+          hasArticleId: !!this.currentArticleId,
+          canUndo: this.canUndo,
+          currentIndex: articleState?.currentIndex,
+          totalCount: articleState?.totalCount
+        })
+        return null
+      }
 
-      // 保存当前快照（回退前）
-      const currentSnapshot = articleState.lastSnapshot
+      console.log('执行撤销，当前索引:', articleState.currentIndex, '总数:', articleState.totalCount)
 
       // 索引向后移动
       articleState.currentIndex--
@@ -280,9 +319,14 @@ export const useHistoryStore = defineStore('history', {
       const text = await this.reconstructTextAtIndex(this.currentArticleId, articleState.currentIndex)
       if (text !== null) {
         articleState.lastSnapshot = text
+        console.log('撤销成功，新索引:', articleState.currentIndex)
+        return text
       }
 
-      return text
+      // 如果重建失败，恢复索引
+      console.error('撤销失败，恢复索引')
+      articleState.currentIndex++
+      return null
     },
 
     /**
@@ -290,7 +334,18 @@ export const useHistoryStore = defineStore('history', {
      */
     async redo(): Promise<string | null> {
       const articleState = this.currentState
-      if (!articleState || !this.currentArticleId || !this.canRedo) return null
+      if (!articleState || !this.currentArticleId || !this.canRedo) {
+        console.log('重做失败 - 状态检查:', {
+          hasState: !!articleState,
+          hasArticleId: !!this.currentArticleId,
+          canRedo: this.canRedo,
+          currentIndex: articleState?.currentIndex,
+          totalCount: articleState?.totalCount
+        })
+        return null
+      }
+
+      console.log('执行重做，当前索引:', articleState.currentIndex, '总数:', articleState.totalCount)
 
       // 索引向前移动
       articleState.currentIndex++
@@ -299,9 +354,14 @@ export const useHistoryStore = defineStore('history', {
       const text = await this.reconstructTextAtIndex(this.currentArticleId, articleState.currentIndex)
       if (text !== null) {
         articleState.lastSnapshot = text
+        console.log('重做成功，新索引:', articleState.currentIndex)
+        return text
       }
 
-      return text
+      // 如果重建失败，恢复索引
+      console.error('重做失败，恢复索引')
+      articleState.currentIndex--
+      return null
     },
 
     /**
@@ -311,24 +371,34 @@ export const useHistoryStore = defineStore('history', {
     async reconstructTextAtIndex(articleId: string, index: number): Promise<string | null> {
       try {
         const histories = await historydb.getArticleHistories(articleId)
-        if (index < 0 || index >= histories.length) return null
+        if (index < 0 || index >= histories.length) {
+          console.error('索引超出范围:', index, '历史记录数:', histories.length)
+          return null
+        }
 
         const articleState = this.articleStates.get(articleId)
-        if (!articleState) return null
+        if (!articleState) {
+          console.error('未找到文章状态:', articleId)
+          return null
+        }
 
         // 如果目标就是当前位置，直接返回快照
         if (index === articleState.currentIndex) {
-          return articleState.lastSnapshot
+          return articleState.lastSnapshot || ''
         }
 
         // 否则需要重建
-        let text = articleState.lastSnapshot
+        let text = articleState.lastSnapshot || ''
         const currentIdx = articleState.currentIndex
 
         if (index < currentIdx) {
           // 向后移动：从当前位置反向应用diff
           for (let i = currentIdx; i > index; i--) {
             const record = histories[i]
+            if (!record || !record.diffsJson) {
+              console.error('无效的历史记录:', i, record)
+              continue
+            }
             const diffs = JSON.parse(record.diffsJson)
             // 需要反向diff
             const { reverseDiff, applyDiff } = await import('@/historyUtils')
@@ -339,10 +409,20 @@ export const useHistoryStore = defineStore('history', {
           // 向前移动：从当前位置正向应用diff
           for (let i = currentIdx + 1; i <= index; i++) {
             const record = histories[i]
+            if (!record || !record.diffsJson) {
+              console.error('无效的历史记录:', i, record)
+              continue
+            }
             const diffs = JSON.parse(record.diffsJson)
             const { applyDiff } = await import('@/historyUtils')
             text = applyDiff(text, diffs)
           }
+        }
+
+        // 确保返回的是字符串
+        if (typeof text !== 'string') {
+          console.error('重建文本不是字符串类型:', text)
+          return ''
         }
 
         return text
@@ -356,14 +436,35 @@ export const useHistoryStore = defineStore('history', {
      * 回退到指定的历史版本
      */
     async restoreToHistory(historyId: string): Promise<string | null> {
-      if (!this.currentArticleId) return null
+      if (!this.currentArticleId) {
+        console.error('回退失败：没有当前文章')
+        return null
+      }
 
       const histories = await historydb.getArticleHistories(this.currentArticleId)
       const targetIndex = histories.findIndex(h => h.id === historyId)
-      if (targetIndex === -1) return null
+
+      console.log('回退到历史版本:', {
+        historyId,
+        targetIndex,
+        totalHistories: histories.length
+      })
+
+      if (targetIndex === -1) {
+        console.error('未找到目标历史记录')
+        return null
+      }
 
       const articleState = this.currentState
-      if (!articleState) return null
+      if (!articleState) {
+        console.error('未找到文章状态')
+        return null
+      }
+
+      console.log('当前状态:', {
+        currentIndex: articleState.currentIndex,
+        totalCount: articleState.totalCount
+      })
 
       // 更新索引
       articleState.currentIndex = targetIndex
@@ -372,6 +473,9 @@ export const useHistoryStore = defineStore('history', {
       const text = await this.reconstructTextAtIndex(this.currentArticleId, targetIndex)
       if (text !== null) {
         articleState.lastSnapshot = text
+        console.log('回退成功，新索引:', targetIndex)
+      } else {
+        console.error('重建文本失败')
       }
 
       return text

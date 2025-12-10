@@ -122,10 +122,12 @@ async function handleRestore() {
   try {
     // 使用 historyStore 的 restoreToHistory 方法
     const text = await historyStore.restoreToHistory(selectedHistory.value.id)
-    if (text !== null) {
+    if (text !== null && typeof text === 'string') {
       emit('restore', text)
       diffPopupRef.value?.close()
       selectedHistory.value = null
+    } else {
+      console.error('回退失败：未能获取有效文本')
     }
   } catch (err) {
     console.error('回退失败:', err)

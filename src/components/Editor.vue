@@ -385,26 +385,30 @@ function entityHoverAutoInsertClose(entity: Entity) {
 /** 撤销操作 */
 function handleUndo() {
   const newText = historyStore.undo()
-  if (newText !== null) {
+  if (newText !== null && typeof newText === 'string') {
+    console.log('撤销：更新编辑器内容为:', newText.substring(0, 50) + '...')
     const cursorPos = saveCursorPosition()
     resetBody(newText)
     setTimeout(() => {
       restoreCursorPosition(cursorPos)
     }, 0)
-    emit('update:articleBody', newText, bodyRef.value.innerText)
+    // 触发保存到数据库，不创建新的历史记录
+    emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
   }
 }
 
 /** 重做操作 */
 function handleRedo() {
   const newText = historyStore.redo()
-  if (newText !== null) {
+  if (newText !== null && typeof newText === 'string') {
+    console.log('重做：更新编辑器内容为:', newText.substring(0, 50) + '...')
     const cursorPos = saveCursorPosition()
     resetBody(newText)
     setTimeout(() => {
       restoreCursorPosition(cursorPos)
     }, 0)
-    emit('update:articleBody', newText, bodyRef.value.innerText)
+    // 触发保存到数据库，不创建新的历史记录
+    emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
   }
 }
 

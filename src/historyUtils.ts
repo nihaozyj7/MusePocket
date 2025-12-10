@@ -150,6 +150,12 @@ function optimizeDiffs(diffs: DiffOperation[]): DiffOperation[] {
  * @returns 应用后的文本
  */
 export function applyDiff(text: string, diffs: DiffOperation[]): string {
+  // 确保 text 是字符串
+  if (typeof text !== 'string') {
+    console.error('applyDiff: text 不是字符串类型', text)
+    return ''
+  }
+
   let result = text
   let offset = 0
 

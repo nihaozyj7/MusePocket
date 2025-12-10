@@ -123,7 +123,7 @@ function handleSaveArticleTitle(title: string) {
   })
 }
 
-async function saveArticle(text: string, oldText?: string) {
+async function saveArticle(text: string, oldText?: string, skipHistory: boolean = false) {
   // 等待编辑器组件加载完成
   if (!editorRef.value) {
     console.error('Editor component not loaded')
@@ -152,6 +152,15 @@ async function saveArticle(text: string, oldText?: string) {
   // 更新历史侧栏的当前文本
   if (historySidebarRef.value) {
     historySidebarRef.value.setCurrentText(text)
+  }
+
+  // 如果不是从撤销/重做触发的，则记录历史
+  if (!skipHistory) {
+    console.log('正常保存，记录历史')
+    // 正常编辑保存，会在 Editor.vue 的 _emitUpdate 中自动记录
+  } else {
+    console.log('撤销/重做保存，跳过历史记录')
+    // 撤销/重做，不创建新的历史记录
   }
 }
 
@@ -234,21 +243,22 @@ function showHistoryPopup() {
 
 /** 从历史版本恢复 */
 async function handleRestoreFromHistory(text: string) {
+  if (!text || typeof text !== 'string') {
+    console.error('无效的文本内容')
+    return
+  }
+
   if (editorRef.value && selectedArticleStore.v) {
-    // 直接重置编辑器内容，不创建新记录
+    console.log('从历史版本恢复，更新编辑器内容')
+    // 直接重置编辑器内容
     editorRef.value.resetBody(text)
 
-    // 保存到数据库
-    saveArticle(text)
+    // 保存到数据库，但不创建新的历史记录
+    saveArticle(text, undefined, true)
 
     // 更新历史侧栏的当前文本
     if (historySidebarRef.value) {
       historySidebarRef.value.setCurrentText(text)
-    }
-
-    // 关闭弹窗
-    if (historySidebarRef.value) {
-      // 这里可能需要关闭 diff 弹窗，根据实际情况调整
     }
   }
 }

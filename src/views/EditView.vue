@@ -6,6 +6,7 @@ import HistorySidebar from '@/components/HistorySidebar.vue'
 import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import DraftManager from '@/components/DraftManager.vue'
 import OutlineNavigator from '@/components/OutlineNavigator.vue'
+import ProofreadTool from '@/components/ProofreadTool.vue'
 import Editor from '@/components/Editor.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
@@ -68,6 +69,9 @@ const recycleBinArticlePopupRef = ref(null)
 const searchArticlePopupRef = ref<InstanceType<typeof SearchArticlePopup> | null>(null)
 
 const eneityManagerRef = ref(null)
+
+/** 校对工具 */
+const proofreadToolRef = ref<InstanceType<typeof ProofreadTool> | null>(null)
 
 /** 右边侧栏工具按钮标题 列表 */
 const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⏱️ 历史版本']
@@ -321,6 +325,35 @@ async function handleRestoreFromHistory(text: string) {
   }
 }
 
+/** 处理校对修复 */
+function handleProofreadFix(issue: any) {
+  if (!editorRef.value) return
+
+  // 获取纯文本内容
+  const bodyText = editorRef.value.getBodyText()
+
+  // 替换文本
+  const newText = bodyText.replace(issue.original, issue.suggestion)
+
+  // 保存光标位置
+  const cursorPos = saveCursorPosition()
+
+  // 将换行符转换为 HTML 段落
+  const htmlContent = newText.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('')
+
+  // 重置编辑器内容
+  editorRef.value.resetBody(htmlContent)
+
+  // 恢复光标位置
+  setTimeout(() => {
+    restoreCursorPosition(cursorPos)
+    // 触发保存
+    if (editorRef.value) {
+      editorRef.value.handleInput()
+    }
+  }, 100)
+}
+
 /** 大纲插入 */
 function handleOutlineInsert(markdown: string) {
   if (editorRef.value) {
@@ -569,6 +602,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
+          <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" @apply-fix="handleProofreadFix" />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
           <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[3]" :bookId="selectedBookStore.v?.id || ''" />
           <OutlineNavigator v-show="settingStore.rutilsTitle === rutilsTitles[4]" :articleId="selectedArticleStore.v?.id || ''" @insert="handleOutlineInsert" />

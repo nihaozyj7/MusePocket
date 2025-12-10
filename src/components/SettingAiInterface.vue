@@ -88,7 +88,7 @@ function copy(text: string) {
       </div>
 
       <div class="models-list">
-        <div class="model-item" v-for="model in modelStore.v" :key="model.id">
+        <div class="model-item" v-for="model, index in modelStore.v" :key="index">
           <div class="model-url" title="请求地址，点击复制" @click="copy(model.baseUrl)">{{ model.baseUrl }}</div>
           <div class="model-info">
             <span class="model-name" title="模型名称，点击复制" @click="copy(model.model)">{{ model.model }}</span>

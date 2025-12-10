@@ -1180,17 +1180,12 @@ main {
 
 .import-export-container {
   padding: 1rem;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.import-export-container .section {
-  margin-bottom: 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .import-export-container h3 {
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
   font-size: 1rem;
 }
 
@@ -1230,6 +1225,6 @@ main {
 .import-export-container .divider {
   height: 1px;
   background-color: var(--border-color);
-  margin: 1.5rem 0;
+  margin-bottom: 1.5rem;
 }
 </style>

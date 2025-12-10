@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { bookdb } from '@/db.ts'
+import { bookdb, importExportdb } from '@/db.ts'
 import router from '@/router.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
@@ -8,11 +8,14 @@ import { getImageBase64ByID } from '@/utils.ts'
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue'
 import { $tips } from '@/plugins/notyf'
 import { articledb, entitydb } from '@/db.ts'
+import { $confirm } from '@/plugins/confirm'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
 const EditBookPopup = defineAsyncComponent(() => import('@/components/EditBookPopup.vue'))
 const RecycleBinBookPopup = defineAsyncComponent(() => import('@/components/RecycleBinBookPopup.vue'))
+const BookImportExport = defineAsyncComponent(() => import('@/components/BookImportExport.vue'))
+const Popup = defineAsyncComponent(() => import('@/components/Popup.vue'))
 
 
 /** 当前是否在主页，只有主页和书籍详情页两种状态 */
@@ -33,6 +36,8 @@ const updateBookPopupRef = ref(null)
 const createBookPopupRef = ref(null)
 /** 书籍回收站弹出层 */
 const recycleBinBookPopupRef = ref(null)
+/** 导入导出弹出层 */
+const importExportPopupRef = ref(null)
 /** 书籍统计数据 */
 const bookStats = ref<{
   totalBooks: number
@@ -90,11 +95,68 @@ const bookContextMenuHanders = {
   edit() {
     updateBookPopupRef.value.show(rightSelectedBook, 'edit')
   },
-  exportTxt() {
-    console.log('右键菜单导出TXT', rightSelectedBook)
+  async exportTxt() {
+    if (!rightSelectedBook) return
+
+    try {
+      // 获取书籍的所有文章
+      const articles = await articledb.getBookArticles(rightSelectedBook.id)
+
+      // 按排序顺序排列
+      articles.sort((a, b) => a.sortOrder - b.sortOrder)
+
+      // 获取所有文章内容
+      let fullContent = `${rightSelectedBook.title}
+
+${rightSelectedBook.description}
+
+`
+      fullContent += '='.repeat(50) + '\n\n'
+
+      for (const article of articles) {
+        const body = await articledb.getArticleBody(article.id)
+        fullContent += `### ${article.title}\n\n`
+        fullContent += (body?.content || '') + '\n\n'
+        fullContent += '-'.repeat(50) + '\n\n'
+      }
+
+      // 下载文件
+      const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${rightSelectedBook.title}_${Date.now()}.txt`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      $tips.success('导出TXT成功')
+    } catch (err: any) {
+      $tips.error(`导出失败: ${err.message}`)
+    }
   },
-  exportBackup() {
-    console.log('右键菜单导出备份', rightSelectedBook)
+  async exportBackup() {
+    if (!rightSelectedBook) return
+
+    try {
+      const data = await importExportdb.exportBook(rightSelectedBook.id)
+      if (!data) {
+        $tips.error('导出书籍数据失败')
+        return
+      }
+
+      const jsonStr = JSON.stringify(data, null, 2)
+      const blob = new Blob([jsonStr], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${rightSelectedBook.title}_backup_${Date.now()}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      $tips.success(`已导出书籍《${rightSelectedBook.title}》`)
+    } catch (err: any) {
+      $tips.error(`导出失败: ${err.message}`)
+    }
   }
 }
 
@@ -315,6 +377,89 @@ function openArticle(article: any) {
   console.log('打开文章:', article)
 }
 
+/** 打开导入导出弹窗 */
+function openImportExportPopup() {
+  importExportPopupRef.value?.show()
+}
+
+/** 导入成功回调 */
+function handleImportSuccess() {
+  // 重新加载书籍列表
+  loadBooks()
+  importExportPopupRef.value?.close()
+}
+
+/** 导出全库 */
+async function exportFullDatabase() {
+  try {
+    const confirmed = await $confirm('确定要导出整个数据库吗？将包含所有书籍、文章和实体数据。')
+    if (!confirmed) return
+
+    const data = await importExportdb.exportFullDatabase()
+    if (!data) {
+      $tips.error('导出失败')
+      return
+    }
+
+    const jsonStr = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `musepocket_full_backup_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    $tips.success(`成功导出全库数据（${data.books.length}本书籍，${data.articles.length}篇文章）`)
+  } catch (err: any) {
+    if (err !== false) {
+      $tips.error(`导出失败: ${err.message}`)
+    }
+  }
+}
+
+/** 导入全库（合并模式） */
+async function importFullDatabaseMerge() {
+  try {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+
+    input.onchange = async (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        try {
+          const content = event.target?.result as string
+          const data = JSON.parse(content)
+
+          const confirmed = await $confirm(`确定要导入全库数据吗？将合并${data.books?.length || 0}本书籍和${data.articles?.length || 0}篇文章。`)
+          if (!confirmed) return
+
+          const result = await importExportdb.importFullDatabase(data, { merge: true })
+          if (result.success) {
+            $tips.success('全库数据导入成功')
+            loadBooks()
+          } else {
+            $tips.error(`导入失败: ${result.message}`)
+          }
+        } catch (err: any) {
+          $tips.error(`导入失败: ${err.message}`)
+        }
+      }
+      reader.readAsText(file)
+    }
+
+    input.click()
+  } catch (err: any) {
+    if (err !== false) {
+      $tips.error(`导入失败: ${err.message}`)
+    }
+  }
+}
+
 </script>
 
 <template>
@@ -327,7 +472,7 @@ function openArticle(article: any) {
       <!-- 操作按钮 -->
       <div class="operations">
         <!-- 导入导出 -->
-        <button class="button-m" title="导入导出">📥 导入导出</button>
+        <button class="button-m" title="导入导出" @click="openImportExportPopup">📥 导入导出</button>
         <!-- 回收站 -->
         <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
         <!-- 占位符 -->
@@ -504,6 +649,32 @@ function openArticle(article: any) {
 
   <!-- 书籍回收站弹出层 -->
   <RecycleBinBookPopup ref="recycleBinBookPopupRef" @restored="handleBookRestored" />
+
+  <!-- 导入导出弹出层 -->
+  <Popup ref="importExportPopupRef" title="📥 导入导出">
+    <div class="import-export-container">
+      <!-- 书籍导入 -->
+      <div class="section">
+        <h3>📚 书籍导入</h3>
+        <BookImportExport @importSuccess="handleImportSuccess" />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 全库操作 -->
+      <div class="section">
+        <h3>🏛️ 全库操作</h3>
+        <p class="description">
+          导出或导入整个数据库（包含所有书籍、文章和实体）<br />
+          <span class="warning">⚠️ 注意：导入全库数据时会与现有数据合并</span>
+        </p>
+        <div class="button-group">
+          <button @click="exportFullDatabase" class="btn-primary">💾 导出全库</button>
+          <button @click="importFullDatabaseMerge" class="btn-primary">📂 导入全库</button>
+        </div>
+      </div>
+    </div>
+  </Popup>
 </template>
 
 <style scoped>
@@ -983,5 +1154,60 @@ main {
 
 .article-item:hover .article-action {
   opacity: 1;
+}
+
+.import-export-container {
+  padding: 1rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.import-export-container .section {
+  margin-bottom: 1.5rem;
+}
+
+.import-export-container h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.import-export-container .description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.import-export-container .warning {
+  color: #ff9800;
+  font-size: 0.8rem;
+}
+
+.import-export-container .button-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.import-export-container .btn-primary {
+  padding: .5rem 1rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.import-export-container .btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.import-export-container .divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 0;
 }
 </style>

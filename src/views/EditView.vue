@@ -8,7 +8,7 @@ import DraftManager from '@/components/DraftManager.vue'
 import OutlineNavigator from '@/components/OutlineNavigator.vue'
 import ProofreadTool from '@/components/ProofreadTool.vue'
 import Editor from '@/components/Editor.vue'
-import { articledb, bookdb } from '@/db.ts'
+import { articledb, bookdb, importExportdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
 import router from '@/router.ts'
@@ -26,6 +26,8 @@ const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.
 const EntityManager = defineAsyncComponent(() => import('@/components/EntityManager.vue'))
 const RecycleBinArticlePopup = defineAsyncComponent(() => import('@/components/RecycleBinArticlePopup.vue'))
 const NameGeneratorTool = defineAsyncComponent(() => import('@/components/NameGeneratorTool.vue'))
+const ArticleImportExport = defineAsyncComponent(() => import('@/components/ArticleImportExport.vue'))
+const Popup = defineAsyncComponent(() => import('@/components/Popup.vue'))
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -67,6 +69,9 @@ const recycleBinArticlePopupRef = ref(null)
 
 /** 搜索文章弹出层 */
 const searchArticlePopupRef = ref<InstanceType<typeof SearchArticlePopup> | null>(null)
+
+/** 导入导出弹出层 */
+const importExportPopupRef = ref(null)
 
 const eneityManagerRef = ref(null)
 
@@ -537,6 +542,78 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   dragOverIndex.value = null
 }
 
+/** 打开导入导出弹窗 */
+function openImportExportPopup() {
+  importExportPopupRef.value?.show()
+}
+
+/** 导入成功回调 */
+function handleImportSuccess() {
+  // 重新加载文章列表
+  loadArticles()
+  importExportPopupRef.value?.close()
+}
+
+/** 导出当前选中的文章 */
+async function exportCurrentArticle() {
+  if (!selectedArticleStore.v) {
+    $tips.error('请先选择一篇文章')
+    return
+  }
+
+  try {
+    const data = await importExportdb.exportArticle(selectedArticleStore.v.id)
+    if (!data) {
+      $tips.error('导出失败')
+      return
+    }
+
+    const jsonStr = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedArticleStore.v.title}_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    $tips.success(`已导出文章《${selectedArticleStore.v.title}》`)
+  } catch (err: any) {
+    $tips.error(`导出失败: ${err.message}`)
+  }
+}
+
+/** 导出所有文章 */
+async function exportAllArticles() {
+  if (articles.value.length === 0) {
+    $tips.error('当前书籍没有文章')
+    return
+  }
+
+  try {
+    const articleIds = articles.value.map(a => a.id)
+    const data = await importExportdb.exportArticles(articleIds)
+
+    if (data.length === 0) {
+      $tips.error('导出失败')
+      return
+    }
+
+    const jsonStr = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedBookStore.v.title}_all_articles_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    $tips.success(`已导出 ${data.length} 篇文章`)
+  } catch (err: any) {
+    $tips.error(`导出失败: ${err.message}`)
+  }
+}
+
 </script>
 
 <template>
@@ -591,7 +668,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
             </button>
           </div>
           <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
-          <button title="导出备份文件和从备份文件导入">💾 导入导出</button>
+          <button title="导出备份文件和从备份文件导入" @click="openImportExportPopup">💾 导入导出</button>
           <button title="软件设置" @click="settingPopupRef.show">⚙️ 配置</button>
         </div>
       </header>
@@ -627,6 +704,31 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
   <!-- 搜索文章弹出层 -->
   <SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
+
+  <!-- 导入导出弹出层 -->
+  <Popup ref="importExportPopupRef" title="💾 文章导入导出">
+    <div class="import-export-container">
+      <!-- 导入文章 -->
+      <div class="section">
+        <h3>📂 导入文章</h3>
+        <ArticleImportExport :bookId="selectedBookStore.v?.id || ''" @importSuccess="handleImportSuccess" />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 导出文章 -->
+      <div class="section">
+        <h3>💾 导出文章</h3>
+        <p class="description">
+          导出当前选中的文章或所有文章为 JSON 文件
+        </p>
+        <div class="button-group">
+          <button @click="exportCurrentArticle" class="btn-primary">📝 导出当前文章</button>
+          <button @click="exportAllArticles" class="btn-primary">📚 导出所有文章</button>
+        </div>
+      </div>
+    </div>
+  </Popup>
 </template>
 
 <style scoped>
@@ -915,5 +1017,55 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 ::v-deep(.utils-drawer>*:nth-child(2)) {
   flex: 1;
   width: 0;
+}
+
+.import-export-container {
+  padding: 1rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.import-export-container .section {
+  margin-bottom: 1.5rem;
+}
+
+.import-export-container h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.import-export-container .description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.import-export-container .button-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.import-export-container .btn-primary {
+  padding: .5rem 1rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.import-export-container .btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.import-export-container .divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 0;
 }
 </style>

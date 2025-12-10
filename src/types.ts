@@ -296,3 +296,39 @@ export interface OutlineItem {
   /** 子标题 */
   children?: OutlineItem[]
 }
+
+/** 书籍导出数据 */
+export interface BookExportData {
+  /** 书籍信息 */
+  book: Book
+  /** 文章列表 */
+  articles: Article[]
+  /** 文章内容列表 */
+  articleBodies: ArticleBody[]
+  /** 实体列表 */
+  entities: Entity[]
+}
+
+/** 文章导出数据 */
+export interface ArticleExportData {
+  /** 文章元数据 */
+  article: Article
+  /** 文章内容 */
+  body: ArticleBody
+}
+
+/** 全库导出数据 */
+export interface FullDatabaseExportData {
+  /** 所有书籍 */
+  books: Book[]
+  /** 所有文章 */
+  articles: Article[]
+  /** 所有文章内容 */
+  articleBodies: ArticleBody[]
+  /** 所有实体 */
+  entities: Entity[]
+  /** 导出时间 */
+  exportTime: number
+  /** 版本号 */
+  version: string
+}

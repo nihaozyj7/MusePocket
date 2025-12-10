@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import SettingPopup from '@/components/SettingPopup.vue'
 import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
+import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -9,6 +10,7 @@ import { useEntityStore } from '@/stores/EntitysStore'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
+import { useHistoryStore } from '@/stores/HistoryStore'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, ref } from 'vue'
@@ -34,12 +36,17 @@ const editorRef = ref(null)
 const rutilsRef = ref<HTMLElement | null>(null)
 /** 配置项 */
 const settingStore = useSettingStore()
+/** 历史记录 */
+const historyStore = useHistoryStore()
 
 /** 设置弹出层 */
 const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
 
 /** 插入预设弹出层 */
 const insertSnippetPopupRef = ref<InstanceType<typeof InsertSnippetPopup> | null>(null)
+
+/** 历史记录弹出层 */
+const historyViewPopupRef = ref<InstanceType<typeof HistoryViewPopup> | null>(null)
 
 
 const eneityManagerRef = ref(null)
@@ -174,6 +181,8 @@ function openArticle(article: Article) {
     waitFor(() => editorRef.value, () => {
       if (editorRef.value) {
         editorRef.value.resetBody(res.content)
+        // 初始化历史记录
+        historyStore.initArticle(article.id, res.content || '')
       }
     })
 
@@ -190,6 +199,25 @@ function handleInsertSnippet(content: string) {
   if (editorRef.value) {
     editorRef.value.handleInput()
   }
+}
+
+/** 撤销 */
+function handleUndo() {
+  if (editorRef.value && historyStore.canUndo) {
+    editorRef.value.undo()
+  }
+}
+
+/** 重做 */
+function handleRedo() {
+  if (editorRef.value && historyStore.canRedo) {
+    editorRef.value.redo()
+  }
+}
+
+/** 显示历史记录弹窗 */
+function showHistoryPopup() {
+  historyViewPopupRef.value?.show()
 }
 
 function creatreArticle() {
@@ -294,10 +322,14 @@ function handleSplitLineMousedown(e: MouseEvent) {
           <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
           <button title="查找与替换">🔍 查找替换</button>
           <div class="button-group">
-            <button title="回退(Ctrl+Z)">↩️</button>
-            <button title="重做(Ctrl+Y)">↪️</button>
+            <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
+              ↩️
+            </button>
+            <button title="重做(Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo">
+              ↪️
+            </button>
           </div>
-          <button title="章节的历史操作记录">🕒 历史</button>
+          <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
           <button title="导出备份文件和从备份文件导入">💾 导入导出</button>
           <button title="软件设置" @click="settingPopupRef.show">⚙️ 配置</button>
         </div>
@@ -323,6 +355,8 @@ function handleSplitLineMousedown(e: MouseEvent) {
   <SettingPopup ref="settingPopupRef" />
   <!-- 插入预设弹出层 -->
   <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
+  <!-- 历史记录弹出层 -->
+  <HistoryViewPopup ref="historyViewPopupRef" @restore="() => { }" />
 </template>
 
 <style scoped>
@@ -485,6 +519,11 @@ function handleSplitLineMousedown(e: MouseEvent) {
 
 .button-group button {
   font-size: 1rem;
+}
+
+.button-group button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .right-container .bottom {

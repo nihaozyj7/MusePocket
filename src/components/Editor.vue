@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
+import { useHistoryStore } from '@/stores/HistoryStore'
 import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
@@ -35,6 +36,8 @@ const entityStore = useEntityStore()
 const settingStore = useSettingStore()
 /** 当前文章 */
 const selectedArticleStore = useSelectedArticleStore()
+/** 历史记录 */
+const historyStore = useHistoryStore()
 
 /** 样式管理 */
 let styleManager = new StyleManager()
@@ -90,6 +93,12 @@ onUnmounted(() => {
 const _emitUpdate = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
   history.push(text)
+
+  // 记录到历史管理器
+  if (selectedArticleStore.v?.id) {
+    historyStore.recordChange(text)
+  }
+
   emit('update:articleBody', history.items[0], history.items[1])
 }
 /** 节流 触发内容更新事件 */
@@ -340,6 +349,14 @@ function handleBodyKeydown(e: KeyboardEvent) {
     if (e.key === 's') {
       _emitUpdate()
       e.preventDefault()
+    } else if (e.key === 'z') {
+      // Ctrl+Z 撤销
+      handleUndo()
+      e.preventDefault()
+    } else if (e.key === 'y') {
+      // Ctrl+Y 重做
+      handleRedo()
+      e.preventDefault()
     }
   } else if (e.key === 'Tab') {
     e.preventDefault()
@@ -363,6 +380,32 @@ function entityHoverAutoInsertClose(entity: Entity) {
 
   chars = ''
   insertVariableSpan(entity.id, entity.title)
+}
+
+/** 撤销操作 */
+function handleUndo() {
+  const newText = historyStore.undo()
+  if (newText !== null) {
+    const cursorPos = saveCursorPosition()
+    resetBody(newText)
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+    }, 0)
+    emit('update:articleBody', newText, bodyRef.value.innerText)
+  }
+}
+
+/** 重做操作 */
+function handleRedo() {
+  const newText = historyStore.redo()
+  if (newText !== null) {
+    const cursorPos = saveCursorPosition()
+    resetBody(newText)
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+    }, 0)
+    emit('update:articleBody', newText, bodyRef.value.innerText)
+  }
 }
 
 function resetBody(text: string = "") {
@@ -394,6 +437,10 @@ defineExpose({
   getBody() { return bodyRef.value },
   /** 手动触发输入处理（用于外部插入内容后触发保存） */
   handleInput() { _emitUpdate() },
+  /** 撤销 */
+  undo: handleUndo,
+  /** 重做 */
+  redo: handleRedo,
 })
 
 </script>

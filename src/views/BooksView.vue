@@ -15,6 +15,7 @@ const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.
 const EditBookPopup = defineAsyncComponent(() => import('@/components/EditBookPopup.vue'))
 const RecycleBinBookPopup = defineAsyncComponent(() => import('@/components/RecycleBinBookPopup.vue'))
 const BookImportExport = defineAsyncComponent(() => import('@/components/BookImportExport.vue'))
+const ConfigImportExport = defineAsyncComponent(() => import('@/components/ConfigImportExport.vue'))
 const Popup = defineAsyncComponent(() => import('@/components/Popup.vue'))
 
 
@@ -389,6 +390,12 @@ function handleImportSuccess() {
   importExportPopupRef.value?.close()
 }
 
+/** 配置导入成功回调 */
+function handleConfigImportSuccess() {
+  // 配置导入后无需关闭弹窗，用户可以继续操作
+  // 已经通过 tips 提示用户需要刷新页面
+}
+
 /** 导出全库 */
 async function exportFullDatabase() {
   try {
@@ -435,12 +442,19 @@ async function importFullDatabaseMerge() {
           const content = event.target?.result as string
           const data = JSON.parse(content)
 
-          const confirmed = await $confirm(`确定要导入全库数据吗？将合并${data.books?.length || 0}本书籍和${data.articles?.length || 0}篇文章。`)
+          const hasConfigs = data.configs && (data.configs.models?.length || data.configs.prompts?.length || data.configs.textSnippets?.length)
+          const configText = hasConfigs ? '和配置' : ''
+
+          const confirmed = await $confirm(`确定要导入全库数据吗？将合并${data.books?.length || 0}本书籍、${data.articles?.length || 0}篇文章${configText}。`)
           if (!confirmed) return
 
-          const result = await importExportdb.importFullDatabase(data, { merge: true })
+          const result = await importExportdb.importFullDatabase(data, { merge: true, includeConfigs: true })
           if (result.success) {
-            $tips.success('全库数据导入成功')
+            if (hasConfigs) {
+              $tips.success('全库数据导入成功，请刷新页面以应用配置更改')
+            } else {
+              $tips.success('全库数据导入成功')
+            }
             loadBooks()
           } else {
             $tips.error(`导入失败: ${result.message}`)
@@ -661,11 +675,19 @@ async function importFullDatabaseMerge() {
 
       <div class="divider"></div>
 
+      <!-- 配置导入导出 -->
+      <div class="section">
+        <h3>⚙️ 配置导入导出</h3>
+        <ConfigImportExport @importSuccess="handleConfigImportSuccess" />
+      </div>
+
+      <div class="divider"></div>
+
       <!-- 全库操作 -->
       <div class="section">
         <h3>🏛️ 全库操作</h3>
         <p class="description">
-          导出或导入整个数据库（包含所有书籍、文章和实体）<br />
+          导出或导入整个数据库（包含所有书籍、文章、实体和配置）<br />
           <span class="warning">⚠️ 注意：导入全库数据时会与现有数据合并</span>
         </p>
         <div class="button-group">

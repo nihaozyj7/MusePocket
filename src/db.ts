@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, DBHistoryRecord, Draft, BookExportData, ArticleExportData, FullDatabaseExportData } from './types'
+import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, DBHistoryRecord, Draft, BookExportData, ArticleExportData, FullDatabaseExportData, ConfigExportData } from './types'
 import { uid } from './utils'
 
 const DATABASE_NAME = 'musepocket_db'
@@ -776,6 +776,100 @@ export const draftdb = new class {
 /** 导入导出操作类 */
 export const importExportdb = new class {
   /**
+   * 导出配置数据（从 localStorage 读取）
+   */
+  exportConfigs(): ConfigExportData {
+    try {
+      // 从 localStorage 读取 Pinia 存储的数据
+      const modelsData = localStorage.getItem('modelsStore')
+      const promptsData = localStorage.getItem('promptsStore')
+      const textSnippetsData = localStorage.getItem('textSnippetsStore')
+
+      return {
+        models: modelsData ? JSON.parse(modelsData).v : [],
+        prompts: promptsData ? JSON.parse(promptsData).v : [],
+        textSnippets: textSnippetsData ? JSON.parse(textSnippetsData).v : [],
+        exportTime: Date.now()
+      }
+    } catch (err: any) {
+      console.error('导出配置失败:', err)
+      return {
+        models: [],
+        prompts: [],
+        textSnippets: [],
+        exportTime: Date.now()
+      }
+    }
+  }
+
+  /**
+   * 导入配置数据（写入 localStorage）
+   */
+  importConfigs(data: ConfigExportData, options: { merge?: boolean } = {}): Status {
+    try {
+      const { merge = false } = options
+
+      // 处理 AI 模型配置
+      if (data.models && data.models.length > 0) {
+        const modelsData = localStorage.getItem('modelsStore')
+        let models = modelsData ? JSON.parse(modelsData).v : []
+
+        if (merge) {
+          // 合并模式：去重后添加
+          const existingKeys = new Set(models.map((m: any) => `${m.model}_${m.baseUrl}`))
+          const newModels = data.models.filter((m: any) => !existingKeys.has(`${m.model}_${m.baseUrl}`))
+          models = [...models, ...newModels]
+        } else {
+          // 覆盖模式
+          models = data.models
+        }
+
+        localStorage.setItem('modelsStore', JSON.stringify({ v: models }))
+      }
+
+      // 处理提示词
+      if (data.prompts && data.prompts.length > 0) {
+        const promptsData = localStorage.getItem('promptsStore')
+        let prompts = promptsData ? JSON.parse(promptsData).v : []
+
+        if (merge) {
+          // 合并模式：按 ID 去重
+          const existingIds = new Set(prompts.map((p: any) => p.id))
+          const newPrompts = data.prompts.filter((p: any) => !existingIds.has(p.id))
+          prompts = [...prompts, ...newPrompts]
+        } else {
+          // 覆盖模式
+          prompts = data.prompts
+        }
+
+        localStorage.setItem('promptsStore', JSON.stringify({ v: prompts }))
+      }
+
+      // 处理文本预设
+      if (data.textSnippets && data.textSnippets.length > 0) {
+        const textSnippetsData = localStorage.getItem('textSnippetsStore')
+        let textSnippets = textSnippetsData ? JSON.parse(textSnippetsData).v : []
+
+        if (merge) {
+          // 合并模式：按 ID 去重
+          const existingIds = new Set(textSnippets.map((t: any) => t.id))
+          const newSnippets = data.textSnippets.filter((t: any) => !existingIds.has(t.id))
+          textSnippets = [...textSnippets, ...newSnippets]
+        } else {
+          // 覆盖模式
+          textSnippets = data.textSnippets
+        }
+
+        localStorage.setItem('textSnippetsStore', JSON.stringify({ v: textSnippets }))
+      }
+
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  /**
    * 导出单本书籍（包含文章、文章内容、实体）
    */
   async exportBook(bookId: string): Promise<BookExportData | null> {
@@ -1034,7 +1128,7 @@ export const importExportdb = new class {
   /**
    * 导出整个数据库（所有书籍、文章、实体）
    */
-  async exportFullDatabase(): Promise<FullDatabaseExportData | null> {
+  async exportFullDatabase(includeConfigs: boolean = true): Promise<FullDatabaseExportData | null> {
     try {
       const tx = db.transaction(['books', 'articles', 'articleBodies', 'entities'], 'readonly')
       const booksStore = tx.objectStore('books')
@@ -1047,7 +1141,7 @@ export const importExportdb = new class {
       const articleBodies = await bodiesStore.getAll()
       const entities = await entitiesStore.getAll()
 
-      return {
+      const result: FullDatabaseExportData = {
         books,
         articles,
         articleBodies,
@@ -1055,6 +1149,13 @@ export const importExportdb = new class {
         exportTime: Date.now(),
         version: '1.0'
       }
+
+      // 如果需要导出配置
+      if (includeConfigs) {
+        result.configs = this.exportConfigs()
+      }
+
+      return result
     } catch (err: any) {
       console.error('导出全库失败:', err)
       return null
@@ -1064,9 +1165,9 @@ export const importExportdb = new class {
   /**
    * 导入整个数据库（会覆盖现有数据）
    */
-  async importFullDatabase(data: FullDatabaseExportData, options: { merge?: boolean } = {}): Promise<Status> {
+  async importFullDatabase(data: FullDatabaseExportData, options: { merge?: boolean, includeConfigs?: boolean } = {}): Promise<Status> {
     try {
-      const { merge = false } = options
+      const { merge = false, includeConfigs = true } = options
 
       const tx = db.transaction(['books', 'articles', 'articleBodies', 'entities'], 'readwrite')
       const booksStore = tx.objectStore('books')
@@ -1109,6 +1210,15 @@ export const importExportdb = new class {
       }
 
       await tx.done
+
+      // 导入配置数据
+      if (includeConfigs && data.configs) {
+        const configResult = this.importConfigs(data.configs, { merge })
+        if (!configResult.success) {
+          console.error('导入配置失败:', configResult.message)
+        }
+      }
+
       return { success: true }
     } catch (err: any) {
       return { success: false, message: err.message }

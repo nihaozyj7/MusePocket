@@ -327,8 +327,22 @@ export interface FullDatabaseExportData {
   articleBodies: ArticleBody[]
   /** 所有实体 */
   entities: Entity[]
+  /** 配置数据 */
+  configs?: ConfigExportData
   /** 导出时间 */
   exportTime: number
   /** 版本号 */
   version: string
+}
+
+/** 配置导出数据 */
+export interface ConfigExportData {
+  /** AI模型配置 */
+  models?: any[]
+  /** 提示词 */
+  prompts?: any[]
+  /** 文本预设 */
+  textSnippets?: TextSnippet[]
+  /** 导出时间 */
+  exportTime: number
 }

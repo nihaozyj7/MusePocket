@@ -116,12 +116,20 @@ async function handleHistoryClick(history: DBHistoryRecord) {
 }
 
 /** 回退到选中的历史版本 */
-function handleRestore() {
-  if (!comparedText.value) return
+async function handleRestore() {
+  if (!selectedHistory.value) return
 
-  emit('restore', comparedText.value)
-  diffPopupRef.value?.close()
-  selectedHistory.value = null
+  try {
+    // 使用 historyStore 的 restoreToHistory 方法
+    const text = await historyStore.restoreToHistory(selectedHistory.value.id)
+    if (text !== null) {
+      emit('restore', text)
+      diffPopupRef.value?.close()
+      selectedHistory.value = null
+    }
+  } catch (err) {
+    console.error('回退失败:', err)
+  }
 }
 
 /** 关闭 diff 弹出层 */

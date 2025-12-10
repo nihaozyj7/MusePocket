@@ -233,14 +233,22 @@ function showHistoryPopup() {
 }
 
 /** 从历史版本恢复 */
-function handleRestoreFromHistory(text: string) {
-  if (editorRef.value) {
+async function handleRestoreFromHistory(text: string) {
+  if (editorRef.value && selectedArticleStore.v) {
+    // 直接重置编辑器内容，不创建新记录
     editorRef.value.resetBody(text)
-    // 触发保存
+
+    // 保存到数据库
     saveArticle(text)
+
     // 更新历史侧栏的当前文本
     if (historySidebarRef.value) {
       historySidebarRef.value.setCurrentText(text)
+    }
+
+    // 关闭弹窗
+    if (historySidebarRef.value) {
+      // 这里可能需要关闭 diff 弹窗，根据实际情况调整
     }
   }
 }

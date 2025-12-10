@@ -88,48 +88,48 @@ defineExpose({
 
 <style scoped>
 .history-container {
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .stats {
   display: flex;
-  gap: 2rem;
-  padding: 1rem;
+  gap: 1.5rem;
+  padding: 0.75rem;
   background-color: var(--background-tertiary);
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .stat-item .label {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .stat-item .value {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: var(--primary);
 }
 
 .actions {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .action-btn {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.375rem;
   background-color: var(--background-tertiary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -155,16 +155,16 @@ defineExpose({
 }
 
 .info {
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--background-tertiary);
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .info p {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.4rem 0;
   font-weight: bold;
   color: var(--text-primary);
 }
@@ -175,16 +175,16 @@ defineExpose({
 }
 
 .info li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .info kbd {
   display: inline-block;
-  padding: 0.1rem 0.4rem;
+  padding: 0.1rem 0.35rem;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
 }
 </style>

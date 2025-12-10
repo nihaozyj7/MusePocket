@@ -258,22 +258,22 @@ function clearResults() {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .section {
   background-color: var(--background-secondary);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
   border: 1px solid var(--border-color);
 }
 
 .section h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
+  margin: 0 0 0.6rem 0;
+  font-size: 0.9rem;
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -282,12 +282,12 @@ function clearResults() {
 .input-box,
 .textarea-box {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.4rem 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   background-color: var(--background-tertiary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .select-box:focus,
@@ -298,7 +298,7 @@ function clearResults() {
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group:last-child {
@@ -307,27 +307,27 @@ function clearResults() {
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
 .textarea-box {
   resize: vertical;
-  min-height: 60px;
+  min-height: 50px;
   font-family: inherit;
 }
 
 .generate-btn {
   width: 100%;
-  padding: 0.75rem;
-  margin-top: 1rem;
+  padding: 0.6rem;
+  margin-top: 0.75rem;
   background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 0.25rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -345,11 +345,11 @@ function clearResults() {
 }
 
 .progress-info {
-  padding: 0.75rem;
+  padding: 0.6rem;
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 
@@ -366,7 +366,7 @@ function clearResults() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .results-header h3 {
@@ -375,12 +375,12 @@ function clearResults() {
 
 .results-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .action-btn {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
   background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
@@ -397,12 +397,12 @@ function clearResults() {
 
 .names-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem;
 }
 
 .name-card {
-  padding: 0.75rem;
+  padding: 0.6rem;
   background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
@@ -411,7 +411,7 @@ function clearResults() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .name-card:hover {
@@ -424,7 +424,7 @@ function clearResults() {
 .name-text {
   flex: 1;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -446,18 +446,18 @@ function clearResults() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
   color: var(--text-secondary);
 }
 
 .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
   opacity: 0.5;
 }
 
 .empty-text {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 </style>

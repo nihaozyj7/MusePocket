@@ -155,15 +155,15 @@ function deleteEntityAttr(index: number) {
 }
 
 .form-group {
-  padding: .5rem;
-  margin: .25rem .25rem 0 .25rem;
+  padding: .4rem;
+  margin: .2rem .2rem 0 .2rem;
   display: flex;
   flex-direction: column;
 }
 
 .form-group label {
-  margin-bottom: .25rem;
-  font-size: .8rem;
+  margin-bottom: .2rem;
+  font-size: .75rem;
   color: var(--text-tertiary);
 }
 
@@ -172,16 +172,16 @@ function deleteEntityAttr(index: number) {
 }
 
 .line-group input, .form-group input {
-  border-bottom: 1px solid var(--border-color);
-  padding: .5rem 0;
+  padding: .4rem .5rem;
   color: var(--text-primary);
+  margin-bottom: .2rem;
 }
 
 .form-group textarea {
   border: 1px solid var(--border-color);
-  height: 3.4rem;
-  min-height: 3.4rem;
-  padding: .5rem;
+  height: 3rem;
+  min-height: 3rem;
+  padding: .4rem;
   resize: vertical;
   border-radius: .25rem;
   color: var(--text-primary);
@@ -190,14 +190,14 @@ function deleteEntityAttr(index: number) {
 
 .form-group .text-button {
   margin-left: auto;
-  margin-top: .5rem;
+  margin-top: .4rem;
   color: var(--primary-dark);
   border-bottom: 1px solid var(--primary-dark);
 }
 
 .form-group button {
   margin-left: auto;
-  line-height: 2rem;
+  line-height: 1.8rem;
   border-radius: .25rem;
   width: 100%;
   background-color: var(--background-tertiary);
@@ -207,16 +207,16 @@ function deleteEntityAttr(index: number) {
 
 .types {
   display: flex;
-  margin-top: .25rem;
+  margin-top: .2rem;
   flex-wrap: wrap;
 }
 
 .types span {
-  padding: .25rem .5rem;
+  padding: .2rem .4rem;
   border-radius: .25rem;
   background-color: var(--background-tertiary);
-  font-size: .8rem;
-  margin: .25rem .25rem 0 0;
+  font-size: .75rem;
+  margin: .2rem .2rem 0 0;
   cursor: pointer;
 }
 
@@ -225,32 +225,32 @@ function deleteEntityAttr(index: number) {
 }
 
 .separator {
-  height: 2rem;
+  height: 1.8rem;
   background-color: var(--background-secondary);
-  line-height: 2rem;
-  font-size: .8rem;
+  line-height: 1.8rem;
+  font-size: .75rem;
   padding-left: .5rem;
   color: var(--text-secondary);
 }
 
 .attrs textarea {
-  height: 2.2rem;
-  min-height: 2.2rem;
+  height: 2rem;
+  min-height: 2rem;
   resize: vertical;
-  padding: .25rem 0;
+  padding: .25rem .5rem;
   border: none;
-  border-bottom: 1px solid var(--border-color);
-  margin-top: .5rem;
+  border: 1px solid var(--border-color);
+  margin-top: .4rem;
 }
 
 .attrs label {
-  margin-left: .25rem;
-  margin-bottom: .25rem;
+  margin-left: .2rem;
+  margin-bottom: .2rem;
 }
 
 .attrs>div {
   background-color: var(--background-secondary);
-  margin: .5rem 1rem 1rem 1rem;
+  margin: .4rem .75rem .75rem .75rem;
   border-radius: .25rem;
 }
 
@@ -265,6 +265,7 @@ function deleteEntityAttr(index: number) {
 
 .line-group input:nth-child(2) {
   width: 5rem;
+  margin-left: .5rem;
 }
 
 .line-group {
@@ -274,11 +275,11 @@ function deleteEntityAttr(index: number) {
 .line-group .delete-button {
   position: absolute;
   width: auto;
-  width: 2rem;
-  height: 2rem;
-  right: -1rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  right: -0.9rem;
   line-height: 1rem;
-  top: -1rem;
+  top: -0.9rem;
   border-radius: 50%;
   background-color: var(--background-secondary);
 }

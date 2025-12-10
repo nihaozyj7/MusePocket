@@ -191,7 +191,7 @@ function handleFileChange(event: Event) {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .content {
@@ -201,35 +201,35 @@ function handleFileChange(event: Event) {
 }
 
 .section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .section h3 {
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
 }
 
 .description {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
 }
 
 .warning {
   color: #ff9800;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .btn-primary {
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   transition: background-color 0.2s;
 }
 
@@ -245,32 +245,32 @@ function handleFileChange(event: Event) {
 .divider {
   height: 1px;
   background-color: var(--border-color);
-  margin: 2rem 0;
+  margin: 1.25rem 0;
 }
 
 .info-box {
   background-color: var(--background-secondary);
   border-left: 3px solid var(--primary);
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 0.25rem;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
 }
 
 .info-box h4 {
   color: var(--text-primary);
-  margin: 0 0 0.75rem 0;
-  font-size: 0.95rem;
+  margin: 0 0 0.6rem 0;
+  font-size: 0.875rem;
 }
 
 .info-box ul {
   margin: 0;
   padding-left: 1.5rem;
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.8;
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 .info-box li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
 }
 </style>

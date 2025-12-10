@@ -699,7 +699,7 @@ function cancelMerge() {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .content {
@@ -709,30 +709,30 @@ function cancelMerge() {
 }
 
 .section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .section h3 {
   color: var(--text-primary);
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .select-box {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   background-color: var(--background-secondary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
@@ -743,44 +743,44 @@ function cancelMerge() {
 
 .hint {
   color: var(--text-tertiary);
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
+  width: 0.9rem;
+  height: 0.9rem;
   cursor: pointer;
 }
 
 .article-list {
-  max-height: 300px;
+  max-height: 250px;
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
-  padding: 0.5rem;
+  padding: 0.4rem;
 }
 
 .empty-state {
   text-align: center;
-  padding: 2rem;
+  padding: 1.5rem;
   color: var(--text-tertiary);
 }
 
 .article-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.4rem;
+  padding: 0.4rem;
   border-radius: 0.25rem;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -801,22 +801,22 @@ function cancelMerge() {
 .article-title {
   flex: 1;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .article-words {
   color: var(--text-tertiary);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
 }
 
 .btn-small {
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   background-color: var(--background-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .btn-small:hover {
@@ -825,13 +825,13 @@ function cancelMerge() {
 
 .btn-extract {
   width: 100%;
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
   transition: background-color 0.2s;
 }
@@ -846,24 +846,24 @@ function cancelMerge() {
 }
 
 .progress-box {
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--background-secondary);
   border-left: 3px solid var(--primary);
   border-radius: 0.25rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .result-box {
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   color: var(--text-primary);
-  font-size: 0.85rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.5;
   overflow-x: auto;
-  max-height: 400px;
+  max-height: 350px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -895,25 +895,25 @@ function cancelMerge() {
 .divider {
   height: 1px;
   background-color: var(--border-color);
-  margin: 2rem 0;
+  margin: 1.25rem 0;
 }
 
 .description {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
 }
 
 .btn-merge {
   width: 100%;
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: #10b981;
   color: white;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
   transition: background-color 0.2s;
 }
@@ -931,7 +931,7 @@ function cancelMerge() {
 .merge-suggestions {
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
-  padding: 1rem;
+  padding: 0.75rem;
   background-color: var(--background-secondary);
 }
 
@@ -939,21 +939,21 @@ function cancelMerge() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .suggestions-header h4 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
 .merge-item,
 .update-item {
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
+  padding: 0.6rem;
+  margin-bottom: 0.6rem;
   background-color: var(--background-primary);
   transition: all 0.2s;
 }
@@ -972,38 +972,38 @@ function cancelMerge() {
 .merge-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
 }
 
 .merge-header input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
+  width: 0.9rem;
+  height: 0.9rem;
   cursor: pointer;
 }
 
 .merge-title {
   font-weight: bold;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .merge-content {
-  padding-left: 1.5rem;
+  padding-left: 1.25rem;
 }
 
 .entity-keep,
 .entity-merge,
 .merge-reason,
 .change-item {
-  margin-bottom: 0.5rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .label {
   color: var(--text-secondary);
-  margin-right: 0.5rem;
+  margin-right: 0.4rem;
   font-weight: 500;
 }
 
@@ -1014,9 +1014,9 @@ function cancelMerge() {
 
 .entity-type {
   color: var(--text-tertiary);
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
 }
@@ -1028,7 +1028,7 @@ function cancelMerge() {
 
 .arrow {
   color: var(--primary);
-  margin: 0 0.5rem;
+  margin: 0 0.4rem;
 }
 
 .new-value {
@@ -1038,21 +1038,21 @@ function cancelMerge() {
 
 .merge-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--border-color);
 }
 
 .btn-execute {
   flex: 1;
-  padding: 0.75rem;
+  padding: 0.6rem;
   background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   transition: background-color 0.2s;
 }
@@ -1067,13 +1067,13 @@ function cancelMerge() {
 }
 
 .btn-cancel {
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.2rem;
   background-color: var(--background-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .btn-cancel:hover {

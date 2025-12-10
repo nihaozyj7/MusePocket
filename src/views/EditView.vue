@@ -812,12 +812,16 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 .article-item {
   display: flex;
   padding: 0.5rem;
-  cursor: move;
+  cursor: pointer;
   transition: all 0.2s;
   user-select: none;
   border-radius: 0.25rem;
   margin: 0 0.5rem 0.5rem 0.5rem;
   border: 1px solid transparent;
+}
+
+.article-item:active {
+  cursor: grabbing;
 }
 
 .article-item.dragging {
@@ -857,7 +861,6 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: .8rem;
-  cursor: pointer;
   flex: 1;
 }
 

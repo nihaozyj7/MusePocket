@@ -1,51 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, watch, ref } from 'vue'
 import Popup from './Popup.vue'
+import { confirmDialogState, confirmDialogConfirm, confirmDialogCancel } from '@/plugins/confirm'
 
 const popupRef = ref<InstanceType<typeof Popup>>()
-const message = ref('')
-const title = ref('确认')
-let resolvePromise: ((value: boolean) => void) | null = null
 
-/**
- * 显示确认对话框
- * @param msg 提示消息
- * @param dialogTitle 对话框标题，默认为"确认"
- * @returns Promise<boolean> 用户点击确认返回 true，取消返回 false
- */
-function show(msg: string, dialogTitle = '确认'): Promise<boolean> {
-  message.value = msg
-  title.value = dialogTitle
-  popupRef.value?.show()
+// 使用全局状态
+const visible = computed(() => confirmDialogState.value.visible)
+const title = computed(() => confirmDialogState.value.title)
+const message = computed(() => confirmDialogState.value.message)
 
-  return new Promise((resolve) => {
-    resolvePromise = resolve
-  })
-}
+// 监听 visible 变化，控制 Popup 显示隐藏
+watch(visible, (newVal) => {
+  if (newVal && popupRef.value) {
+    popupRef.value.show()
+  } else if (!newVal && popupRef.value) {
+    popupRef.value.close()
+  }
+})
 
 function handleConfirm() {
-  popupRef.value?.close()
-  resolvePromise?.(true)
-  resolvePromise = null
+  confirmDialogConfirm()
 }
 
 function handleCancel() {
-  popupRef.value?.close()
-  resolvePromise?.(false)
-  resolvePromise = null
+  confirmDialogCancel()
 }
 
 function handleClose() {
   // 点击关闭按钮或遮罩层，视为取消
-  resolvePromise?.(false)
-  resolvePromise = null
+  confirmDialogCancel()
 }
-
-defineExpose({ show })
 </script>
 
 <template>
-  <Popup :title="title" ref="popupRef" mask-closable @close="handleClose">
+  <Popup :title="title" ref="popupRef" mask-closable destroy-on-close @close="handleClose">
     <div class="confirm-dialog">
       <div class="message">{{ message }}</div>
       <div class="actions">

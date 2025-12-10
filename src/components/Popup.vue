@@ -282,35 +282,42 @@ watch(
   display: flex;
   flex-direction: column;
   position: absolute;
+  box-shadow: var(--shadow-lg);
 }
 
 header {
   width: 100%;
-  height: 2rem;
-  background-color: var(--background-tertiary);
+  height: 2.5rem;
+  background-color: var(--background-secondary);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 0.5rem;
+  padding: 0.25rem 0.5rem;
   user-select: none;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .close {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   margin-right: -0.5rem;
+  background-color: transparent;
+  border: none;
 }
 
 header>h3 {
   line-height: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   padding: 0;
   margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 main {
   flex: 1;
   height: 0;
   display: flex;
+  padding: 0.5rem;
 }
 
 .popup-dragging {

@@ -61,14 +61,17 @@ header {
   background-color: var(--background-secondary);
   width: 100%;
   height: 4.5rem;
-  padding-top: .5rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
 }
 
 header>h4 {
-  padding: 0 .5rem 0 .5rem;
+  padding: 0 0.5rem;
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .buttons {
@@ -76,13 +79,21 @@ header>h4 {
   justify-content: space-between;
   background-color: var(--background-tertiary);
   height: 2.2rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
 }
 
 .buttons button {
   flex: 1;
   margin: 0;
-  padding: 0;
+  padding: 0.25rem 0.5rem;
   border-right: 1px solid var(--border-color);
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.buttons button:last-child {
+  border-right: none;
 }
 
 .selected {

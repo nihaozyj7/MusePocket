@@ -61,15 +61,25 @@ textarea {
 }
 
 button {
-  transition: opacity, color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   cursor: pointer;
-  background-color: transparent;
-  font-size: .8rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
 }
 
-button:hover {
-  opacity: .8;
-  color: var(--primary);
+button:hover:not(:disabled) {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .flex {
@@ -95,10 +105,11 @@ button:hover {
   position: absolute;
   color: var(--text-primary);
   background-color: var(--background-primary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   display: inline-block;
   border: 1px solid var(--border-color);
-  padding: .25rem;
+  padding: 0.5rem;
+  box-shadow: var(--shadow-md);
 }
 
 .notyf__ripple {

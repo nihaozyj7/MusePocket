@@ -72,20 +72,23 @@ defineExpose({ show, hide })
   border-radius: 0.25rem;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   z-index: 1000;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   overflow: hidden;
+  padding: 0.25rem;
 }
 
 .menu-item {
   line-height: 1.6rem;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  border-radius: 0.25rem;
 }
 
 .menu-item:hover {
-  background-color: var(--background-tertiary);
+  background-color: var(--primary);
+  color: white;
 }
 </style>

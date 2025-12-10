@@ -497,8 +497,6 @@ function handleDrop(e: DragEvent, targetIndex: number) {
         <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
         <!-- 占位符 -->
         <div style="flex: 1;"></div>
-        <!-- 自定义 -->
-        <button class="button-m" title="自定义">🛠️ 自定义</button>
         <!-- 回收站 -->
         <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
         <!-- 新建书籍 -->
@@ -594,7 +592,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 }
 
 .search {
-  height: 2.5rem;
+  height: 2.7rem;
   display: flex;
   align-items: center;
   justify-content: start;
@@ -607,17 +605,18 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 
 .operations {
   display: flex;
-  height: 2.2rem;
+  height: 2.5rem;
   align-items: center;
   padding: 0 .25rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .operations button {
-  padding: .2rem .25rem;
-  border-radius: .25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
   background-color: var(--background-tertiary);
-  margin-right: .25rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .operations button:last-child {
@@ -694,7 +693,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 
 .toolbar {
   display: flex;
-  height: 2.5rem;
+  height: 2.7rem;
   border-bottom: 1px solid var(--border-color);
   justify-content: space-between;
   background-color: var(--background-secondary);
@@ -719,19 +718,21 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 }
 
 .tools>button {
-  margin-left: .5rem;
+  margin-left: 0.5rem;
   background-color: var(--background-tertiary);
-  padding: .25rem;
-  border-radius: .25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
 }
 
 .button-group {
   display: flex;
   align-items: center;
-  margin-left: .5rem;
+  margin-left: 0.5rem;
   background-color: var(--background-tertiary);
-  padding: .19rem .25rem;
-  border-radius: .25rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
 }
 
 .button-group button {
@@ -750,8 +751,8 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 }
 
 .utils-panel {
-  width: 2.5rem;
-  padding-top: .5rem;
+  width: 3rem;
+  padding-top: .3rem;
   border-left: 1px solid var(--border-color);
   background-color: var(--background-secondary);
   overflow-y: hidden;
@@ -769,10 +770,11 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 
 .utils-panel button {
   background-color: var(--background-tertiary);
-  padding: .19rem .25rem;
-  border-radius: .25rem;
-  margin-bottom: .5rem;
-  margin-right: .35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  margin-right: 0.3rem;
+  border: 1px solid var(--border-color);
 }
 
 
@@ -789,10 +791,13 @@ function handleDrop(e: DragEvent, targetIndex: number) {
 
 .article-item {
   display: flex;
-  padding: .5rem;
+  padding: 0.5rem;
   cursor: move;
   transition: all 0.2s;
   user-select: none;
+  border-radius: 0.25rem;
+  margin: 0 0.5rem 0.5rem 0.5rem;
+  border: 1px solid transparent;
 }
 
 .article-item.dragging {

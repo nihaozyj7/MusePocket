@@ -163,8 +163,9 @@ function closeEditor() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-secondary);
 }
 
 .header h3 {
@@ -173,13 +174,14 @@ function closeEditor() {
 }
 
 .btn-create {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem;
   background-color: var(--primary);
   color: white;
-  border: none;
+  border: 1px solid var(--primary);
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  transition: all 0.2s;
 }
 
 .btn-create:hover {
@@ -202,16 +204,18 @@ function closeEditor() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
+  padding: 0.5rem;
   margin-bottom: 0.5rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .draft-item:hover {
   background-color: var(--background-tertiary);
+  border-color: var(--primary);
 }
 
 .draft-info {
@@ -253,8 +257,9 @@ function closeEditor() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-secondary);
 }
 
 .draft-title-input {
@@ -274,16 +279,18 @@ function closeEditor() {
 
 .btn-save,
 .btn-close {
-  padding: 0.5rem 1rem;
-  border: none;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: 0.85rem;
+  transition: all 0.2s;
 }
 
 .btn-save {
   background-color: var(--primary);
   color: white;
+  border-color: var(--primary);
 }
 
 .btn-save:disabled {
@@ -299,7 +306,7 @@ function closeEditor() {
 .markdown-editor {
   flex: 1;
   overflow: hidden;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
 }
@@ -307,7 +314,7 @@ function closeEditor() {
 .draft-textarea {
   flex: 1;
   width: 100%;
-  padding: 1rem;
+  padding: 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: 0.25rem;
   background-color: var(--background-secondary);

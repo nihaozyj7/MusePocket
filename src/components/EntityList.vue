@@ -265,7 +265,7 @@ function handleItemClick(entity: Entity) {
 .entity-list {
   display: flex;
   flex-direction: column;
-  padding-bottom: .25rem;
+  padding-bottom: 0.5rem;
   overflow-y: auto;
 }
 
@@ -278,33 +278,35 @@ function handleItemClick(entity: Entity) {
 }
 
 .item {
-  margin: .25rem .5rem;
+  margin: 0.5rem;
   background-color: var(--background-secondary);
   position: relative;
   border: 1px solid var(--border-color);
-  border-radius: .25rem;
+  border-radius: 0.25rem;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .item:hover {
   background-color: var(--background-tertiary);
+  border-color: var(--primary);
 }
 
 .item h4 {
   font-weight: bold;
   border-bottom: 1px solid var(--border-color);
-  padding: .5rem;
+  padding: 0.5rem;
   color: var(--primary);
 }
 
 .item span {
   position: absolute;
-  right: .3rem;
-  top: .3rem;
+  right: 0.5rem;
+  top: 0.5rem;
   max-width: 6rem;
-  font-size: .8rem;
-  padding: .25rem .5rem;
-  border-radius: .25rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
   background-color: var(--background-tertiary);
   color: var(--danger);
   white-space: nowrap;
@@ -313,10 +315,10 @@ function handleItemClick(entity: Entity) {
 }
 
 .item p {
-  font-size: .8rem;
-  margin-top: .5rem;
-  padding: .25rem .5rem .25rem .5rem;
-  margin-bottom: .5rem;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.5rem;
   color: var(--text-tertiary);
   word-wrap: break-word;
   word-break: break-all;
@@ -327,8 +329,8 @@ function handleItemClick(entity: Entity) {
 
 .filter-title {
   display: flex;
-  padding: .5rem .5rem .25rem .5rem;
-  margin-bottom: .25rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
   background-color: var(--background-secondary);
   border-bottom: 1px solid var(--border-color);
   border-top: 1px solid var(--border-color);
@@ -339,15 +341,15 @@ function handleItemClick(entity: Entity) {
 .current-filter-conditions {
   flex: 1;
   width: 0;
-  font-size: .8rem;
+  font-size: 0.85rem;
 }
 
 .current-filter-conditions span {
   display: inline-block;
-  padding: .25rem .5rem;
-  margin-right: .25rem;
-  margin-bottom: .25rem;
-  border-radius: .25rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.25rem;
   background-color: var(--background-tertiary);
 }
 
@@ -363,14 +365,15 @@ function handleItemClick(entity: Entity) {
   display: flex;
   flex-direction: column;
   background-color: var(--background-secondary);
-  margin: .5rem;
-  border-radius: .25rem;
+  margin: 0.5rem;
+  border-radius: 0.25rem;
   z-index: 2;
-  border: 5px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .search {
-  padding: 0 .5rem;
+  padding: 0.5rem;
   height: 2.5rem;
   display: flex;
   align-items: center;
@@ -382,37 +385,44 @@ function handleItemClick(entity: Entity) {
 }
 
 .search button {
-  padding: .25rem .5rem;
+  padding: 0.25rem 0.5rem;
   font-size: 1rem;
   background-color: var(--background-tertiary);
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 .divider-line {
-  font-size: .8rem;
+  font-size: 0.85rem;
   background-color: var(--background-tertiary);
-  padding: .25rem .5rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .sort, .by-type {
   display: block;
-  padding: .25rem;
+  padding: 0.5rem;
 }
 
 .filter-panel span {
   display: inline-block;
-  padding: .25rem .5rem;
-  margin: .25rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.25rem;
   background-color: var(--background-tertiary);
-  font-size: .8rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  border: 1px solid transparent;
 }
 
 .filter-panel span:hover {
-  color: var(--primary);
+  color: white;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .filter-panel span.selected {
-  color: var(--primary);
+  color: white;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 </style>

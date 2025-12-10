@@ -527,11 +527,12 @@ function openArticle(article: any) {
 }
 
 .operations button {
-  padding: .2rem .25rem;
-  border-radius: .25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
   background-color: var(--background-tertiary);
-  margin-right: .25rem;
-  font-size: .8rem;
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--border-color);
 }
 
 .operations button:last-child {
@@ -548,10 +549,17 @@ function openArticle(article: any) {
   display: flex;
   align-items: start;
   cursor: pointer;
-  border-radius: .25rem;
-  padding: .5rem;
-  margin: 0 .25rem .25rem .25rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin: 0 0.5rem 0.5rem 0.5rem;
   align-items: center;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.book-item:hover {
+  background-color: var(--background-tertiary);
+  border-color: var(--border-color);
 }
 
 .book-item.checked {
@@ -676,14 +684,15 @@ main {
   align-items: center;
   padding: 1.5rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
-  transition: all .2s;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
@@ -726,12 +735,12 @@ main {
 .recent-book-item {
   display: flex;
   align-items: center;
-  padding: .75rem;
+  padding: 0.5rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all .2s;
+  transition: all 0.2s;
 }
 
 .recent-book-item:hover {
@@ -777,9 +786,9 @@ main {
 .book-header {
   display: flex;
   gap: 2rem;
-  padding: 2rem;
+  padding: 1.5rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
 
@@ -787,8 +796,8 @@ main {
   width: 8rem;
   height: 12rem;
   object-fit: cover;
-  border-radius: .5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+  border-radius: 0.25rem;
+  box-shadow: var(--shadow-md);
 }
 
 .book-header-info {
@@ -826,9 +835,9 @@ main {
 }
 
 .detail-stat-item {
-  padding: 1.25rem;
+  padding: 1rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
   text-align: center;
 }
@@ -850,9 +859,9 @@ main {
 }
 
 .entity-types-section {
-  padding: 1.5rem;
+  padding: 1rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
 
@@ -864,13 +873,13 @@ main {
 }
 
 .entity-type-tag {
-  padding: .4rem .75rem;
+  padding: 0.25rem 0.5rem;
   background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 1rem;
-  font-size: .85rem;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
-  transition: all .2s;
+  transition: all 0.2s;
 }
 
 .entity-type-tag:hover {
@@ -880,9 +889,9 @@ main {
 }
 
 .articles-section {
-  padding: 1.5rem;
+  padding: 1rem;
   background-color: var(--background-secondary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
 
@@ -915,11 +924,11 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.5rem;
   background-color: var(--background-tertiary);
-  border-radius: .5rem;
+  border-radius: 0.25rem;
   cursor: pointer;
-  transition: all .2s;
+  transition: all 0.2s;
   border: 1px solid transparent;
 }
 

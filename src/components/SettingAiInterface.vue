@@ -47,43 +47,48 @@ function copy(text: string) {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <header>
-        <div>
-          <div style="display: flex;">
-            <label class="sitem" for="">
-              <span>模型名称</span>
+      <div class="form-section">
+        <div class="form-row">
+          <div class="form-item">
+            <label>
+              <span class="label-text">模型名称</span>
               <input type="text" placeholder="模型名称" v-model="newModel.model" />
             </label>
-            <label class="sitem" for="" style="margin-left: 1rem;">
-              <span>备注</span>
-              <input type="text" placeholder="备注 & 描述信息" style="width: 21.89rem;" v-model="newModel.note" />
-            </label>
           </div>
-          <div>
-            <label class="sitem" for="">
-              <span>请求地址</span>
-              <input type="text" placeholder="示例：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" style="flex: 1;" v-model="newModel.baseUrl" />
-            </label>
-          </div>
-          <div>
-            <label class="sitem" for="">
-              <span style="width: 3.1rem;">密钥</span>
-              <input type="text" placeholder="密钥 ApiKey" style="flex: 1;" v-model="newModel.apiKey" />
+          <div class="form-item" style="flex: 2;">
+            <label>
+              <span class="label-text">备注</span>
+              <input type="text" placeholder="备注 & 描述信息" v-model="newModel.note" />
             </label>
           </div>
         </div>
-        <div class="from-box">
-          <button @click="addModel">添加新模型</button>
+        <div class="form-item">
+          <label>
+            <span class="label-text">请求地址</span>
+            <input type="text" placeholder="示例：https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" v-model="newModel.baseUrl" />
+          </label>
         </div>
-      </header>
-      <div class="modes-list">
-        <div class="item" v-for="model in modelStore.v">
-          <p style="cursor: pointer;" title="请求地址，点击复制" @click="copy(model.baseUrl)">{{ model.baseUrl }}</p>
-          <div class="title">
-            <span style="cursor: pointer;" title="模型名称，点击复制" @click="copy(model.model)">{{ model.model }}</span>
-            <p>{{ model.note }}</p>
-            <button class="test" title="检测模型是否能够工作" @click="testApi(model)">💓</button>
-            <button class="delete" title="删除模型" @click="modelStore.remove(model)">🗑️</button>
+        <div class="form-item">
+          <label>
+            <span class="label-text">密钥</span>
+            <input type="text" placeholder="密钥 ApiKey" v-model="newModel.apiKey" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button class="add-btn" @click="addModel">添加新模型</button>
+        </div>
+      </div>
+
+      <div class="models-list">
+        <div class="model-item" v-for="model in modelStore.v" :key="model.id">
+          <div class="model-url" title="请求地址，点击复制" @click="copy(model.baseUrl)">{{ model.baseUrl }}</div>
+          <div class="model-info">
+            <span class="model-name" title="模型名称，点击复制" @click="copy(model.model)">{{ model.model }}</span>
+            <span class="model-note">{{ model.note }}</span>
+            <div class="model-actions">
+              <button class="test-btn" title="检测模型是否能够工作" @click="testApi(model)">💓</button>
+              <button class="delete-btn" title="删除模型" @click="modelStore.remove(model)">🗑️</button>
+            </div>
           </div>
         </div>
       </div>
@@ -97,99 +102,134 @@ function copy(text: string) {
   flex-direction: column;
 }
 
-.modes-list {
-  flex: 1;
-  height: 0;
-  overflow-y: auto
+.form-section {
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
 }
 
-.modes-list, header {
-  margin: 0 .5rem .5rem .5rem;
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-item {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-item label {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
-.item {
-  padding: .5rem;
-  background-color: var(--background-secondary);
-  margin-bottom: .5rem;
-  border-radius: .25rem;
+.label-text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-.item p {
-  font-size: .8rem;
+.form-item input {
+  width: 100%;
 }
 
-.item .title {
-  padding: 0 !important;
-  display: flex;
-  margin-top: .5rem;
-  border-bottom: none;
-  position: relative;
-  align-items: center;
+.form-actions {
+  margin-top: 1rem;
 }
 
-.item .title p {
+.add-btn {
+  width: 100%;
+}
+
+.models-list {
   flex: 1;
-  width: 0;
-  white-space: nowrap;
+  height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.model-item {
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.model-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.model-url {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
+  word-break: break-all;
+}
+
+.model-url:hover {
+  color: var(--primary);
+  background-color: var(--background-primary);
+}
+
+.model-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.model-name:hover {
+  text-decoration: underline;
+}
+
+.model-note {
+  flex: 1;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 4rem;
-  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
-.item .title span {
-  margin-right: .5rem;
-  color: var(--info);
-}
-
-.item .delete {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.item .test {
-  position: absolute;
-  right: 2rem;
-  top: 0;
-}
-
-.sitem {
+.model-actions {
   display: flex;
-  align-items: center;
-  height: 2.5rem;
+  gap: 0.5rem;
 }
 
-.sitem input {
-  width: 10rem;
-  border: 1px solid var(--border-color);
-  padding: .5rem;
-  border-radius: .25rem;
-  margin-left: .5rem;
+.model-actions button {
+  padding: 0.25rem 0.5rem;
 }
 
-.from-box {
-  display: flex;
-  width: 100%;
-  position: relative;
+.test-btn:hover {
+  background-color: var(--success) !important;
+  border-color: var(--success) !important;
 }
 
-.from-box button {
-  flex: 1;
-  width: 0;
-  background-color: var(--background-tertiary);
-  line-height: 1.8rem;
-  border-radius: .25rem;
-  color: var(--text-primary);
-  margin-top: .25rem;
-}
-
-.from-box span {
-  position: absolute;
-  font-size: .8rem;
-  right: 1rem;
-  top: .5rem;
+.delete-btn:hover {
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
 }
 </style>

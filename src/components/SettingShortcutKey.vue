@@ -63,28 +63,36 @@ const resetToDefault = async () => {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <div class="shortcut-section">
-        <label class="sitem" for="shortcut-save">
-          <span class="label-text">保存：</span>
-          <input id="shortcut-save" type="text" readonly :value="settingStore.shortcutKeys.save" @keydown="e => handleKeyDown(e, 'save')" @focus="() => handleFocus('save')" @blur="handleBlur" placeholder="按下快捷键组合">
-        </label>
+      <div class="shortcut-group">
+        <div class="shortcut-item">
+          <label>
+            <span class="label-text">保存：</span>
+            <input type="text" readonly :value="settingStore.shortcutKeys.save" @keydown="e => handleKeyDown(e, 'save')" @focus="() => handleFocus('save')" @blur="handleBlur" placeholder="按下快捷键组合">
+          </label>
+        </div>
 
-        <label class="sitem" for="shortcut-format">
-          <span class="label-text">一键排版：</span>
-          <input id="shortcut-format" type="text" readonly :value="settingStore.shortcutKeys.format" @keydown="e => handleKeyDown(e, 'format')" @focus="() => handleFocus('format')" @blur="handleBlur" placeholder="按下快捷键组合">
-        </label>
+        <div class="shortcut-item">
+          <label>
+            <span class="label-text">一键排版：</span>
+            <input type="text" readonly :value="settingStore.shortcutKeys.format" @keydown="e => handleKeyDown(e, 'format')" @focus="() => handleFocus('format')" @blur="handleBlur" placeholder="按下快捷键组合">
+          </label>
+        </div>
       </div>
 
-      <div class="shortcut-section">
-        <label class="sitem" for="shortcut-find">
-          <span class="label-text">查找：</span>
-          <input id="shortcut-find" type="text" readonly :value="settingStore.shortcutKeys.find" @keydown="e => handleKeyDown(e, 'find')" @focus="() => handleFocus('find')" @blur="handleBlur" placeholder="按下快捷键组合">
-        </label>
+      <div class="shortcut-group">
+        <div class="shortcut-item">
+          <label>
+            <span class="label-text">查找：</span>
+            <input type="text" readonly :value="settingStore.shortcutKeys.find" @keydown="e => handleKeyDown(e, 'find')" @focus="() => handleFocus('find')" @blur="handleBlur" placeholder="按下快捷键组合">
+          </label>
+        </div>
 
-        <label class="sitem" for="shortcut-replace">
-          <span class="label-text">替换：</span>
-          <input id="shortcut-replace" type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
-        </label>
+        <div class="shortcut-item">
+          <label>
+            <span class="label-text">替换：</span>
+            <input type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
+          </label>
+        </div>
       </div>
 
       <div class="button-group">
@@ -92,85 +100,80 @@ const resetToDefault = async () => {
       </div>
 
       <div class="hint">
-        <p>提示：点击输入框后直接按下您想要设置的快捷键组合</p>
+        <p>💡 提示：点击输入框后直接按下您想要设置的快捷键组合</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.shortcut-section {
+.content {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 1rem;
+  flex-direction: column;
 }
 
-.sitem {
+.shortcut-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.shortcut-item {
   display: flex;
   align-items: center;
-  flex: 1;
+}
+
+.shortcut-item label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .label-text {
-  width: 6rem;
+  min-width: 5rem;
   text-align: right;
-  margin-right: 0.5rem;
   color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
-input {
-  width: 10rem !important;
-  border: 1px solid var(--border-color);
-  padding: .25rem .5rem;
-  border-radius: .25rem;
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: var(--shadow-sm);
-}
-
-input::placeholder {
-  color: var(--text-tertiary);
+.shortcut-item input {
+  flex: 1;
+  text-align: center;
+  font-weight: 500;
 }
 
 .button-group {
-  margin-top: 2rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
   display: flex;
   gap: 1rem;
 }
 
-.reset-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: .25rem;
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
 .reset-btn:hover {
-  background-color: var(--background-tertiary);
-  border-color: var(--primary);
-  color: var(--primary);
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
 }
 
 .hint {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   padding: 1rem;
   background-color: var(--background-secondary);
-  border-radius: .25rem;
-  color: var(--text-tertiary);
-  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid var(--primary);
 }
 
 .hint p {
   margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.6;
 }
 </style>

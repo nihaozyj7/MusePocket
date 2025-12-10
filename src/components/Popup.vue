@@ -79,10 +79,13 @@ function show() {
     headerRef.value.style.cursor = 'move'
   }
 
-  if (props.maskClosable) {
-    headerRef.value.parentElement.parentElement.style.cursor = 'pointer'
-  } else {
-    headerRef.value.parentElement.parentElement.style.cursor = 'default'
+  // 确保 headerRef 及其父元素存在后再设置样式
+  if (headerRef.value && headerRef.value.parentElement && headerRef.value.parentElement.parentElement) {
+    if (props.maskClosable) {
+      headerRef.value.parentElement.parentElement.style.cursor = 'pointer'
+    } else {
+      headerRef.value.parentElement.parentElement.style.cursor = 'default'
+    }
   }
 }
 

@@ -94,8 +94,16 @@ const techStack = [
 </template>
 
 <style scoped>
+.content {
+  padding: 0 !important;
+}
+
 .info-section {
   margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .app-header {
@@ -128,7 +136,7 @@ const techStack = [
 }
 
 .app-description {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--text-primary);
   margin-bottom: 1.5rem;
   line-height: 1.6;
@@ -136,30 +144,34 @@ const techStack = [
 
 .info-grid {
   display: grid;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .info-item {
   display: flex;
   align-items: baseline;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
 }
 
 .info-label {
   font-weight: 500;
   color: var(--text-secondary);
   min-width: 4rem;
+  font-size: 0.85rem;
 }
 
 .info-value {
   color: var(--text-primary);
+  font-size: 0.85rem;
 }
 
 .info-link {
   color: var(--primary);
   text-decoration: none;
   transition: opacity 0.2s;
+  font-size: 0.85rem;
 }
 
 .info-link:hover {
@@ -168,9 +180,9 @@ const techStack = [
 }
 
 .section-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  margin: 2rem 0 1rem;
+  margin: 0 0 1rem 0;
   color: var(--text-primary);
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--primary);
@@ -178,35 +190,45 @@ const techStack = [
 
 .feature-section {
   margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .feature-item {
   padding: 0.75rem 1rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
   transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid var(--border-color);
 }
 
 .feature-item:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
 }
 
 .tech-section {
   margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
 }
 
 .tech-grid {
   display: grid;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .tech-item {
@@ -214,9 +236,9 @@ const techStack = [
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: var(--background-secondary);
+  background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   transition: border-color 0.2s;
 }
 
@@ -227,21 +249,23 @@ const techStack = [
 .tech-name {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .tech-desc {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .copyright {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--background-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
   text-align: center;
   color: var(--text-tertiary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .copyright p {

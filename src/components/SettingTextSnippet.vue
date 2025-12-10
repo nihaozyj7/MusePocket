@@ -33,21 +33,23 @@ function remove(snippet: TextSnippet) {
 </script>
 
 <template>
-  <div class="base-setting" style="margin: 0 .25rem .25rem .25rem;">
+  <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <header>
+      <div class="form-section">
         <textarea placeholder="文本预设内容（可多行）" v-model="newSnippet.content"></textarea>
-        <div>
+        <div class="form-actions">
           <input type="text" placeholder="文本预设标题" v-model="newSnippet.title">
           <button @click="add">添加文本预设</button>
         </div>
-      </header>
-      <div class="snippets">
-        <div class="snippet" v-for="snippet in snippetsStore.v" :key="snippet.id">
-          <h5>{{ snippet.title }}</h5>
-          <div class="snippet-content" title="预设内容，点击复制" @click="copy(snippet.content)">{{ snippet.content }}</div>
-          <button class="delete-btn" title="删除" @click="remove(snippet)">🗑️</button>
+      </div>
+      <div class="items-list">
+        <div class="item-card" v-for="snippet in snippetsStore.v" :key="snippet.id">
+          <div class="item-header">
+            <h5>{{ snippet.title }}</h5>
+            <button class="delete-btn" title="删除" @click="remove(snippet)">🗑️</button>
+          </div>
+          <div class="item-content" title="预设内容，点击复制" @click="copy(snippet.content)">{{ snippet.content }}</div>
         </div>
       </div>
     </div>
@@ -55,129 +57,96 @@ function remove(snippet: TextSnippet) {
 </template>
 
 <style scoped>
-header {
+.content {
   display: flex;
   flex-direction: column;
 }
 
-header textarea {
-  width: 100%;
-  height: 6rem;
-  padding: .25rem;
-  border-radius: .25rem;
-  border: 1px solid var(--border-color);
-  font-size: .8rem;
+.form-section {
+  padding: 1rem;
   background-color: var(--background-secondary);
-  color: var(--text-primary);
-  resize: vertical;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
 }
 
-header>div {
-  margin-top: .5rem;
+.form-section textarea {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.form-actions {
   display: flex;
+  gap: 0.75rem;
   align-items: center;
 }
 
-header>div input {
+.form-actions input {
   flex: 1;
-  width: 0;
-  padding: .5rem;
-  border-radius: .25rem;
-  border: 1px solid var(--border-color);
-  font-size: .8rem;
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
 }
 
-header>div button {
-  margin-left: .5rem;
-  padding: .5rem;
-  border-radius: .25rem;
-  background-color: var(--background-tertiary);
-  font-size: .8rem;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-header>div button:hover {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.snippets {
+.items-list {
   flex: 1;
   height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  margin-top: .5rem;
+  gap: 0.75rem;
 }
 
-.snippet {
-  padding: .25rem .5rem;
-  margin-bottom: .5rem;
+.item-card {
+  padding: 1rem;
   background-color: var(--background-secondary);
-  border-radius: .25rem;
-  position: relative;
+  border-radius: 0.5rem;
   border: 1px solid var(--border-color);
   transition: all 0.2s;
 }
 
-.snippet:hover {
+.item-card:hover {
   border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.snippet .delete-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-  padding: .25rem;
-  background-color: var(--background-tertiary);
-  border-radius: 0.25rem;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.2s;
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
 }
 
-.snippet .delete-btn:hover {
-  background-color: var(--danger);
-  color: white;
-  border-color: var(--danger);
-}
-
-.snippet>* {
-  font-size: .8rem;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.snippet h5 {
-  margin-bottom: .25rem;
+.item-header h5 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.snippet-content {
-  cursor: pointer;
+.item-content {
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  padding: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  cursor: pointer;
+  padding: 0.75rem;
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
-  margin-top: 0.25rem;
-  max-height: 8rem;
+  max-height: 12rem;
   overflow-y: auto;
+  line-height: 1.6;
 }
 
-.snippet-content:hover {
+.item-content:hover {
   background-color: var(--background-primary);
+  color: var(--text-primary);
+}
+
+.delete-btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.delete-btn:hover {
+  background-color: var(--danger) !important;
+  border-color: var(--danger) !important;
 }
 </style>

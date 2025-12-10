@@ -103,57 +103,92 @@ defineExpose({
   flex: 1;
   height: 0;
   overflow-y: auto;
-  margin: .5rem .5rem .25rem .5rem;
-}
-
-.sitem {
+  padding: 1rem;
   display: flex;
-  height: 3rem;
-  align-items: center;
-  font-size: .8rem;
+  flex-direction: column;
 }
 
-label.sitem {
+/* 通用输入框样式 */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+input[type="text"]:disabled,
+input[type="number"]:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="number"] {
+  width: 5rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+/* 通用按钮样式 */
+button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkbox 样式 */
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
   cursor: pointer;
 }
 
-.sitem>[type="checkbox"] {
-  margin-right: 1rem;
-}
-
-.sitem>input[type="number"] {
-  width: 2.2rem;
+input[type="color"] {
+  width: 3rem;
+  height: 2rem;
   border: 1px solid var(--border-color);
-  margin: 0 .5rem;
-  padding: .25rem .5rem;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  background-color: var(--background-secondary);
 }
 
-.sitem>.sitem {
-  margin-left: .5rem;
-}
-
-.sitem>.sitem>[type="checkbox"] {
-  margin-right: .25rem;
-}
-
-.selete-image-button {
-  max-width: 260px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sitem>.sitem button {
-  margin-left: .25rem;
-  border-bottom: 1px solid var(--success);
-  line-height: 1rem;
-}
-
-.sitem select {
-  background-color: var(--background-primary);
-  border: 1px solid var(--border-color);
-  margin-left: .25rem;
-  border-radius: .25rem;
+input[type="color"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

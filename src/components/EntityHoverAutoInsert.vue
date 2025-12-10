@@ -71,13 +71,11 @@ function move(x: number, y: number) {
 }
 
 function update(chars: string) {
-  console.log(`筛选条件: ${chars}`)
 
   if (chars === '') {
     entitys.value = entityStore.v
   } else {
     entitys.value = entityStore.v.filter(entity => entity.title.includes(chars))
-    console.log('筛选结果', entitys.value)
   }
 
   if (entitys.value.length === 0) hide()
@@ -116,7 +114,6 @@ defineExpose({ show, move, update, hide })
   font-size: .8rem;
   max-width: 200px;
   max-height: 300px;
-  overflow-y: auto;
   border: 1px solid var(--border-color);
   z-index: 2;
   display: flex;
@@ -133,6 +130,7 @@ defineExpose({ show, move, update, hide })
   text-overflow: ellipsis;
   cursor: pointer;
   display: flex;
+  flex-shrink: 0;
 }
 
 .item span {

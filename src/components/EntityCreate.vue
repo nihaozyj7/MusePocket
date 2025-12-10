@@ -89,7 +89,6 @@ function saveEntity() {
       newEntity.value = getDefaultEntity(selectedBook.v.id)
     } else {
       $tips.error(`创建失败, ${res.message}`)
-      console.log(res.message)
     }
   })
 }

@@ -162,7 +162,6 @@ function handleSaveArticleTitle(title: string) {
 }
 
 async function saveArticle(text: string, oldText?: string, skipHistory: boolean = false) {
-  console.log('saveArticle 被调用，text:', text.substring(0, 100) + '...', 'skipHistory:', skipHistory)
 
   // 等待编辑器组件加载完成
   if (!editorRef.value) {
@@ -196,7 +195,6 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
 
   // 如果不是从撤销/重做触发的，则记录历史
   if (!skipHistory) {
-    console.log('正常保存，记录历史')
     // 正常编辑保存，会在 Editor.vue 的 _emitUpdate 中自动记录
   } else {
     console.log('撤销/重做保存，跳过历史记录')
@@ -283,7 +281,6 @@ function showHistoryPopup() {
 
 /** 从历史版本恢复 */
 async function handleRestoreFromHistory(text: string) {
-  console.log('回退到历史版本，接收到的文本:', text.substring(0, 100) + '...')
 
   if (!text || typeof text !== 'string') {
     console.error('无效的文本内容')
@@ -291,29 +288,24 @@ async function handleRestoreFromHistory(text: string) {
   }
 
   if (editorRef.value && selectedArticleStore.v) {
-    console.log('从历史版本恢复，更新编辑器内容')
 
     // 保存光标位置
     const cursorPos = saveCursorPosition()
 
     // 直接重置编辑器内容
     editorRef.value.resetBody(text)
-    console.log('已更新编辑器内容')
 
     // 恢复光标位置
     setTimeout(() => {
-      console.log('恢复光标位置')
       restoreCursorPosition(cursorPos)
     }, 0)
 
     // 保存到数据库，但不创建新的历史记录
-    console.log('调用 saveArticle 保存数据，跳过历史记录')
     await saveArticle(text, undefined, true)
 
     // 更新历史侧栏的当前文本
     if (historySidebarRef.value) {
       historySidebarRef.value.setCurrentText(text)
-      console.log('已更新历史侧栏文本')
     }
   } else {
     console.error('编辑器未载入或器没有选中文章')

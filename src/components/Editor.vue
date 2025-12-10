@@ -384,43 +384,31 @@ function entityHoverAutoInsertClose(entity: Entity) {
 
 /** 撤销操作 */
 async function handleUndo() {
-  console.log('开始执行撤销操作')
   const newText = await historyStore.undo()
-  console.log('撤销操作返回的新文本:', newText)
   if (newText !== null && typeof newText === 'string') {
-    console.log('撤销：更新编辑器内容为:', newText.substring(0, 100) + '...')
     const cursorPos = saveCursorPosition()
-    console.log('保存的光标位置:', cursorPos)
     resetBody(newText)
     setTimeout(() => {
-      console.log('尝试恢复光标位置')
       restoreCursorPosition(cursorPos)
     }, 0)
     // 触发保存到数据库，不创建新的历史记录
     emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
   } else {
-    console.log('撤销操作未返回有效文本')
   }
 }
 
 /** 重做操作 */
 async function handleRedo() {
-  console.log('开始执行重做操作')
   const newText = await historyStore.redo()
-  console.log('重做操作返回的新文本:', newText)
   if (newText !== null && typeof newText === 'string') {
-    console.log('重做：更新编辑器内容为:', newText.substring(0, 100) + '...')
     const cursorPos = saveCursorPosition()
-    console.log('保存的光标位置:', cursorPos)
     resetBody(newText)
     setTimeout(() => {
-      console.log('尝试恢复光标位置')
       restoreCursorPosition(cursorPos)
     }, 0)
     // 触发保存到数据库，不创建新的历史记录
     emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
   } else {
-    console.log('重做操作未返回有效文本')
   }
 }
 

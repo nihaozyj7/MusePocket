@@ -157,15 +157,11 @@ async function handleRestore() {
     return
   }
 
-  console.log('开始回退，目标历史ID:', selectedHistory.value.id, 'sequence:', selectedHistory.value.sequence)
-
   try {
     // 使用 historyStore 的 restoreToHistory 方法
     const text = await historyStore.restoreToHistory(selectedHistory.value.id)
-    console.log('historyStore.restoreToHistory 返回:', text ? '\u6709效文本' + text.substring(0, 50) + '...' : 'null')
 
     if (text !== null && typeof text === 'string') {
-      console.log('回退成功，发送 restore 事件，文本長度:', text.length)
       emit('restore', text)
       diffPopupRef.value?.close()
       selectedHistory.value = null

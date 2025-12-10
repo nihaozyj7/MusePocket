@@ -15,7 +15,6 @@ export const confirmDialogState = ref({
  * @returns Promise<boolean> 用户确认返回 true，取消返回 false
  */
 export function $confirm(message: string, title = '确认'): Promise<boolean> {
-  console.log('$confirm called:', { message, title })
   return new Promise((resolve) => {
     confirmDialogState.value = {
       visible: true,
@@ -23,7 +22,6 @@ export function $confirm(message: string, title = '确认'): Promise<boolean> {
       message,
       resolve
     }
-    console.log('confirmDialogState updated:', confirmDialogState.value)
   })
 }
 
@@ -31,7 +29,6 @@ export function $confirm(message: string, title = '确认'): Promise<boolean> {
  * 确认操作
  */
 export function confirmDialogConfirm() {
-  console.log('confirmDialogConfirm called')
   confirmDialogState.value.resolve?.(true)
   confirmDialogState.value.visible = false
   confirmDialogState.value.resolve = null
@@ -41,7 +38,6 @@ export function confirmDialogConfirm() {
  * 取消操作
  */
 export function confirmDialogCancel() {
-  console.log('confirmDialogCancel called')
   confirmDialogState.value.resolve?.(false)
   confirmDialogState.value.visible = false
   confirmDialogState.value.resolve = null

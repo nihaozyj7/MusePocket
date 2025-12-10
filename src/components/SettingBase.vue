@@ -5,7 +5,7 @@ const props = defineProps<{ title: string }>()
 <template>
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
-    <div class="content">
+    <div class="content" style="margin: 0 .5rem .5rem .5rem;">
       <label class="sitem" for="I0L9K">
         <span>基准尺寸，影响全局文字和UI</span>
         <input id="I0L9K" type="number">

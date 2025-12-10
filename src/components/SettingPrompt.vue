@@ -33,7 +33,7 @@ function remove(prompt: Prompt) {
 </script>
 
 <template>
-  <div class="base-setting">
+  <div class="base-setting" style="margin: 0 .25rem .25rem .25rem;">
     <div class="title">{{ props.title }}</div>
     <div class="content">
       <header>

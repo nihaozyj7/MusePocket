@@ -76,7 +76,6 @@ const entityContextMenuItems = [
     callback() {
       entitydb.deleteEntity(selectedEntity.value?.id).then(res => {
         if (res.success) {
-          console.log(selectedEntity.value?.title)
           entityTypes.remove(selectedEntity.value?.type)
           $tips.success('删除成功')
           entityStore.v = entityStore.v.filter(en => en.id !== selectedEntity.value?.id)

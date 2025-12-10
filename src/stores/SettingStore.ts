@@ -213,25 +213,17 @@ export const useSettingStore = defineStore('setting', {
 
     /** 应用背景图片 */
     applyBackgroundImage() {
-      // 应用到 EditView 的 .container 区域
-      const editContainer = document.querySelector('.container') as HTMLElement
-      // 应用到 BooksView 的 .left-container 区域
-      const booksContainer = document.querySelector('.left-container') as HTMLElement
-
-      const containers = [editContainer, booksContainer].filter(c => c)
+      // 直接应用到 body 元素，这样所有视图都能共享背景图片，避免路由切换时闪烁
+      const body = document.body
 
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        containers.forEach(container => {
-          container.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
-          container.style.backgroundSize = 'cover'
-          container.style.backgroundPosition = 'center'
-          container.style.backgroundRepeat = 'no-repeat'
-          container.style.backgroundAttachment = 'local'
-        })
+        body.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
+        body.style.backgroundSize = 'cover'
+        body.style.backgroundPosition = 'center'
+        body.style.backgroundRepeat = 'no-repeat'
+        body.style.backgroundAttachment = 'fixed'
       } else {
-        containers.forEach(container => {
-          container.style.backgroundImage = 'none'
-        })
+        body.style.backgroundImage = 'none'
       }
 
       // 应用编辑区透明度

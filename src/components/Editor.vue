@@ -73,9 +73,6 @@ onMounted(() => {
   }
   styleManager.add('.body>p', { minHeight: settingStore.baseSettings.lineHeight + 'rem' })
 
-  // 应用背景图片设置
-  settingStore.applyBackgroundImage()
-
   chineseInputManager = new ChineseInputManager(
     () => { },
     handleChineseInputMethodSubmission,

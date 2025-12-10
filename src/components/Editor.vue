@@ -506,6 +506,7 @@ main {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 1rem;
+  padding-right: 4.5rem;
 }
 
 .tu-container .title input {

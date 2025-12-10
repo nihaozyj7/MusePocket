@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, nextTick } from 'vue'
 import Popup from './Popup.vue'
 import { confirmDialogState, confirmDialogConfirm, confirmDialogCancel } from '@/plugins/confirm'
 
@@ -11,10 +11,16 @@ const title = computed(() => confirmDialogState.value.title)
 const message = computed(() => confirmDialogState.value.message)
 
 // 监听 visible 变化，控制 Popup 显示隐藏
-watch(visible, (newVal) => {
-  if (newVal && popupRef.value) {
-    popupRef.value.show()
-  } else if (!newVal && popupRef.value) {
+watch(visible, async (newVal) => {
+  if (newVal) {
+    // 等待下一个 tick，确保 DOM 已经渲染
+    await nextTick()
+    if (popupRef.value) {
+      popupRef.value.show()
+    } else {
+      console.warn('ConfirmDialog: popupRef is null when trying to show')
+    }
+  } else if (popupRef.value) {
     popupRef.value.close()
   }
 })

@@ -40,10 +40,17 @@ function saveCurrentAsPreset() {
 }
 
 async function applyPreset(preset: SettingsPreset) {
-  if (await $confirm(`确定要应用配置预设“${preset.title}”吗？这将覆盖当前的基础设置。`)) {
-    settingStore.baseSettings = JSON.parse(JSON.stringify(preset.settings))
-    settingStore.applyBaseSettings()
-    $tips.success('配置预设已应用')
+  console.log('applyPreset called with:', preset.title)
+  try {
+    const result = await $confirm(`确定要应用配置预设“${preset.title}”吗？这将覆盖当前的基础设置。`)
+    console.log('$confirm result:', result)
+    if (result) {
+      settingStore.baseSettings = JSON.parse(JSON.stringify(preset.settings))
+      settingStore.applyBaseSettings()
+      $tips.success('配置预设已应用')
+    }
+  } catch (error) {
+    console.error('Error in applyPreset:', error)
   }
 }
 </script>

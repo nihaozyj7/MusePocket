@@ -123,3 +123,15 @@ export interface AppDB extends DBSchema {
 }
 
 export type Status = { success: boolean; message?: string }
+
+/** 快捷键配置 */
+export interface ShortcutKeys {
+  /** 保存快捷键 */
+  save: string
+  /** 一键排版快捷键 */
+  format: string
+  /** 查找快捷键 */
+  find: string
+  /** 替换快捷键 */
+  replace: string
+}

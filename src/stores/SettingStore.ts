@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { ShortcutKeys } from '@/types'
 
 
 export const useSettingStore = defineStore('setting', {
@@ -18,6 +19,13 @@ export const useSettingStore = defineStore('setting', {
     drawerWidth: 500,
     /** 当前侧边栏中正在显示的工具标题 */
     rutilsTitle: null as string | null,
+    /** 快捷键配置 */
+    shortcutKeys: {
+      save: 'Ctrl+S',
+      format: 'Ctrl+Shift+F',
+      find: 'Ctrl+F',
+      replace: 'Ctrl+H'
+    } as ShortcutKeys
   }),
 
   getters: {
@@ -54,6 +62,21 @@ export const useSettingStore = defineStore('setting', {
         document.documentElement.setAttribute('data-theme', 'dark')
       } else {
         document.documentElement.removeAttribute('data-theme')
+      }
+    },
+
+    /** 更新快捷键配置 */
+    updateShortcutKey(key: keyof ShortcutKeys, value: string) {
+      this.shortcutKeys[key] = value
+    },
+
+    /** 重置快捷键为默认值 */
+    resetShortcutKeys() {
+      this.shortcutKeys = {
+        save: 'Ctrl+S',
+        format: 'Ctrl+Shift+F',
+        find: 'Ctrl+F',
+        replace: 'Ctrl+H'
       }
     }
   }

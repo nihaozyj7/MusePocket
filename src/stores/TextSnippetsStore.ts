@@ -1,25 +1,25 @@
 import { $tips } from '@/plugins/notyf'
 import { defineStore } from 'pinia'
-import type { SettingsPreset } from '@/types'
+import type { TextSnippet } from '@/types'
 
-export const useSettingsPresetsStore = defineStore('settingsPresetsStore', {
+export const useTextSnippetsStore = defineStore('textSnippetsStore', {
   persist: true,
 
   state: () => ({
-    v: [] as SettingsPreset[]
+    v: [] as TextSnippet[]
   }),
 
   actions: {
-    equal(v1: SettingsPreset, v2: SettingsPreset) {
+    equal(v1: TextSnippet, v2: TextSnippet) {
       return v1.id === v2.id
     },
 
-    add(v: SettingsPreset) {
+    add(v: TextSnippet) {
       if (this.v.find(item => this.equal(item, v))) return $tips.error('已存在')
       this.v.push(v)
     },
 
-    update(v: SettingsPreset) {
+    update(v: TextSnippet) {
       const index = this.v.findIndex(item => this.equal(item, v))
       if (index !== -1) {
         this.v[index] = v
@@ -28,7 +28,7 @@ export const useSettingsPresetsStore = defineStore('settingsPresetsStore', {
       }
     },
 
-    remove(v: SettingsPreset) {
+    remove(v: TextSnippet) {
       if (this.v.find(item => this.equal(item, v))) {
         this.v = this.v.filter(item => !this.equal(item, v))
       } else {

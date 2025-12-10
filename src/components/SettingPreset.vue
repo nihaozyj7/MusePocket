@@ -1,48 +1,48 @@
 <script setup lang="ts">
-import { getDefaultPreset } from '@/defaultObjects'
+import { getDefaultSettingsPreset } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
-import { usePresetsStore } from '@/stores/PresetsStore'
+import { useSettingsPresetsStore } from '@/stores/PresetsStore'
 import { useSettingStore } from '@/stores/SettingStore'
-import type { Preset } from '@/types'
+import type { SettingsPreset } from '@/types'
 import { ref } from 'vue'
 
 const props = defineProps<{ title: string }>()
 
-const presetsStore = usePresetsStore()
+const presetsStore = useSettingsPresetsStore()
 const settingStore = useSettingStore()
-const newPreset = ref(getDefaultPreset())
+const newPreset = ref(getDefaultSettingsPreset())
 
 function add() {
   if (newPreset.value.title.trim() === '') {
-    return $tips.error('预设名称不能为空')
+    return $tips.error('配置预设名称不能为空')
   }
 
   presetsStore.add(newPreset.value)
-  newPreset.value = getDefaultPreset()
+  newPreset.value = getDefaultSettingsPreset()
   $tips.success('添加成功')
 }
 
-function remove(preset: Preset) {
+function remove(preset: SettingsPreset) {
   presetsStore.remove(preset)
   $tips.success('删除成功')
 }
 
 function saveCurrentAsPreset() {
   if (newPreset.value.title.trim() === '') {
-    return $tips.error('请输入预设名称')
+    return $tips.error('请输入配置预设名称')
   }
 
   newPreset.value.settings = JSON.parse(JSON.stringify(settingStore.baseSettings))
   presetsStore.add(newPreset.value)
-  newPreset.value = getDefaultPreset()
-  $tips.success('当前设置已保存为预设')
+  newPreset.value = getDefaultSettingsPreset()
+  $tips.success('当前设置已保存为配置预设')
 }
 
-function applyPreset(preset: Preset) {
-  if (confirm(`确定要应用预设"${preset.title}"吗？这将覆盖当前的基础设置。`)) {
+function applyPreset(preset: SettingsPreset) {
+  if (confirm(`确定要应用配置预设“${preset.title}”吗？这将覆盖当前的基础设置。`)) {
     settingStore.baseSettings = JSON.parse(JSON.stringify(preset.settings))
     settingStore.applyBaseSettings()
-    $tips.success('预设已应用')
+    $tips.success('配置预设已应用')
   }
 }
 </script>
@@ -53,10 +53,10 @@ function applyPreset(preset: Preset) {
     <div class="content">
       <header>
         <div class="input-group">
-          <input type="text" placeholder="预设名称" v-model="newPreset.title">
+          <input type="text" placeholder="配置预设名称" v-model="newPreset.title">
           <button @click="saveCurrentAsPreset">保存当前设置为预设</button>
         </div>
-        <div class="tip">💡 提示：输入预设名称后，点击"保存当前设置为预设"按钮，将当前的基础设置保存为预设。</div>
+        <div class="tip">💡 提示：输入配置预设名称后，点击“保存当前设置为预设”按钮，将当前的基础设置保存为配置预设。</div>
       </header>
       <div class="presets">
         <div class="preset" v-for="preset in presetsStore.v" :key="preset.id">

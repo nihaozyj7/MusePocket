@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import SettingPopup from '@/components/SettingPopup.vue'
+import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -9,7 +10,7 @@ import { useSelectedArticleStore } from '@/stores/SelectedArticleStore.ts'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor } from '@/utils.ts'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, ref } from 'vue'
 
 // 懒加载组件
@@ -36,6 +37,9 @@ const settingStore = useSettingStore()
 
 /** 设置弹出层 */
 const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
+
+/** 插入预设弹出层 */
+const insertSnippetPopupRef = ref<InstanceType<typeof InsertSnippetPopup> | null>(null)
 
 
 const eneityManagerRef = ref(null)
@@ -184,6 +188,15 @@ function openArticle(article: Article) {
   })
 }
 
+/** 处理插入文本预设 */
+function handleInsertSnippet(content: string) {
+  insertText(content)
+  // 触发编辑器保存
+  if (editorRef.value) {
+    editorRef.value.handleInput()
+  }
+}
+
 function creatreArticle() {
   const newArticle = getDefaultArticle(selectedBookStore.v.id, articles.value)
   if (!newArticle) return $tips.error('获取默认文章失败')
@@ -283,7 +296,7 @@ function handleSplitLineMousedown(e: MouseEvent) {
         <div class="tools">
           <button title="设置段落间距和字体等">🔤 段落和字体</button>
           <button title="对当前文章进行排版">✨ 一键排版</button>
-          <button title="插入">📋 插入预设</button>
+          <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
           <button title="查找与替换">🔍 查找替换</button>
           <div class="button-group">
             <button title="回退(Ctrl+Z)">↩️</button>
@@ -313,6 +326,8 @@ function handleSplitLineMousedown(e: MouseEvent) {
   <ContextMenu ref="articleContextMenuRef" />
   <!-- 设置弹出层 -->
   <SettingPopup ref="settingPopupRef" />
+  <!-- 插入预设弹出层 -->
+  <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
 </template>
 
 <style scoped>

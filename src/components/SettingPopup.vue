@@ -5,13 +5,14 @@ import SettingBase from './SettingBase.vue'
 import SettingAiInterface from './SettingAiInterface.vue'
 import SettingPrompt from './SettingPrompt.vue'
 import SettingPreset from './SettingPreset.vue'
+import SettingTextSnippet from './SettingTextSnippet.vue'
 import SettingShortcutKey from './SettingShortcutKey.vue'
 import SettingRegarding from './SettingRegarding.vue'
 
 
 const popupRef = ref<InstanceType<typeof Popup>>()
 
-const paths = ['基础', 'AI接口', '提示词', '预设', '快捷键', '关于'] as const
+const paths = ['基础', 'AI接口', '提示词', '文本预设', '配置预设', '快捷键', '关于'] as const
 
 const defPath = ref<typeof paths[number]>(paths[2])
 
@@ -35,11 +36,13 @@ defineExpose({
 
         <SettingPrompt :title="paths[2]" v-else-if="defPath === paths[2]" />
 
-        <SettingPreset :title="paths[3]" v-else-if="defPath === paths[3]" />
+        <SettingTextSnippet :title="paths[3]" v-else-if="defPath === paths[3]" />
 
-        <SettingShortcutKey :title="paths[4]" v-else-if="defPath === paths[4]" />
+        <SettingPreset :title="paths[4]" v-else-if="defPath === paths[4]" />
 
-        <SettingRegarding :title="paths[5]" v-else-if="defPath === paths[5]" />
+        <SettingShortcutKey :title="paths[5]" v-else-if="defPath === paths[5]" />
+
+        <SettingRegarding :title="paths[6]" v-else-if="defPath === paths[6]" />
       </div>
     </div>
   </Popup>

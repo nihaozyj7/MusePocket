@@ -1,6 +1,6 @@
 import { type OpenAiParams } from './apis/index'
 import type { Prompt } from './stores/PromptsStore'
-import type { Article, Book, Entity, EntityAttr, Preset, BaseSettings } from "./types"
+import type { Article, Book, Entity, EntityAttr, SettingsPreset, TextSnippet, BaseSettings } from "./types"
 import { getNewChapterName, uid } from "./utils"
 
 export function getDefaultBook(): Book {
@@ -69,11 +69,19 @@ export function getDefaultPrompt(): Prompt {
   }
 }
 
-export function getDefaultPreset(): Preset {
+export function getDefaultSettingsPreset(): SettingsPreset {
   return {
     id: uid(),
     title: '',
     settings: getDefaultBaseSettings()
+  }
+}
+
+export function getDefaultTextSnippet(): TextSnippet {
+  return {
+    id: uid(),
+    title: '',
+    content: ''
   }
 }
 

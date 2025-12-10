@@ -185,12 +185,22 @@ export interface BaseSettings {
   editorBackgroundOpacity: number
 }
 
-/** 预设配置项 */
-export interface Preset {
+/** 配置预设项（用于保存和应用基础设置） */
+export interface SettingsPreset {
   /** 预设ID */
   id: string
   /** 预设名称 */
   title: string
   /** 预设设置内容 */
   settings: BaseSettings
+}
+
+/** 文本预设项（用于快速插入常用文本到文章） */
+export interface TextSnippet {
+  /** 预设ID */
+  id: string
+  /** 预设名称 */
+  title: string
+  /** 预设文本内容 */
+  content: string
 }

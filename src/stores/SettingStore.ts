@@ -54,8 +54,7 @@ export const useSettingStore = defineStore('setting', {
       enableGridLines: false,
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
-      backgroundImage: '',
-      editorBackgroundOpacity: 0.9
+      backgroundImage: ''
     } as BaseSettings
   }),
 
@@ -225,38 +224,6 @@ export const useSettingStore = defineStore('setting', {
       } else {
         body.style.backgroundImage = 'none'
       }
-
-      // 应用编辑区透明度
-      this.applyEditorOpacity()
-    },
-
-    /** 应用编辑区背景透明度 */
-    applyEditorOpacity() {
-      // EditView 的编辑区
-      const editMain = document.querySelector('.right-container .bottom main') as HTMLElement
-      // BooksView 的主内容区
-      const booksMain = document.querySelector('.left-container .right-container main') as HTMLElement
-
-      const mains = [editMain, booksMain].filter(m => m)
-
-      if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        // 启用背景图片时，给内容区设置半透明背景
-        const opacity = this.baseSettings.editorBackgroundOpacity
-        mains.forEach(main => {
-          main.style.backgroundColor = `rgba(var(--background-primary-rgb), ${opacity})`
-        })
-      } else {
-        // 未启用背景图片时，恢复默认背景
-        mains.forEach(main => {
-          main.style.backgroundColor = ''
-        })
-      }
-    },
-
-    /** 更新编辑区背景透明度 */
-    updateEditorOpacity(opacity: number) {
-      this.baseSettings.editorBackgroundOpacity = Math.max(0, Math.min(1, opacity))
-      this.applyEditorOpacity()
     },
 
     /** 切换背景图片 */

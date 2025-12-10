@@ -157,12 +157,7 @@ const resetSettings = async () => {
             </button>
           </label>
         </div>
-        <div class="setting-item" v-show="settings.enableBackgroundImage">
-          <label>
-            <span class="label-text">编辑区背景透明度：{{ (settings.editorBackgroundOpacity * 100).toFixed(0) }}%</span>
-            <input class="range-input" type="range" :value="settings.editorBackgroundOpacity" @input="e => settingStore.updateEditorOpacity(Number((e.target as HTMLInputElement).value))" min="0" max="1" step="0.01" :disabled="!settings.enableBackgroundImage">
-          </label>
-        </div>
+
       </div>
 
       <!-- 重置按钮 -->

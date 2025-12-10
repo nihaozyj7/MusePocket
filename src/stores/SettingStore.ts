@@ -53,7 +53,8 @@ export const useSettingStore = defineStore('setting', {
       enableGridLines: false,
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
-      backgroundImage: ''
+      backgroundImage: '',
+      editorBackgroundOpacity: 0.9
     } as BaseSettings
   }),
 
@@ -224,6 +225,30 @@ export const useSettingStore = defineStore('setting', {
       } else {
         container.style.backgroundImage = 'none'
       }
+
+      // 应用编辑区透明度
+      this.applyEditorOpacity()
+    },
+
+    /** 应用编辑区背景透明度 */
+    applyEditorOpacity() {
+      const editMain = document.querySelector('.right-container .bottom main') as HTMLElement
+      if (!editMain) return
+
+      if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
+        // 启用背景图片时，给编辑区设置半透明背景
+        const opacity = this.baseSettings.editorBackgroundOpacity
+        editMain.style.backgroundColor = `rgba(var(--background-primary-rgb), ${opacity})`
+      } else {
+        // 未启用背景图片时，恢复默认背景
+        editMain.style.backgroundColor = ''
+      }
+    },
+
+    /** 更新编辑区背景透明度 */
+    updateEditorOpacity(opacity: number) {
+      this.baseSettings.editorBackgroundOpacity = Math.max(0, Math.min(1, opacity))
+      this.applyEditorOpacity()
     },
 
     /** 切换背景图片 */
@@ -287,7 +312,8 @@ export const useSettingStore = defineStore('setting', {
         enableGridLines: false,
         gridLineStyle: 'dashed',
         enableBackgroundImage: false,
-        backgroundImage: ''
+        backgroundImage: '',
+        editorBackgroundOpacity: 0.9
       }
       this.applyBaseSettings()
     }

@@ -124,6 +124,10 @@ const resetSettings = () => {
             🖼️ 选择图片
           </button>
         </label>
+        <label class="sitem" v-show="settings.enableBackgroundImage">
+          <span>编辑区背景透明度：{{ (settings.editorBackgroundOpacity * 100).toFixed(0) }}%</span>
+          <input type="range" :value="settings.editorBackgroundOpacity" @input="e => settingStore.updateEditorOpacity(Number((e.target as HTMLInputElement).value))" min="0" max="1" step="0.01" :disabled="!settings.enableBackgroundImage">
+        </label>
       </div>
 
       <!-- 重置按钮 -->
@@ -191,6 +195,40 @@ select {
 }
 
 select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="range"] {
+  flex: 1;
+  min-width: 10rem;
+  height: 0.3rem;
+  background: var(--background-tertiary);
+  border-radius: 0.25rem;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

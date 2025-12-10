@@ -181,4 +181,6 @@ export interface BaseSettings {
   enableBackgroundImage: boolean
   /** 背景图片（base64或URL） */
   backgroundImage: string
+  /** 编辑区背景透明度（0-1） */
+  editorBackgroundOpacity: number
 }

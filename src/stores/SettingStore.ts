@@ -212,18 +212,25 @@ export const useSettingStore = defineStore('setting', {
 
     /** 应用背景图片 */
     applyBackgroundImage() {
-      // 应用到整个 EditView 的 .container 区域（整个窗口）
-      const container = document.querySelector('.container') as HTMLElement
-      if (!container) return
+      // 应用到 EditView 的 .container 区域
+      const editContainer = document.querySelector('.container') as HTMLElement
+      // 应用到 BooksView 的 .left-container 区域
+      const booksContainer = document.querySelector('.left-container') as HTMLElement
+
+      const containers = [editContainer, booksContainer].filter(c => c)
 
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        container.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
-        container.style.backgroundSize = 'cover'
-        container.style.backgroundPosition = 'center'
-        container.style.backgroundRepeat = 'no-repeat'
-        container.style.backgroundAttachment = 'local'
+        containers.forEach(container => {
+          container.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
+          container.style.backgroundSize = 'cover'
+          container.style.backgroundPosition = 'center'
+          container.style.backgroundRepeat = 'no-repeat'
+          container.style.backgroundAttachment = 'local'
+        })
       } else {
-        container.style.backgroundImage = 'none'
+        containers.forEach(container => {
+          container.style.backgroundImage = 'none'
+        })
       }
 
       // 应用编辑区透明度
@@ -232,16 +239,24 @@ export const useSettingStore = defineStore('setting', {
 
     /** 应用编辑区背景透明度 */
     applyEditorOpacity() {
+      // EditView 的编辑区
       const editMain = document.querySelector('.right-container .bottom main') as HTMLElement
-      if (!editMain) return
-
+      // BooksView 的主内容区
+      const booksMain = document.querySelector('.left-container .right-container main') as HTMLElement
+      
+      const mains = [editMain, booksMain].filter(m => m)
+      
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        // 启用背景图片时，给编辑区设置半透明背景
+        // 启用背景图片时，给内容区设置半透明背景
         const opacity = this.baseSettings.editorBackgroundOpacity
-        editMain.style.backgroundColor = `rgba(var(--background-primary-rgb), ${opacity})`
+        mains.forEach(main => {
+          main.style.backgroundColor = `rgba(var(--background-primary-rgb), ${opacity})`
+        })
       } else {
         // 未启用背景图片时，恢复默认背景
-        editMain.style.backgroundColor = ''
+        mains.forEach(main => {
+          main.style.backgroundColor = ''
+        })
       }
     },
 

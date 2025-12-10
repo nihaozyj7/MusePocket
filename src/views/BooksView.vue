@@ -65,6 +65,11 @@ const bookContextMenuHanders = {
 
 onMounted(async () => {
   loadBooks()
+
+  // 应用背景图片设置
+  setTimeout(() => {
+    settingStore.applyBackgroundImage()
+  }, 100)
 })
 
 function bookIdEqual(book: Book) {

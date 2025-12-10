@@ -12,9 +12,17 @@ import SettingRegarding from './SettingRegarding.vue'
 
 const popupRef = ref<InstanceType<typeof Popup>>()
 
-const paths = ['基础', 'AI接口', '提示词', '文本预设', '配置预设', '快捷键', '关于'] as const
+const paths = [
+  { name: '基础', icon: '⚙️' },
+  { name: 'AI接口', icon: '🤖' },
+  { name: '提示词', icon: '💬' },
+  { name: '文本预设', icon: '📋' },
+  { name: '配置预设', icon: '📦' },
+  { name: '快捷键', icon: '⌨️' },
+  { name: '关于', icon: 'ℹ️' }
+] as const
 
-const defPath = ref<typeof paths[number]>(paths[2])
+const defPath = ref(paths[2].name)
 
 defineExpose({
   show: () => popupRef.value.show()
@@ -25,24 +33,25 @@ defineExpose({
   <Popup title="⚙️ 软件配置" ref="popupRef" mask-closable>
     <div class="setting">
       <div class="setting-titles">
-        <div v-for="title in paths" :key="title" class="setting-title" @click="defPath = title" :class="{ selected: defPath === title }">
-          {{ title }}
+        <div v-for="item in paths" :key="item.name" class="setting-title" @click="defPath = item.name" :class="{ selected: defPath === item.name }">
+          <span class="title-icon">{{ item.icon }}</span>
+          <span class="title-text">{{ item.name }}</span>
         </div>
       </div>
       <div class="setting-content">
-        <SettingBase :title="paths[0]" v-if="defPath === paths[0]" />
+        <SettingBase :title="paths[0].name" v-if="defPath === paths[0].name" />
 
-        <SettingAiInterface :title="paths[1]" v-else-if="defPath === paths[1]" />
+        <SettingAiInterface :title="paths[1].name" v-else-if="defPath === paths[1].name" />
 
-        <SettingPrompt :title="paths[2]" v-else-if="defPath === paths[2]" />
+        <SettingPrompt :title="paths[2].name" v-else-if="defPath === paths[2].name" />
 
-        <SettingTextSnippet :title="paths[3]" v-else-if="defPath === paths[3]" />
+        <SettingTextSnippet :title="paths[3].name" v-else-if="defPath === paths[3].name" />
 
-        <SettingPreset :title="paths[4]" v-else-if="defPath === paths[4]" />
+        <SettingPreset :title="paths[4].name" v-else-if="defPath === paths[4].name" />
 
-        <SettingShortcutKey :title="paths[5]" v-else-if="defPath === paths[5]" />
+        <SettingShortcutKey :title="paths[5].name" v-else-if="defPath === paths[5].name" />
 
-        <SettingRegarding :title="paths[6]" v-else-if="defPath === paths[6]" />
+        <SettingRegarding :title="paths[6].name" v-else-if="defPath === paths[6].name" />
       </div>
     </div>
   </Popup>
@@ -50,39 +59,74 @@ defineExpose({
 
 <style>
 .setting {
-  width: 47.5rem;
-  height: 31.25rem;
+  width: 70rem;
+  height: 40rem;
   display: flex;
+  overflow: hidden;
 }
 
 .setting .selected {
-  background-color: var(--background-tertiary);
-  color: var(--primary)
+  background-color: var(--primary);
+  color: white;
+  font-weight: 500;
+}
+
+.setting .selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background-color: white;
+  border-radius: 0 2px 2px 0;
 }
 
 .setting-titles {
   display: flex;
   flex-direction: column;
-  width: 6rem;
-  background-color: var(--background-secondary);
-  margin: .25rem;
+  width: 10rem;
+  background-color: var(--background-primary);
+  border-right: 1px solid var(--border-color);
+  padding: 0.5rem 0;
 }
 
 .setting-titles>div {
-  padding: .5rem 1rem;
+  padding: 0.75rem 1rem;
   cursor: pointer;
-  font-size: .8rem;
-  text-align: right;
+  font-size: 0.85rem;
+  text-align: left;
+  margin: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title-icon {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+}
+
+.title-text {
+  flex: 1;
 }
 
 .setting-titles>div:hover {
-  background-color: var(--background-tertiary);
+  background-color: var(--background-secondary);
+  transform: translateX(2px);
 }
 
 .setting-content {
   flex: 1;
   width: 0;
-  margin: .25rem .25rem .25rem 0;
+  background-color: var(--background-primary);
 }
 
 .setting-content>div {

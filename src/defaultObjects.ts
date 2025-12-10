@@ -111,6 +111,7 @@ export function getDefaultBaseSettings(): BaseSettings {
     enableGridLines: false,
     gridLineStyle: 'dashed',
     enableBackgroundImage: false,
-    backgroundImage: ''
+    backgroundImage: '',
+    autoCompleteDelay: 0
   }
 }

@@ -55,7 +55,8 @@ export const useSettingStore = defineStore('setting', {
       enableGridLines: true,
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
-      backgroundImage: ''
+      backgroundImage: '',
+      autoCompleteDelay: 0
     } as BaseSettings
   }),
 
@@ -117,6 +118,11 @@ export const useSettingStore = defineStore('setting', {
     /** 更新自动保存间隔 */
     updateAutoSaveInterval(interval: number) {
       this.baseSettings.autoSaveInterval = Math.max(1, Math.min(60, interval))
+    },
+
+    /** 更新自动完成延迟 */
+    updateAutoCompleteDelay(delay: number) {
+      this.baseSettings.autoCompleteDelay = Math.max(0, Math.min(2000, delay))
     },
 
     /** 更新行高 */

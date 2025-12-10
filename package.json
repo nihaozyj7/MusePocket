@@ -17,6 +17,7 @@
     "notyf": "^3.10.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "pinyin-pro": "^3.27.0",
     "vue": "^3.5.24",
     "vue-router": "^4.6.3"
   },

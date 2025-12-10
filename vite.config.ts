@@ -14,6 +14,9 @@ export default defineConfig({
       brotliSize: true
     })
   ],
+  optimizeDeps: {
+    include: ['pinyin-pro']
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')

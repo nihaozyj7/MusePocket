@@ -202,6 +202,8 @@ export interface BaseSettings {
   enableBackgroundImage: boolean
   /** 背景图片（base64或URL） */
   backgroundImage: string
+  /** 自动完成悬浮层延迟时间（毫秒） */
+  autoCompleteDelay: number
 }
 
 /** 配置预设项（用于保存和应用基础设置） */

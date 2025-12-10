@@ -74,6 +74,17 @@ const resetSettings = async () => {
         </label>
       </div>
 
+      <!-- 自动完成延迟 -->
+      <div class="setting-item">
+        <label>
+          <span class="label-text">自动完成悬浮层延迟（输入后多久显示实体匹配提示）</span>
+          <div class="input-group">
+            <input type="number" :value="settings.autoCompleteDelay" @input="e => settingStore.updateAutoCompleteDelay(Number((e.target as HTMLInputElement).value))" min="0" max="2000" step="50">
+            <span class="unit">毫秒（默认0，即立即显示）</span>
+          </div>
+        </label>
+      </div>
+
       <!-- 字体行高 -->
       <div class="setting-item">
         <label>

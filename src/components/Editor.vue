@@ -88,6 +88,11 @@ onUnmounted(() => {
   document.removeEventListener('selectionchange', handleTextSelect)
   styleManager?.clear()
   chineseInputManager.destroy()
+  // 清理自动完成定时器
+  if (autoCompleteTimer !== null) {
+    clearTimeout(autoCompleteTimer)
+    autoCompleteTimer = null
+  }
 })
 
 const _emitUpdate = () => {
@@ -276,6 +281,9 @@ function handleBodyMouseout(e: MouseEvent) {
 
 /** 鼠标单击时 */
 function handleBodyClick(e: MouseEvent) {
+  // 点击时隐藏实体提示
+  entityHoverAutoInsertRef.value.hide()
+
   const target = e.target as HTMLElement
   if (target.dataset.key) {
     console.log(target.dataset.key)
@@ -293,57 +301,131 @@ function getCaretRect(): DOMRect | null {
   return rect || null
 }
 
+/**
+ * 获取光标位置前的文本（最多截取 maxLength 个字符）
+ * @param maxLength 最大截取长度
+ * @returns 光标前的文本
+ */
+function getTextBeforeCursor(maxLength: number = 50): string {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return ''
+
+  const range = sel.getRangeAt(0)
+  if (!range.collapsed) return ''
+
+  // 获取当前光标位置
+  const startContainer = range.startContainer
+  const startOffset = range.startOffset
+
+  // 如果在文本节点中
+  if (startContainer.nodeType === Node.TEXT_NODE) {
+    const textContent = startContainer.textContent || ''
+    const start = Math.max(0, startOffset - maxLength)
+    return textContent.substring(start, startOffset)
+  }
+
+  // 如果在元素节点中，尝试获取前面的文本
+  return ''
+}
+
+/**
+ * 从光标位置向前删除指定长度的文本
+ * @param length 要删除的长度
+ */
+function deleteTextBeforeCursor(length: number) {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return
+
+  const range = sel.getRangeAt(0)
+  if (!range.collapsed) return
+
+  const startContainer = range.startContainer
+  const startOffset = range.startOffset
+
+  // 如果在文本节点中
+  if (startContainer.nodeType === Node.TEXT_NODE) {
+    const textNode = startContainer as Text
+    const deleteStart = Math.max(0, startOffset - length)
+    textNode.deleteData(deleteStart, startOffset - deleteStart)
+
+    // 设置光标位置
+    range.setStart(textNode, deleteStart)
+    range.setEnd(textNode, deleteStart)
+  }
+}
+
 let chars = ''
+/** 自动完成延迟定时器 */
+let autoCompleteTimer: number | null = null
 
 /** 中文输入提交时 */
 const handleChineseInputMethodSubmission = (data: string) => {
-  if (chars) {
-    chars += data
-    entityHoverAutoInsertRef.value.update(chars.substring(1))
-  }
+  // 中文输入法确认后，触发自动完成
+  triggerAutoComplete()
 }
 
-const hoverMove = (data?: string) => {
-  const { x, y } = getCaretRect()
-  data && entityHoverAutoInsertRef.value.update(data.substring(1))
+const hoverMove = () => {
+  const rect = getCaretRect()
+  if (!rect) return
+  const { x, y } = rect
   entityHoverAutoInsertRef.value.move(x, y)
 }
 
-/** 处理输入 @ 时弹出实体自动完成列表 */
-function autoComplete(e: InputEvent) {
+/** 触发自动完成 */
+function triggerAutoComplete() {
+  // 清除之前的定时器
+  if (autoCompleteTimer !== null) {
+    clearTimeout(autoCompleteTimer)
+    autoCompleteTimer = null
+  }
 
+  autoCompleteTimer = setTimeout(() => {
+    const textBeforeCursor = getTextBeforeCursor(50)
+
+    if (!textBeforeCursor) {
+      entityHoverAutoInsertRef.value.hide()
+      return
+    }
+
+    // 更新匹配结果
+    entityHoverAutoInsertRef.value.update(textBeforeCursor)
+
+    // 更新位置
+    const rect = getCaretRect()
+    if (rect) {
+      const { x, y } = rect
+      entityHoverAutoInsertRef.value.show(x, y)
+      hoverMove()
+    }
+  }, settingStore.baseSettings.autoCompleteDelay)
+}
+
+/** 自动监听输入，匹配实体 */
+function autoComplete(e: InputEvent) {
   if (!e.data) return
 
-  if (chineseInputManager.isChineseInput && chars) {
-    hoverMove()
+  // 忽略一些不需要触发实体提示的字符（空格、换行、常见标点符号）
+  const ignoredChars = /[\s\n\r。，！？、；：“”‘’（）《》〈〉『』「」.!?,;:\[\](){}"'<>]/
+
+  // 如果输入的是需要忽略的字符
+  if (ignoredChars.test(e.data)) {
+    entityHoverAutoInsertRef.value.hide()
     return
   }
 
-  if (e.data === '@') {
-    chars = e.data
-    setTimeout(() => {
-      const { x, y } = getCaretRect()
-      entityHoverAutoInsertRef.value.show(x, y)
-    }, 100)
-    return
-  }
-
-  if (chars === '') return
-
-  chars += e.data
-
-  hoverMove(chars)
+  // 触发自动完成
+  triggerAutoComplete()
 }
 
 /** 在文本框中按下按键时 */
 function handleBodyKeydown(e: KeyboardEvent) {
   if (e.key === 'Backspace') {
-
-    if (chars === '@') entityHoverAutoInsertRef.value.hide()
-
-    if (chars) {
-      chars = chars.slice(0, -1)
-      hoverMove(chars)
+    // 删除时也触发自动完成
+    setTimeout(() => triggerAutoComplete(), 10)
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    // 方向键移动光标时，如果不是上下键，则隐藏提示
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      entityHoverAutoInsertRef.value.hide()
     }
   } else if (e.ctrlKey) {
     if (e.key === 's') {
@@ -363,22 +445,17 @@ function handleBodyKeydown(e: KeyboardEvent) {
   }
 }
 
-function entityHoverAutoInsertClose(entity: Entity) {
+function entityHoverAutoInsertClose(entity: Entity, coverLength?: number) {
   if (!entity) {
-    chars = ''
     return
   }
 
-  // 删除@符号和已输入的字符
-  const sel = window.getSelection()
-  if (sel && sel.rangeCount > 0) {
-    const range = sel.getRangeAt(0)
-    // 向前删除已输入的字符长度（包括@）
-    range.setStart(range.startContainer, range.startOffset - chars.length)
-    range.deleteContents()
+  // 根据 coverLength 删除对应长度的文本
+  if (coverLength && coverLength > 0) {
+    deleteTextBeforeCursor(coverLength)
   }
 
-  chars = ''
+  // 插入实体
   insertVariableSpan(entity.id, entity.title)
 }
 

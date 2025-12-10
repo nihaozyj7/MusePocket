@@ -9,10 +9,13 @@
   color: var(--text-secondary);
 }
 
+html {
+  font-size: 16px;
+}
+
 html, body, #app {
   height: 100%;
   width: 100%;
-  font-size: 16px;
   overflow: hidden;
   color: var(--text-primary);
   background-color: var(--background-primary);
@@ -20,6 +23,11 @@ html, body, #app {
   user-select: none;
   min-width: 960px;
   min-height: 600px;
+}
+
+
+html * {
+  font-size: 100%;
 }
 
 ::-webkit-scrollbar {

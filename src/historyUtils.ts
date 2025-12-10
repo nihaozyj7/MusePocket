@@ -27,7 +27,7 @@ export function computeDiff(oldText: string, newText: string): DiffOperation[] {
       if (oldIndex < oldText.length && oldText[oldIndex] !== newText[newIndex]) {
         let deleteText = ''
         while (oldIndex < oldText.length &&
-               (newIndex >= newText.length || oldText[oldIndex] !== newText[newIndex])) {
+          (newIndex >= newText.length || oldText[oldIndex] !== newText[newIndex])) {
           deleteText += oldText[oldIndex]
           oldIndex++
         }
@@ -44,7 +44,7 @@ export function computeDiff(oldText: string, newText: string): DiffOperation[] {
       if (newIndex < newText.length && (oldIndex >= oldText.length || oldText[oldIndex] !== newText[newIndex])) {
         let insertText = ''
         while (newIndex < newText.length &&
-               (oldIndex >= oldText.length || oldText[oldIndex] !== newText[newIndex])) {
+          (oldIndex >= oldText.length || oldText[oldIndex] !== newText[newIndex])) {
           insertText += newText[newIndex]
           newIndex++
         }
@@ -126,7 +126,7 @@ function optimizeDiffs(diffs: DiffOperation[]): DiffOperation[] {
     const next = diffs[i]
 
     if (current.type === next.type &&
-        current.position + (current.type === 'insert' ? current.text.length : 0) === next.position) {
+      current.position + (current.type === 'insert' ? current.text.length : 0) === next.position) {
       // 合并相同类型的连续操作
       current = {
         type: current.type,
@@ -342,8 +342,14 @@ export interface VisualDiff {
 
 export function computeVisualDiff(oldText: string, newText: string): VisualDiff[] {
   const result: VisualDiff[] = []
-  const oldLines = oldText.split('\n')
-  const newLines = newText.split('\n')
+  // 分割文本行，并过滤掉末尾的空行（由末尾换行符产生）
+  const oldLines = oldText.split('\n').filter((line, index, arr) => {
+    // 保留非最后一行，或者最后一行非空的情况
+    return index < arr.length - 1 || line !== ''
+  })
+  const newLines = newText.split('\n').filter((line, index, arr) => {
+    return index < arr.length - 1 || line !== ''
+  })
 
   const maxLen = Math.max(oldLines.length, newLines.length)
 

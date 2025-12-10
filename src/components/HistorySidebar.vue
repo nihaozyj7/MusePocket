@@ -106,7 +106,13 @@ async function handleHistoryClick(history: DBHistoryRecord) {
     comparedText.value = await reconstructHistoryText(history)
 
     // 计算与当前版本的 diff
-    visualDiffs.value = computeVisualDiff(comparedText.value, currentText.value)
+    // 注意：第一个参数是旧版本（历史），第二个参数是新版本（当前）
+    // 这样能正确显示：历史版本有但当前没有的是删除（-），历史版本没有但当前有的是新增（+）
+    let diffs = computeVisualDiff(currentText.value, comparedText.value)
+
+    // 重新排序：删除的行放在前面，添加的行放在后面
+    diffs = sortDiffByType(diffs)
+    visualDiffs.value = diffs
 
     // 显示弹出层
     diffPopupRef.value?.show()
@@ -115,14 +121,51 @@ async function handleHistoryClick(history: DBHistoryRecord) {
   }
 }
 
+/** 对 diff 进行排序，使相同行号的删除行在前，添加行在后 */
+function sortDiffByType(diffs: VisualDiff[]): VisualDiff[] {
+  // 按行号分组
+  const grouped = new Map<number, VisualDiff[]>()
+
+  for (const diff of diffs) {
+    const lineNum = diff.lineNumber || 0
+    if (!grouped.has(lineNum)) {
+      grouped.set(lineNum, [])
+    }
+    grouped.get(lineNum)!.push(diff)
+  }
+
+  // 对每组内排序：removed -> added -> unchanged
+  const result: VisualDiff[] = []
+  const sortedLineNums = Array.from(grouped.keys()).sort((a, b) => a - b)
+
+  for (const lineNum of sortedLineNums) {
+    const group = grouped.get(lineNum)!
+    // 每组内按类型排序
+    const removed = group.filter(d => d.type === 'removed')
+    const added = group.filter(d => d.type === 'added')
+    const unchanged = group.filter(d => d.type === 'unchanged')
+    result.push(...removed, ...added, ...unchanged)
+  }
+
+  return result
+}
+
 /** 回退到选中的历史版本 */
 async function handleRestore() {
-  if (!selectedHistory.value) return
+  if (!selectedHistory.value) {
+    console.error('没有选中的历史')
+    return
+  }
+
+  console.log('开始回退，目标历史ID:', selectedHistory.value.id, 'sequence:', selectedHistory.value.sequence)
 
   try {
     // 使用 historyStore 的 restoreToHistory 方法
     const text = await historyStore.restoreToHistory(selectedHistory.value.id)
+    console.log('historyStore.restoreToHistory 返回:', text ? '\u6709效文本' + text.substring(0, 50) + '...' : 'null')
+
     if (text !== null && typeof text === 'string') {
+      console.log('回退成功，发送 restore 事件，文本長度:', text.length)
       emit('restore', text)
       diffPopupRef.value?.close()
       selectedHistory.value = null

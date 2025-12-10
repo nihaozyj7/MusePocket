@@ -494,19 +494,17 @@ export const useHistoryStore = defineStore('history', {
         totalCount: articleState.totalCount
       })
 
-      // 更新索引
-      articleState.currentIndex = targetIndex
-
-      // 重建文本
+      // 先重建文本，成功后再更新索引
       const text = await this.reconstructTextAtIndex(this.currentArticleId, targetIndex)
-      if (text !== null) {
+      if (text !== null && typeof text === 'string') {
+        articleState.currentIndex = targetIndex
         articleState.lastSnapshot = text
-        console.log('回退成功，新索引:', targetIndex)
+        console.log('回退成功，新索引:', targetIndex, '重建的文本:', text.substring(0, 100) + '...')
+        return text
       } else {
         console.error('重建文本失败')
+        return null
       }
-
-      return text
     },
 
     /**

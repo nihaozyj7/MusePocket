@@ -22,7 +22,7 @@ const paths = [
   { name: '关于', icon: 'ℹ️' }
 ] as const
 
-const defPath = ref(paths[2].name)
+const defPath = ref<typeof paths[number]['name']>(paths[0].name)
 
 defineExpose({
   show: () => popupRef.value.show()

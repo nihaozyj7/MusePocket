@@ -16,7 +16,7 @@ import { useSelectedBookStore } from '@/stores/SelectedBookStore.ts'
 import { useSettingStore } from '@/stores/SettingStore.ts'
 import { useHistoryStore } from '@/stores/HistoryStore'
 import type { Article, ArticleBody } from '@/types.ts'
-import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText } from '@/utils.ts'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 
 // 懒加载组件
@@ -283,6 +283,8 @@ function showHistoryPopup() {
 
 /** 从历史版本恢复 */
 async function handleRestoreFromHistory(text: string) {
+  console.log('回退到历史版本，接收到的文本:', text.substring(0, 100) + '...')
+
   if (!text || typeof text !== 'string') {
     console.error('无效的文本内容')
     return
@@ -290,16 +292,31 @@ async function handleRestoreFromHistory(text: string) {
 
   if (editorRef.value && selectedArticleStore.v) {
     console.log('从历史版本恢复，更新编辑器内容')
+
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
     // 直接重置编辑器内容
     editorRef.value.resetBody(text)
+    console.log('已更新编辑器内容')
+
+    // 恢复光标位置
+    setTimeout(() => {
+      console.log('恢复光标位置')
+      restoreCursorPosition(cursorPos)
+    }, 0)
 
     // 保存到数据库，但不创建新的历史记录
-    saveArticle(text, undefined, true)
+    console.log('调用 saveArticle 保存数据，跳过历史记录')
+    await saveArticle(text, undefined, true)
 
     // 更新历史侧栏的当前文本
     if (historySidebarRef.value) {
       historySidebarRef.value.setCurrentText(text)
+      console.log('已更新历史侧栏文本')
     }
+  } else {
+    console.error('编辑器未载入或器没有选中文章')
   }
 }
 

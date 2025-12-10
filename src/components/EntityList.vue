@@ -130,7 +130,7 @@ const filteredEntitys = computed(() => {
 })
 
 /** 筛选面板是否已打开 */
-const filterOpen = ref(true)
+const filterOpen = ref(false)
 
 /** 处理排序项目的单击事件 */
 function handleSortItemClick(e: MouseEvent) {

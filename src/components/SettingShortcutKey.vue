@@ -93,6 +93,13 @@ const resetToDefault = async () => {
             <input type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
           </label>
         </div>
+
+        <div class="shortcut-item">
+          <label>
+            <span class="label-text">搜索章节：</span>
+            <input type="text" readonly :value="settingStore.shortcutKeys.search" @keydown="e => handleKeyDown(e, 'search')" @focus="() => handleFocus('search')" @blur="handleBlur" placeholder="按下快捷键组合">
+          </label>
+        </div>
       </div>
 
       <div class="button-group">

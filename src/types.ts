@@ -145,6 +145,8 @@ export interface ShortcutKeys {
   find: string
   /** 替换快捷键 */
   replace: string
+  /** 搜索快捷键 */
+  search: string
 }
 
 /** 实体样式配置 */

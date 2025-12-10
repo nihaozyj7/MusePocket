@@ -3,6 +3,7 @@ import SettingPopup from '@/components/SettingPopup.vue'
 import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
 import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
 import HistorySidebar from '@/components/HistorySidebar.vue'
+import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import { articledb, bookdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
 import { $tips } from '@/plugins/notyf'
@@ -14,7 +15,7 @@ import { useSettingStore } from '@/stores/SettingStore.ts'
 import { useHistoryStore } from '@/stores/HistoryStore'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText } from '@/utils.ts'
-import { defineAsyncComponent, onMounted, ref } from 'vue'
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -60,6 +61,9 @@ const historySidebarRef = ref<InstanceType<typeof HistorySidebar> | null>(null)
 /** 文章回收站弹出层 */
 const recycleBinArticlePopupRef = ref(null)
 
+/** 搜索文章弹出层 */
+const searchArticlePopupRef = ref<InstanceType<typeof SearchArticlePopup> | null>(null)
+
 const eneityManagerRef = ref(null)
 
 /** 右边侧栏工具按钮标题 列表 */
@@ -70,7 +74,31 @@ onMounted(() => {
   settingStore.setEditorWidthMode()
   rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
   useEntityStore().load(selectedBookStore.v.id)
+  // 监听快捷键
+  document.addEventListener('keydown', handleGlobalKeydown)
 })
+
+onUnmounted(() => {
+  // 移除全局监听器
+  document.removeEventListener('keydown', handleGlobalKeydown)
+})
+
+/** 全局快捷键监听 */
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const keys: string[] = []
+  if (e.ctrlKey || e.metaKey) keys.push('Ctrl')
+  if (e.altKey) keys.push('Alt')
+  if (e.shiftKey) keys.push('Shift')
+  keys.push(e.key.toUpperCase())
+
+  const shortcut = keys.join('+')
+
+  // 搜索快捷键
+  if (shortcut === settingStore.shortcutKeys.search) {
+    e.preventDefault()
+    openSearchPopup()
+  }
+}
 
 const contextMenuHanders = {
   edit(id: string) {
@@ -321,6 +349,16 @@ function openRecycleBin() {
   recycleBinArticlePopupRef.value?.show(selectedBookStore.v.id)
 }
 
+/** 打开搜索弹窗 */
+function openSearchPopup() {
+  searchArticlePopupRef.value?.show(articles.value)
+}
+
+/** 处理搜索选择文章 */
+function handleSearchSelectArticle(article: Article) {
+  openArticle(article)
+}
+
 /** 处理文章恢复 */
 function handleArticleRestored(article: Article) {
   // 重新加载文章列表
@@ -434,7 +472,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   <div class="container">
     <div class="sidebar">
       <!-- 搜索栏 -->
-      <div class="search">搜索章节</div>
+      <div class="search" @click="openSearchPopup">搜索章节</div>
       <!-- 操作按钮 -->
       <div class="operations">
         <!-- 回到主页 -->
@@ -514,6 +552,8 @@ function handleDrop(e: DragEvent, targetIndex: number) {
   <HistoryViewPopup ref="historyViewPopupRef" @restore="() => { }" />
   <!-- 文章回收站弹出层 -->
   <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
+  <!-- 搜索文章弹出层 -->
+  <SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
 </template>
 
 <style scoped>

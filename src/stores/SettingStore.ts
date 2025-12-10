@@ -32,7 +32,8 @@ export const useSettingStore = defineStore('setting', {
       save: 'Ctrl+S',
       format: 'Ctrl+Shift+F',
       find: 'Ctrl+F',
-      replace: 'Ctrl+H'
+      replace: 'Ctrl+H',
+      search: 'Ctrl+P'
     } as ShortcutKeys,
     /** 基础设置 */
     baseSettings: {
@@ -272,7 +273,8 @@ export const useSettingStore = defineStore('setting', {
         save: 'Ctrl+S',
         format: 'Ctrl+Shift+F',
         find: 'Ctrl+F',
-        replace: 'Ctrl+H'
+        replace: 'Ctrl+H',
+        search: 'Ctrl+P'
       }
     },
 

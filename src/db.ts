@@ -406,6 +406,28 @@ export const articledb = new class {
     const articles = await store.index('by-book').getAll(bookId)
     return includeDeleted ? articles : articles.filter(a => a.deletedTime === 0)
   }
+
+  /** 批量更新文章排序 */
+  async batchUpdateSortOrder(updates: { id: string; sortOrder: number }[]): Promise<Status> {
+    try {
+      const tx = db.transaction(['articles'], 'readwrite')
+      const store = tx.objectStore('articles')
+
+      for (const update of updates) {
+        const article = await store.get(update.id)
+        if (article) {
+          article.sortOrder = update.sortOrder
+          article.modifiedTime = Date.now()
+          await store.put(article)
+        }
+      }
+
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
 }()
 
 

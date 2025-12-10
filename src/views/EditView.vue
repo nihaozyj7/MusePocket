@@ -41,6 +41,10 @@ const settingStore = useSettingStore()
 /** 历史记录 */
 const historyStore = useHistoryStore()
 
+/** 拖拽相关状态 */
+const draggedItem = ref<Article | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
 /** 设置弹出层 */
 const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
 
@@ -282,8 +286,22 @@ function creatreArticle() {
 
 function loadArticles() {
   articledb.getBookArticles(selectedBookStore.v.id).then(res => {
+    // 为没有sortOrder的旧数据设置默认值
+    res.forEach((article, index) => {
+      if (article.sortOrder === undefined || article.sortOrder === null) {
+        article.sortOrder = article.createdTime
+      }
+    })
+
     articles.value = res
-    articles.value.sort((a, b) => a.createdTime - b.createdTime)
+    // 按sortOrder排序，如果sortOrder相同则按创建时间排序
+    articles.value.sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder
+      }
+      return a.createdTime - b.createdTime
+    })
+
     // 如何存在历史打开的文章，则查找文章列表中是否存在该文章，如果存在则打开
     const article = selectedArticleStore.v
       && articles.value.find(article => article.id === selectedArticleStore.v.id)
@@ -337,6 +355,79 @@ function handleSplitLineMousedown(e: MouseEvent) {
   }, { once: true })
 }
 
+/** 开始拖拽 */
+function handleDragStart(e: DragEvent, article: Article) {
+  draggedItem.value = article
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+  }
+}
+
+/** 拖拽结束 */
+function handleDragEnd() {
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+/** 拖拽经过 */
+function handleDragOver(e: DragEvent, index: number) {
+  e.preventDefault()
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'move'
+  }
+  dragOverIndex.value = index
+}
+
+/** 拖拽离开 */
+function handleDragLeave() {
+  dragOverIndex.value = null
+}
+
+/** 放置 */
+function handleDrop(e: DragEvent, targetIndex: number) {
+  e.preventDefault()
+
+  if (!draggedItem.value) return
+
+  const draggedIndex = articles.value.findIndex(a => a.id === draggedItem.value!.id)
+  if (draggedIndex === -1 || draggedIndex === targetIndex) {
+    draggedItem.value = null
+    dragOverIndex.value = null
+    return
+  }
+
+  // 重新排列数组
+  const newArticles = [...articles.value]
+  const [movedArticle] = newArticles.splice(draggedIndex, 1)
+  newArticles.splice(targetIndex, 0, movedArticle)
+
+  // 更新sortOrder
+  const updates = newArticles.map((article, index) => ({
+    id: article.id,
+    sortOrder: index + 1
+  }))
+
+  // 更新本地状态
+  articles.value = newArticles
+  articles.value.forEach((article, index) => {
+    article.sortOrder = index + 1
+  })
+
+  // 批量保存到数据库
+  articledb.batchUpdateSortOrder(updates).then(res => {
+    if (res.success) {
+      $tips.success('排序已保存')
+    } else {
+      $tips.error(`保存排序失败: ${res.message}`)
+      // 失败时重新加载
+      loadArticles()
+    }
+  })
+
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
 </script>
 
 <template>
@@ -359,7 +450,11 @@ function handleSplitLineMousedown(e: MouseEvent) {
       </div>
       <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
         <div class="scroll-container">
-          <div class="article-item" :class="{ 'selected': isSelected(article) }" v-for="article in articles" :data-article-id="article.id" :key="article.id">
+          <div class="article-item" :class="{
+            'selected': isSelected(article),
+            'dragging': draggedItem && draggedItem.id === article.id,
+            'drag-over': dragOverIndex === index
+          }" v-for="(article, index) in articles" :data-article-id="article.id" :key="article.id" draggable="true" @dragstart="handleDragStart($event, article)" @dragend="handleDragEnd" @dragover="handleDragOver($event, index)" @dragleave="handleDragLeave" @drop="handleDrop($event, index)">
             <span>📜</span>
             <h4>{{ article.title }}</h4>
             <div class="count">{{ article.wordCount }}</div>
@@ -635,6 +730,18 @@ function handleSplitLineMousedown(e: MouseEvent) {
 .article-item {
   display: flex;
   padding: .5rem;
+  cursor: move;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.article-item.dragging {
+  opacity: 0.5;
+}
+
+.article-item.drag-over {
+  border-top: 2px solid var(--primary);
+  margin-top: 2px;
 }
 
 .article-item:hover h4 {

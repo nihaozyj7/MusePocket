@@ -20,6 +20,8 @@ export interface Article extends Time {
   title: string
   /** 字数 */
   wordCount: number
+  /** 排序索引（用于自定义排序，升序） */
+  sortOrder: number
 }
 
 /** 文章内容，与文章ID一致 */

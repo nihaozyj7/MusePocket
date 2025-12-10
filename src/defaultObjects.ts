@@ -16,6 +16,11 @@ export function getDefaultBook(): Book {
 }
 
 export function getDefaultArticle(bookId: string, articles: Article[]): Article {
+  // 计算新文章的排序索引（比现有最大值大1）
+  const maxSortOrder = articles.length > 0
+    ? Math.max(...articles.map(a => a.sortOrder || 0))
+    : 0
+
   return {
     bookId,
     id: uid(),
@@ -23,7 +28,8 @@ export function getDefaultArticle(bookId: string, articles: Article[]): Article 
     createdTime: Date.now(),
     modifiedTime: Date.now(),
     wordCount: 0,
-    deletedTime: 0
+    deletedTime: 0,
+    sortOrder: maxSortOrder + 1
   }
 }
 

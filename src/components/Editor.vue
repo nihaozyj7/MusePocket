@@ -66,12 +66,15 @@ onMounted(() => {
   document.addEventListener('selectionchange', handleTextSelect)
   settingStore.setEditorWidthMode()
 
-  if (settingStore.enableParagraphSpacing) {
+  if (settingStore.baseSettings.enableParagraphSpacing) {
     styleManager.add('.body>p', {
-      'margin-bottom': settingStore.lineHeight + 'rem'
+      'margin-bottom': settingStore.baseSettings.lineHeight + 'rem'
     })
   }
-  styleManager.add('.body>p', { minHeight: settingStore.lineHeight + 'rem' })
+  styleManager.add('.body>p', { minHeight: settingStore.baseSettings.lineHeight + 'rem' })
+
+  // 应用背景图片设置
+  settingStore.applyBackgroundImage()
 
   chineseInputManager = new ChineseInputManager(
     () => { },
@@ -133,8 +136,17 @@ const drawBackground = (function () {
     // 清除画布
     ctx.clearRect(0, 0, rect.width, rect.height)
 
-    // 设置画笔样式 - 使用CSS变量以支持主题
-    ctx.setLineDash([5, 5])
+    // 检查是否启用网格线
+    if (!settingStore.baseSettings.enableGridLines) {
+      return // 未启用网格线，不绘制
+    }
+
+    // 根据设置决定线条样式
+    if (settingStore.baseSettings.gridLineStyle === 'dashed') {
+      ctx.setLineDash([5, 5]) // 虚线
+    } else {
+      ctx.setLineDash([]) // 实线
+    }
     ctx.lineDashOffset = 0
 
     // 使用CSS变量获取主题颜色

@@ -1,6 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ShortcutKeys, BaseSettings } from '@/types'
+import { StyleManager } from '@/utils'
+
+// 全局样式管理器实例
+let styleManager: StyleManager | null = null
+
+const getStyleManager = () => {
+  if (!styleManager) {
+    styleManager = new StyleManager()
+  }
+  return styleManager
+}
 
 
 export const useSettingStore = defineStore('setting', {
@@ -66,6 +77,16 @@ export const useSettingStore = defineStore('setting', {
       // 应用基准字体大小
       document.documentElement.style.fontSize = `${this.baseSettings.baseFontSize}px`
 
+      // 初始化样式管理器并应用行高和段间距
+      const manager = getStyleManager()
+      manager.add('.body>p', { minHeight: this.baseSettings.lineHeight + 'rem' })
+
+      if (this.baseSettings.enableParagraphSpacing) {
+        manager.add('.body>p', {
+          'margin-bottom': this.baseSettings.lineHeight + 'rem'
+        })
+      }
+
       // 应用实体样式
       this.applyEntityStyle()
 
@@ -103,11 +124,33 @@ export const useSettingStore = defineStore('setting', {
       if (editor) {
         editor.style.lineHeight = `${this.baseSettings.lineHeight}`
       }
+
+      // 更新 minHeight
+      const manager = getStyleManager()
+      manager.add('.body>p', { minHeight: this.baseSettings.lineHeight + 'rem' })
+
+      // 如果开启了段间距，也要同步更新 margin-bottom
+      if (this.baseSettings.enableParagraphSpacing) {
+        manager.add('.body>p', {
+          'margin-bottom': this.baseSettings.lineHeight + 'rem'
+        })
+      }
     },
 
     /** 切换段间距 */
     toggleParagraphSpacing(enabled: boolean) {
       this.baseSettings.enableParagraphSpacing = enabled
+      const manager = getStyleManager()
+
+      if (enabled) {
+        // 开启段间距：添加 margin-bottom
+        manager.add('.body>p', {
+          'margin-bottom': this.baseSettings.lineHeight + 'rem'
+        })
+      } else {
+        // 关闭段间距：移除 margin-bottom 属性
+        manager.removeProperty('.body>p', 'margin-bottom')
+      }
     },
 
     /** 应用实体样式 */
@@ -150,46 +193,36 @@ export const useSettingStore = defineStore('setting', {
 
     /** 应用网格线 */
     applyGridLines() {
-      const editor = document.querySelector('.tu-container') as HTMLElement
-      if (!editor) return
-
-      if (this.baseSettings.enableGridLines) {
-        const lineStyle = this.baseSettings.gridLineStyle === 'dashed' ? '1px dashed' : '1px solid'
-        const color = 'var(--border-color)'
-        editor.style.backgroundImage = `
-          linear-gradient(${lineStyle} ${color}, transparent 1px),
-          linear-gradient(90deg, ${lineStyle} ${color}, transparent 1px)
-        `
-        editor.style.backgroundSize = '20px 20px'
-      } else {
-        editor.style.backgroundImage = 'none'
-      }
+      // 网格线由 Editor 组件的 canvas 绘制，这里不需要应用样式
+      // Editor 会直接读取 settingStore.baseSettings 来绘制
     },
 
     /** 切换网格线 */
     toggleGridLines(enabled: boolean) {
       this.baseSettings.enableGridLines = enabled
-      this.applyGridLines()
+      // 网格线由 Editor 组件负责绘制
     },
 
     /** 更新网格线样式 */
     updateGridLineStyle(style: 'dashed' | 'solid') {
       this.baseSettings.gridLineStyle = style
-      this.applyGridLines()
+      // 网格线由 Editor 组件负责绘制
     },
 
     /** 应用背景图片 */
     applyBackgroundImage() {
-      const editor = document.querySelector('.tu-container') as HTMLElement
-      if (!editor) return
+      // 应用到整个 EditView 的 .container 区域（整个窗口）
+      const container = document.querySelector('.container') as HTMLElement
+      if (!container) return
 
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        editor.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
-        editor.style.backgroundSize = 'cover'
-        editor.style.backgroundPosition = 'center'
-        editor.style.backgroundRepeat = 'no-repeat'
-      } else if (!this.baseSettings.enableGridLines) {
-        editor.style.backgroundImage = 'none'
+        container.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
+        container.style.backgroundSize = 'cover'
+        container.style.backgroundPosition = 'center'
+        container.style.backgroundRepeat = 'no-repeat'
+        container.style.backgroundAttachment = 'local'
+      } else {
+        container.style.backgroundImage = 'none'
       }
     },
 

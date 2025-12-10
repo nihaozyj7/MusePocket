@@ -49,6 +49,7 @@ function handleHeaderButtonClick(e: MouseEvent) {
   flex-direction: column;
   flex: 1;
   width: 0;
+  background-color: var(--background-primary);
 }
 
 .container>div {

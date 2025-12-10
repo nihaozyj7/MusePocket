@@ -48,6 +48,11 @@ onMounted(() => {
   settingStore.setEditorWidthMode()
   rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
   useEntityStore().load(selectedBookStore.v.id)
+
+  // 应用背景图片设置
+  setTimeout(() => {
+    settingStore.applyBackgroundImage()
+  }, 100)
 })
 
 const contextMenuHanders = {

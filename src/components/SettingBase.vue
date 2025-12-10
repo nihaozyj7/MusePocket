@@ -108,7 +108,7 @@ const resetSettings = () => {
 
       <!-- 网格线和背景 -->
       <div class="sitem">
-        <span>配置背景，</span>
+        <span class="config-label">配置背景，</span>
         <label class="sitem">
           <input type="checkbox" :checked="settings.enableGridLines" @change="e => settingStore.toggleGridLines((e.target as HTMLInputElement).checked)">
           <span>编辑区启用网格线</span>
@@ -145,6 +145,11 @@ const resetSettings = () => {
 
 .sitem span {
   color: var(--text-secondary);
+}
+
+.config-label {
+  align-self: flex-start;
+  line-height: 2rem;
 }
 
 input[type="number"] {

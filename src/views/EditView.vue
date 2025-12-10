@@ -24,6 +24,7 @@ import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
 const EntityManager = defineAsyncComponent(() => import('@/components/EntityManager.vue'))
 const RecycleBinArticlePopup = defineAsyncComponent(() => import('@/components/RecycleBinArticlePopup.vue'))
+const NameGeneratorTool = defineAsyncComponent(() => import('@/components/NameGeneratorTool.vue'))
 
 /** 文章列表 */
 const articles = ref<Article[]>([])
@@ -567,6 +568,7 @@ function handleDrop(e: DragEvent, targetIndex: number) {
         <!-- 工具窗口 -->
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
+          <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
           <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[3]" :bookId="selectedBookStore.v?.id || ''" />
           <OutlineNavigator v-show="settingStore.rutilsTitle === rutilsTitles[4]" :articleId="selectedArticleStore.v?.id || ''" @insert="handleOutlineInsert" />

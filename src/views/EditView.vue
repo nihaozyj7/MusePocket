@@ -6,6 +6,7 @@ import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import DraftManager from '@/components/DraftManager.vue'
 import OutlineNavigator from '@/components/OutlineNavigator.vue'
 import ProofreadTool from '@/components/ProofreadTool.vue'
+import FindReplacePopup from '@/components/FindReplacePopup.vue'
 import Editor from '@/components/Editor.vue'
 import { articledb, bookdb, importExportdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
@@ -74,6 +75,9 @@ const eneityManagerRef = ref(null)
 
 /** 校对工具 */
 const proofreadToolRef = ref<InstanceType<typeof ProofreadTool> | null>(null)
+
+/** 查找替换弹出层 */
+const findReplacePopupRef = ref<InstanceType<typeof FindReplacePopup> | null>(null)
 
 /** 右边侧栏工具按钮标题 列表 */
 const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⏱️ 历史版本']
@@ -624,6 +628,138 @@ function openSettings() {
   event_emit('openSettings')
 }
 
+/** 一键排版 */
+function handleFormat() {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取当前编辑器的body元素
+  const bodyElement = editorRef.value.getBody()
+
+  // 使用和保存时相同的处理逻辑
+  const cleanedContent = getCleanedEditorContent(bodyElement)
+
+  // 保存光标位置
+  const cursorPos = saveCursorPosition()
+
+  // 重新设置内容
+  editorRef.value.resetBody(cleanedContent)
+
+  // 恢复光标位置
+  setTimeout(() => {
+    restoreCursorPosition(cursorPos)
+    // 触发保存
+    if (editorRef.value) {
+      editorRef.value.handleInput()
+    }
+    $tips.success('排版完成')
+  }, 100)
+}
+
+/** 打开查找替换弹窗 */
+function openFindReplace() {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取当前编辑器内容
+  const content = editorRef.value.getBodyText()
+  findReplacePopupRef.value?.show(content)
+}
+
+/** 处理查找替换 */
+function handleFindReplace(findText: string, replaceText: string, isRegex: boolean, replaceAll: boolean) {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取纯文本内容
+  const bodyText = editorRef.value.getBodyText()
+
+  let newText = bodyText
+  let matchCount = 0
+
+  try {
+    if (isRegex) {
+      // 正则表达式模式
+      const regex = new RegExp(findText, replaceAll ? 'g' : '')
+
+      if (replaceAll) {
+        // 替换全部
+        newText = bodyText.replace(regex, replaceText)
+        // 计算匹配数
+        const matches = bodyText.match(regex)
+        matchCount = matches ? matches.length : 0
+      } else {
+        // 只替换第一个
+        if (regex.test(bodyText)) {
+          newText = bodyText.replace(regex, replaceText)
+          matchCount = 1
+        }
+      }
+    } else {
+      // 普通文本模式
+      if (replaceAll) {
+        // 替换全部
+        const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
+        newText = bodyText.replace(regex, replaceText)
+        // 计算匹配数
+        const matches = bodyText.match(regex)
+        matchCount = matches ? matches.length : 0
+      } else {
+        // 只替换第一个
+        const index = bodyText.indexOf(findText)
+        if (index !== -1) {
+          newText = bodyText.substring(0, index) + replaceText + bodyText.substring(index + findText.length)
+          matchCount = 1
+        }
+      }
+    }
+
+    if (matchCount === 0) {
+      $tips.error('未找到匹配内容')
+      return
+    }
+
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
+    // 重置编辑器内容
+    editorRef.value.resetBody(newText)
+
+    // 替换后立即执行一键排版
+    setTimeout(() => {
+      if (!editorRef.value) return
+
+      // 获取当前编辑器的body元素
+      const bodyElement = editorRef.value.getBody()
+
+      // 使用和保存时相同的处理逻辑进行排版
+      const cleanedContent = getCleanedEditorContent(bodyElement)
+
+      // 重新设置内容（已排版）
+      editorRef.value.resetBody(cleanedContent)
+
+      // 恢复光标位置
+      setTimeout(() => {
+        restoreCursorPosition(cursorPos)
+        // 触发保存
+        if (editorRef.value) {
+          editorRef.value.handleInput()
+        }
+        $tips.success(`已替换 ${matchCount} 处并完成排版`)
+      }, 50)
+    }, 100)
+
+  } catch (error) {
+    $tips.error('正则表达式格式错误')
+  }
+}
+
 </script>
 
 <template>
@@ -665,9 +801,9 @@ function openSettings() {
         </div>
         <!-- 工具按钮 -->
         <div class="tools">
-          <button title="对当前文章进行排版">✨ 一键排版</button>
+          <button title="对当前文章进行排版" @click="handleFormat">✨ 一键排版</button>
           <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
-          <button title="查找与替换">🔍 查找替换</button>
+          <button title="查找与替换" @click="openFindReplace">🔍 查找替换</button>
           <div class="button-group">
             <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
               ↩️
@@ -711,6 +847,8 @@ function openSettings() {
   <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
   <!-- 搜索文章弹出层 -->
   <SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
+  <!-- 查找替换弹出层 -->
+  <FindReplacePopup ref="findReplacePopupRef" @replace="handleFindReplace" />
 
   <!-- 导入导出弹出层 -->
   <Popup ref="importExportPopupRef" title="💾 文章导入导出">
@@ -1027,7 +1165,6 @@ function openSettings() {
 }
 
 .import-export-container {
-  padding: 1rem;
   max-width: 700px;
   margin: 0 auto;
 }

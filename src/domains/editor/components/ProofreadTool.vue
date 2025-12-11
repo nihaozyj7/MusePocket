@@ -1,7 +1,243 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useModelsStore } from '@domains/settings/stores/models.store'
-import { usePromptsStore } from '@domains/settings/stores/prompts.store'
+import { useModelsStore } from '@/domains/settings/stores/models.store'
+import { usePromptsStore } from '@/domains/settings/stores/prompts.store'
+
+/** 内置校对预设 */
+const BUILTIN_PROOFREAD_PRESETS = [
+  {
+    id: 'typo-check',
+    title: '📝 错别字检查',
+    description: '专注检查错别字和拼写错误',
+    prompt: `你是一个专业的文字校对专家，专注于查找错别字和拼写错误。
+
+请仔细检查以下文本，找出所有的错别字、同音字错误、形近字错误等拼写问题。
+
+检查重点：
+1. 错别字（如"的地得"混用）
+2. 同音字错误（如"做"与"作"、"辩"与"辨"）
+3. 形近字错误（如"未"与"末"、"己"与"已"）
+4. 多音字误用
+5. 简繁体混用
+
+请以JSON数组格式返回，每个问题包含：
+- type: "error"
+- category: "错别字"
+- original: 错误的文字
+- suggestion: 正确的文字
+- reason: 错误原因说明
+
+只返回确定的错误，不要过度猜测。`
+  },
+  {
+    id: 'punctuation-check',
+    title: '🔣 标点符号检查',
+    description: '检查标点符号使用规范',
+    prompt: `你是一个标点符号使用规范专家。
+
+请检查以下文本的标点符号使用，找出不规范的地方。
+
+检查重点：
+1. 中英文标点混用（如中文中使用英文逗号、句号）
+2. 标点符号位置错误
+3. 引号、书名号使用不当
+4. 省略号、破折号使用错误
+5. 顿号、逗号、分号使用混乱
+6. 问号、感叹号滥用
+
+请以JSON数组格式返回，每个问题包含：
+- type: "warning"
+- category: "标点符号"
+- original: 包含错误标点的片段
+- suggestion: 修正后的内容
+- reason: 修改原因说明
+
+遵循《标点符号用法》国家标准。`
+  },
+  {
+    id: 'grammar-check',
+    title: '📖 语法检查',
+    description: '检查语法结构和句式问题',
+    prompt: `你是一个语法专家，擅长发现各类语法错误。
+
+请检查以下文本的语法问题。
+
+检查重点：
+1. 主谓不一致
+2. 成分残缺（缺少主语、谓语等）
+3. 成分赘余（重复啰嗦）
+4. 搭配不当（动宾、主谓搭配错误）
+5. 语序混乱
+6. 句式杂糅
+7. 关联词使用错误
+
+请以JSON数组格式返回，每个问题包含：
+- type: "error"
+- category: "语法错误"
+- original: 语法错误的句子
+- suggestion: 修正后的句子
+- reason: 语法问题说明
+
+只指出明确的语法错误。`
+  },
+  {
+    id: 'wording-check',
+    title: '💬 用词检查',
+    description: '检查用词准确性和得体性',
+    prompt: `你是一个用词专家，关注词语使用的准确性和得体性。
+
+请检查以下文本的用词问题。
+
+检查重点：
+1. 词语搭配不当
+2. 词义理解错误
+3. 词性误用
+4. 语体色彩不当（书面语、口语混用）
+5. 感情色彩不当（褒贬失当）
+6. 外来词、网络词使用不当
+7. 专业术语使用错误
+
+请以JSON数组格式返回，每个问题包含：
+- type: "suggestion"
+- category: "用词不当"
+- original: 用词不当的片段
+- suggestion: 更恰当的表达
+- reason: 为什么这样改更好
+
+保持原文风格，只建议明确的改进。`
+  },
+  {
+    id: 'clarity-check',
+    title: '💡 表达清晰度检查',
+    description: '检查表达是否清晰明确',
+    prompt: `你是一个表达清晰度专家，帮助改善模糊不清的表达。
+
+请检查以下文本，找出表达不清晰的地方。
+
+检查重点：
+1. 指代不明（代词指代模糊）
+2. 歧义句（可能有多种理解）
+3. 表述啰嗦（可简化的冗余表达）
+4. 概念模糊（缺少具体说明）
+5. 信息缺失（关键信息不完整）
+6. 逻辑跳跃（前后缺少衔接）
+
+请以JSON数组格式返回，每个问题包含：
+- type: "suggestion"
+- category: "表达不清"
+- original: 表达不清的句子
+- suggestion: 更清晰的表达
+- reason: 为什么原表达不够清晰
+
+建议应该让表达更简洁明确。`
+  },
+  {
+    id: 'logic-check',
+    title: '🔗 逻辑检查',
+    description: '检查句子和段落的逻辑性',
+    prompt: `你是一个逻辑分析专家，擅长发现文本中的逻辑问题。
+
+请检查以下文本的逻辑问题。
+
+检查重点：
+1. 前后矛盾
+2. 因果关系不当
+3. 论证不足或过度
+4. 转折不合理
+5. 条件关系错误
+6. 并列关系混乱
+7. 推理跳跃
+
+请以JSON数组格式返回，每个问题包含：
+- type: "warning"
+- category: "逻辑不通"
+- original: 逻辑有问题的句子
+- suggestion: 逻辑更合理的表达
+- reason: 逻辑问题说明
+
+只指出明显的逻辑问题。`
+  },
+  {
+    id: 'style-check',
+    title: '🎨 风格一致性检查',
+    description: '检查语言风格是否统一',
+    prompt: `你是一个语言风格专家，关注文本风格的一致性。
+
+请检查以下文本的风格一致性问题。
+
+检查重点：
+1. 人称使用不一致（第一、第二、第三人称混用）
+2. 时态不一致（过去、现在、未来时态混乱）
+3. 语气不一致（正式与非正式混用）
+4. 叙述视角不统一
+5. 书面语与口语混用
+6. 专业术语与通俗表达混杂
+
+请以JSON数组格式返回，每个问题包含：
+- type: "suggestion"
+- category: "风格不一致"
+- original: 风格不一致的部分
+- suggestion: 统一风格后的表达
+- reason: 为了保持何种风格一致性
+
+建议应该让整体风格更统一。`
+  },
+  {
+    id: 'comprehensive-check',
+    title: '✅ 全面检查',
+    description: '综合检查所有常见问题',
+    prompt: `你是一个专业的文本校对专家。请全面检查以下文本，找出所有问题并给出修改建议。
+
+检查内容包括：
+1. 错别字和拼写错误
+2. 标点符号使用错误
+3. 语法错误
+4. 用词不当
+5. 表达不清晰的地方
+6. 逻辑不通顺的句子
+7. 语言风格不一致
+8. 重复啰嗦的表达
+
+请以JSON数组格式返回，每个问题包含：
+- type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
+- category: 问题类别（如"拼写错误"、"标点符号"、"语法错误"、"用词不当"、"表达不清"、"逻辑不通"、"风格不一致"等）
+- original: 需要修改的原文片段（尽量精确到词组或句子）
+- suggestion: 建议修改后的内容
+- reason: 简明的修改原因说明
+
+注意事项：
+1. 只指出真正的问题，不要过度挑剔
+2. original 字段应该是文本中实际存在的内容，以便精确替换
+3. 保持原文的语言风格和意图
+4. 对于文学作品，允许合理的修辞和艺术表达
+5. 按问题严重程度排序，type="error" 的问题优先
+
+示例格式：
+[
+  {
+    "type": "error",
+    "category": "拼写错误",
+    "original": "旅游",
+    "suggestion": "旅游",
+    "reason": "正确写法应为"旅游""
+  },
+  {
+    "type": "warning",
+    "category": "标点符号",
+    "original": "你好,世界",
+    "suggestion": "你好，世界",
+    "reason": "中文应使用全角逗号"
+  },
+  {
+    "type": "suggestion",
+    "category": "表达优化",
+    "original": "他的速度非常地快",
+    "suggestion": "他的速度非常快",
+    "reason": "去掉冗余的"地"字，表达更简洁"
+  }
+]`
+  }
+] as const
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { openaiFetch, type OpenAiParams } from '@core/api'
 import { $tips } from '@app/plugins'
@@ -27,7 +263,9 @@ const selectedArticleStore = useSelectedArticleStore()
 
 /** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
-/** 选中的提示词 */
+/** 选中的预设 */
+const selectedPreset = ref<string>('')
+/** 校对提示词 */
 const selectedPrompt = ref<string>('')
 /** 是否正在校对 */
 const isProofreading = ref(false)
@@ -94,20 +332,27 @@ onMounted(() => {
     selectedModel.value = modelOptions.value[0]
   }
 
-  // 恢复提示词
-  if (savedConfig.systemPrompt) {
+  // 恢复预设选择
+  if (savedConfig.presetId) {
+    const preset = allPresetOptions.value.find(p => p.id === savedConfig.presetId)
+    if (preset) {
+      selectedPreset.value = savedConfig.presetId
+      selectedPrompt.value = preset.prompt
+    } else {
+      // 如果保存的预设不存在，使用第一个内置预设
+      if (BUILTIN_PROOFREAD_PRESETS.length > 0) {
+        selectedPreset.value = BUILTIN_PROOFREAD_PRESETS[0].id
+        selectedPrompt.value = BUILTIN_PROOFREAD_PRESETS[0].prompt
+      }
+    }
+  } else if (savedConfig.systemPrompt) {
+    // 兼容旧配置：有保存的提示词但没有预设ID
     selectedPrompt.value = savedConfig.systemPrompt
   } else {
-    // 默认提示词：先查找校对相关的提示词，如果没有则使用内置默认提示词
-    const proofreadPrompt = promptOptions.value.find(p =>
-      p.title.includes('校对') || p.title.includes('纠错') || p.title.includes('proofread')
-    )
-
-    if (proofreadPrompt) {
-      selectedPrompt.value = proofreadPrompt.prompt
-    } else {
-      // 如果没有找到校对提示词，使用默认提示词
-      selectedPrompt.value = getDefaultProofreadPrompt()
+    // 默认使用第一个内置预设
+    if (BUILTIN_PROOFREAD_PRESETS.length > 0) {
+      selectedPreset.value = BUILTIN_PROOFREAD_PRESETS[0].id
+      selectedPrompt.value = BUILTIN_PROOFREAD_PRESETS[0].prompt
     }
   }
 })
@@ -123,13 +368,28 @@ function saveConfig() {
 
   settingStore.saveAiToolConfig('proofread', {
     modelId: getModelId(selectedModel.value),
+    presetId: selectedPreset.value,
     systemPrompt: selectedPrompt.value
   })
 }
 
 // 监听配置变化，自动保存
-watch([selectedModel, selectedPrompt], () => {
+watch([selectedModel, selectedPreset, selectedPrompt], () => {
   saveConfig()
+})
+
+/** 合并后的预设选项（内置 + 自定义） */
+const allPresetOptions = computed(() => {
+  return [
+    ...BUILTIN_PROOFREAD_PRESETS.map(p => ({ ...p, isBuiltin: true })),
+    ...promptOptions.value.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: '自定义提示词',
+      prompt: p.prompt,
+      isBuiltin: false
+    }))
+  ]
 })
 
 /** 获取默认校对提示词 */
@@ -148,7 +408,7 @@ function getDefaultProofreadPrompt(): string {
 
 请以JSON数组格式返回，每个问题包含：
 - type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
-- category: 问题类别（如"拼写错误"、"标点符号"、"语法错误"、"用词不当"等）
+- category: 问题类别（如“拼写错误”、“标点符号”、“语法错误”、“用词不当”等）
 - original: 需要修改的原文片段（尽量精确到词组或句子）
 - suggestion: 建议修改后的内容
 - reason: 简明的修改原因说明
@@ -176,6 +436,30 @@ function getDefaultProofreadPrompt(): string {
     "reason": "中文应使用全角逗号"
   }
 ]`
+}
+
+/** 选择校对提示词 */
+function selectProofreadPrompt(promptId: string) {
+  const prompt = promptOptions.value.find(p => p.id === promptId)
+  if (prompt) {
+    selectedPrompt.value = prompt.prompt
+    $tips.success('已填入提示词')
+  }
+}
+
+/** 应用预设 */
+function applyPreset(presetId: string) {
+  const preset = allPresetOptions.value.find(p => p.id === presetId)
+  if (preset) {
+    selectedPrompt.value = preset.prompt
+  }
+}
+
+/** 预设变化时 */
+function onPresetChange(presetId: string) {
+  if (!presetId) return
+  applyPreset(presetId)
+  saveConfig()
 }
 
 /** 开始校对 */
@@ -352,8 +636,36 @@ defineExpose({
         </div>
 
         <div class="form-item">
+          <label>校对场景</label>
+          <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
+            <option value="">选择校对场景（可选）</option>
+            <optgroup label="内置场景">
+              <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
+                {{ preset.title }}
+              </option>
+            </optgroup>
+            <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
+              <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
+                {{ preset.title }}
+              </option>
+            </optgroup>
+          </select>
+          <p v-if="selectedPreset" class="preset-description">
+            {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
+          </p>
+        </div>
+
+        <div class="form-item">
           <label>校对提示词</label>
-          <textarea v-model="selectedPrompt" placeholder="输入校对提示词..." rows="4"></textarea>
+          <div class="prompt-selector-wrapper">
+            <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+              <option value="">从提示词库快速选择（可选）</option>
+              <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+                {{ prompt.title }}
+              </option>
+            </select>
+          </div>
+          <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
         </div>
 
         <div class="actions">
@@ -509,6 +821,34 @@ defineExpose({
   resize: vertical;
   min-height: 80px;
   font-family: monospace;
+}
+
+.prompt-selector-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.prompt-quick-select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.prompt-quick-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.preset-description {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
 }
 
 .actions {

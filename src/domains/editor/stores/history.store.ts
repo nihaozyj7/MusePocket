@@ -170,10 +170,10 @@ export const useHistoryStore = defineStore('history', {
       }
 
       const oldText = articleState.lastSnapshot
+
       if (newText === oldText) {
         return
       }
-
 
       // 如果不在最新位置（说明用户回退后编辑），需要丢弃后面的历史
       if (articleState.currentIndex < articleState.totalCount - 1) {

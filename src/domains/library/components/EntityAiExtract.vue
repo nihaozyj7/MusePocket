@@ -20,10 +20,98 @@ const entityStore = useEntityStore()
 const entityTypesStore = useEntityTypesStore()
 const selectedBookStore = useSelectedBookStore()
 
+/** 内置合并提示词 */
+const BUILTIN_MERGE_PROMPTS = [
+  {
+    id: 'merge-duplicates',
+    title: '🔄 合并重复项',
+    prompt: `你是一个实体合并专家。分析以下实体，找出重复和相似项，返回合并建议。
+
+说明:
+- id: 实体ID
+- t: 标题/名称
+- ty: 类型
+- d: 描述
+- a: 属性数组
+
+任务:
+1. 识别完全重复的实体(标题相同)
+2. 识别相似实体(描述相似度>70%)
+3. 对可合并实体,选择最完整的作为主实体
+4. 合并属性时去重,保留所有有价值信息
+
+返回JSON格式:
+{
+  "merges": [
+    {
+      "keepId": "保留的实体ID",
+      "mergeIds": ["要合并的ID1", "要合并的ID2"],
+      "reason": "合并原因"
+    }
+  ],
+  "updates": [
+    {
+      "id": "实体ID",
+      "title": "更新后的标题",
+      "description": "补充完善的描述",
+      "attrs": [更新后的属性],
+      "reason": "更新原因"
+    }
+  ]
+}`
+  },
+  {
+    id: 'optimize-descriptions',
+    title: '✨ 优化描述',
+    prompt: `你是一个实体优化专家。分析以下实体，主要关注描述的完善和优化。
+
+任务：
+1. 识别描述为空或过于简略的实体
+2. 根据实体名称和类型，提供合理的补充描述
+3. 保持原有信息，只补充和优化
+
+返回JSON格式（只返回需要更新的）：
+{
+  "merges": [],
+  "updates": [
+    {
+      "id": "实体ID",
+      "description": "优化后的描述",
+      "reason": "优化原因"
+    }
+  ]
+}`
+  },
+  {
+    id: 'smart-categorize',
+    title: '📂 智能分类',
+    prompt: `你是一个实体分类专家。分析以下实体，优化其类型分类。
+
+任务：
+1. 识别类型命名不规范的实体
+2. 识别可以合并的相似类型（如“人物”和“角色”）
+3. 提供更合理的类型名称
+
+返回JSON格式：
+{
+  "merges": [],
+  "updates": [
+    {
+      "id": "实体ID",
+      "type": "优化后的类型",
+      "reason": "修改原因"
+    }
+  ]
+}`
+  }
+] as const
+
 /** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
 /** 选中的提示词 */
 const selectedPrompt = ref<string>('')
+/** 选中的合并提示词 */
+const selectedMergePrompt = ref<string>('')
 /** 是否携带已有实体 */
 const includeExistingEntities = ref(false)
 /** 选中的文章 */
@@ -70,6 +158,19 @@ const modelOptions = computed(() => modelsStore.v)
 
 /** 提示词选项 */
 const promptOptions = computed(() => promptsStore.v)
+
+/** 合并后的合并提示词选项（内置 + 自定义） */
+const allMergePromptOptions = computed(() => {
+  return [
+    ...BUILTIN_MERGE_PROMPTS.map(p => ({ ...p, isBuiltin: true })),
+    ...promptOptions.value.map(p => ({
+      id: p.id,
+      title: p.title,
+      prompt: p.prompt,
+      isBuiltin: false
+    }))
+  ]
+})
 
 /** 是否可以开始提取 */
 const canExtract = computed(() => {
@@ -135,6 +236,15 @@ async function loadArticles() {
   if (!selectedBookStore.v?.id) return
 
   allArticles.value = await articledb.getBookArticles(selectedBookStore.v.id)
+}
+
+/** 选择提取提示词 */
+function selectExtractPrompt(promptId: string) {
+  const prompt = promptOptions.value.find(p => p.id === promptId)
+  if (prompt) {
+    selectedPrompt.value = prompt.prompt
+    $tips.success('已填入提示词')
+  }
 }
 
 /** 切换文章选择 */
@@ -323,40 +433,10 @@ async function startMergeAnalysis() {
       a: e.attrs || []
     }))
 
-    const systemPrompt = `你是一个实体合并专家。分析以下实体，找出重复和相似项，返回合并建议。
-
-说明:
-- id: 实体ID
-- t: 标题/名称
-- ty: 类型
-- d: 描述
-- a: 属性数组
-
-任务:
-1. 识别完全重复的实体(标题相同)
-2. 识别相似实体(描述相似度>70%)
-3. 对可合并实体,选择最完整的作为主实体
-4. 合并属性时去重,保留所有有价值信息
-
-返回JSON格式:
-{
-  "merges": [
-    {
-      "keepId": "保留的实体ID",
-      "mergeIds": ["要合并的ID1", "要合并的ID2"],
-      "reason": "合并原因"
-    }
-  ],
-  "updates": [
-    {
-      "id": "实体ID",
-      "title": "更新后的标题",
-      "description": "补充完善的描述",
-      "attrs": [更新后的属性],
-      "reason": "更新原因"
-    }
-  ]
-}`
+    // 使用选中的合并提示词，如果没有则使用默认的第一个内置提示词
+    const mergePromptId = selectedMergePrompt.value || BUILTIN_MERGE_PROMPTS[0].id
+    const mergePrompt = allMergePromptOptions.value.find(p => p.id === mergePromptId)
+    const systemPrompt = mergePrompt ? mergePrompt.prompt : BUILTIN_MERGE_PROMPTS[0].prompt
 
     const userContent = `请分析以下实体，返回JSON格式的合并和曰新建议：\n${JSON.stringify(compressedEntities)}`
 
@@ -595,12 +675,15 @@ function cancelMerge() {
       <!-- 提示词选择 -->
       <div class="section">
         <h3>📝 选择系统提示词</h3>
-        <select v-model="selectedPrompt" class="select-box">
-          <option value="" disabled>请选择提示词</option>
-          <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.prompt">
-            {{ prompt.title }}
-          </option>
-        </select>
+        <div class="prompt-selector-wrapper">
+          <select @change="selectExtractPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+            <option value="">从提示词库快速选择（可选）</option>
+            <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+              {{ prompt.title }}
+            </option>
+          </select>
+        </div>
+        <textarea v-model="selectedPrompt" class="prompt-textarea" placeholder="输入系统提示词或从上方快速选择..." rows="4"></textarea>
         <p v-if="promptOptions.length === 0" class="hint">
           ⚠️ 请先在「设置 - 提示词」中添加提示词
         </p>
@@ -665,6 +748,25 @@ function cancelMerge() {
         <p class="description">
           智能分析当前书籍的所有实体，识别重复和相似项，提供合并建议
         </p>
+
+        <!-- 合并提示词选择 -->
+        <div class="merge-prompt-selector">
+          <label>合并策略</label>
+          <select v-model="selectedMergePrompt" class="select-box">
+            <option value="">使用默认策略</option>
+            <optgroup label="内置策略">
+              <option v-for="prompt in allMergePromptOptions.filter(p => p.isBuiltin)" :key="prompt.id" :value="prompt.id">
+                {{ prompt.title }}
+              </option>
+            </optgroup>
+            <optgroup label="自定义提示词" v-if="allMergePromptOptions.filter(p => !p.isBuiltin).length > 0">
+              <option v-for="prompt in allMergePromptOptions.filter(p => !p.isBuiltin)" :key="prompt.id" :value="prompt.id">
+                {{ prompt.title }}
+              </option>
+            </optgroup>
+          </select>
+        </div>
+
         <button @click="startMergeAnalysis" :disabled="!selectedModel || entityStore.v.length === 0 || isMerging" class="btn-merge">
           {{ isMerging ? '分析中...' : '🔍 开始分析合并' }}
         </button>
@@ -809,6 +911,57 @@ function cancelMerge() {
   color: var(--text-tertiary);
   font-size: 0.8rem;
   margin-top: 0.4rem;
+}
+
+.prompt-selector-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.prompt-quick-select {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.prompt-quick-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.prompt-textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.prompt-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.merge-prompt-selector {
+  margin-bottom: 0.75rem;
+}
+
+.merge-prompt-selector label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .checkbox-label {

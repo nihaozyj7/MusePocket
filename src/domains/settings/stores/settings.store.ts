@@ -7,6 +7,7 @@ import { getDefaultBaseSettings } from '@shared/constants/defaults'
 /** AI工具配置 */
 interface AiToolConfig {
   modelId?: string  // 模型的唯一标识（baseUrl + model）
+  presetId?: string  // 预设场景ID
   systemPrompt?: string
   userPrompt?: string
   selectedPromptId?: string

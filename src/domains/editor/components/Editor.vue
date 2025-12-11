@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
-import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { useHistoryStore } from '@domains/editor/stores/history.store'
+import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
+import { EntityHover, EntityHoverAutoInsert } from '@domains/library'
+import { useEntityStore } from '@domains/library/stores/entities.store'
+import { useSettingStore } from '@domains/settings/stores/settings.store'
+import type { Entity } from '@shared/types'
 import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getCleanedEditorContent, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@shared/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { EntityHover, EntityHoverAutoInsert } from '@domains/library'
-import { getDefaultEntity } from '@shared/constants/defaults'
-import { useSelectedBookStore } from '@domains/library/stores/selected-book.store'
-import { useEntityStore } from '@domains/library/stores/entities.store'
-import type { Entity } from '@shared/types'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */
@@ -123,8 +121,7 @@ onUnmounted(() => {
 /** 执行保存逻辑（不考虑输入法状态） */
 const _executeSave = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
-  history.push(text)
-  emit('update:articleBody', history.items[0], history.items[1])
+  emit('update:articleBody', text, undefined)
 }
 
 /** 延迟保存的标记 */
@@ -300,8 +297,12 @@ function handleBodyInput(e: InputEvent) {
 
 /** 文本粘贴时 */
 function handleBodyPaste(e: ClipboardEvent) {
-  // 如果不使用纯文本粘贴，则由浏览器接管
+  // 如果不使用纯文本粘贴，则由浏览器接管，但仍然需要触发保存
   if (!settingStore.baseSettings.usePlainTextPaste) {
+    // 浏览器默认粘贴行为，但粘贴后需要触发保存
+    setTimeout(() => {
+      _forceSave()
+    }, 50)
     return
   }
 

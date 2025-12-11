@@ -1,10 +1,56 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useModelsStore } from '@domains/settings/stores/models.store'
+import { usePromptsStore } from '@domains/settings/stores/prompts.store'
 import { openaiFetch, type OpenAiParams } from '@core/api'
 import { $tips } from '@app/plugins'
 
 const modelsStore = useModelsStore()
+const promptsStore = usePromptsStore()
+
+/** 内置额外要求提示词 */
+const BUILTIN_REQUIREMENTS = [
+  {
+    id: 'water-element',
+    title: '💧 带有水的元素',
+    content: '需要带有水、海洋、流动、潮汐等水相关的元素或寓意'
+  },
+  {
+    id: 'fire-element',
+    title: '🔥 带有火的元素',
+    content: '需要带有火、烈焰、热情、光明等火相关的元素或寓意'
+  },
+  {
+    id: 'elegant',
+    title: '✨ 优雅高贵',
+    content: '名字需要显得优雅、高贵、有气质，适合贵族或上流社会人物'
+  },
+  {
+    id: 'powerful',
+    title: '⚡ 强大有力',
+    content: '名字需要体现出强大、有力量、威严、震慑的感觉'
+  },
+  {
+    id: 'gentle',
+    title: '🌸 温柔美好',
+    content: '名字需要温柔、美好、清新、宁静的感觉，寓意美好'
+  },
+  {
+    id: 'mysterious',
+    title: '🌙 神秘深邃',
+    content: '名字需要神秘、深邃、难以捉摸、带有神秘色彩'
+  },
+  {
+    id: 'two-characters',
+    title: '🔢 两个字',
+    content: '名字必须是两个字，简洁易记'
+  },
+  {
+    id: 'three-characters',
+    title: '🔢 三个字',
+    content: '名字必须是三个字，韵律优美'
+  }
+] as const
 
 /** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
@@ -41,6 +87,22 @@ const genderOptions = ['不限', '男', '女', '中性']
 /** 模型选项 */
 const modelOptions = computed(() => modelsStore.v)
 
+/** 提示词选项 */
+const promptOptions = computed(() => promptsStore.v)
+
+/** 合并后的额外要求选项（内置 + 自定义） */
+const allRequirementOptions = computed(() => {
+  return [
+    ...BUILTIN_REQUIREMENTS.map(r => ({ ...r, isBuiltin: true })),
+    ...promptOptions.value.map(p => ({
+      id: p.id,
+      title: p.title,
+      content: p.prompt,
+      isBuiltin: false
+    }))
+  ]
+})
+
 /** 是否可以开始生成 */
 const canGenerate = computed(() => {
   return selectedModel.value && nameType.value && nameCount.value > 0
@@ -52,6 +114,15 @@ onMounted(() => {
     selectedModel.value = modelOptions.value[0]
   }
 })
+
+/** 选择额外要求 */
+function selectRequirement(reqId: string) {
+  const req = allRequirementOptions.value.find(r => r.id === reqId)
+  if (req) {
+    additionalRequirements.value = req.content
+    $tips.success(`已填入「${req.title}」`)
+  }
+}
 
 /** 生成取名提示词 */
 function generatePrompt(): string {
@@ -204,6 +275,21 @@ function clearResults() {
 
         <div class="form-group">
           <label>额外要求（可选）</label>
+          <div class="requirement-selector">
+            <select @change="selectRequirement(($event.target as HTMLSelectElement).value)" class="requirement-select">
+              <option value="">快速选择常用要求（可选）</option>
+              <optgroup label="内置要求">
+                <option v-for="req in allRequirementOptions.filter(r => r.isBuiltin)" :key="req.id" :value="req.id">
+                  {{ req.title }}
+                </option>
+              </optgroup>
+              <optgroup label="自定义提示词" v-if="allRequirementOptions.filter(r => !r.isBuiltin).length > 0">
+                <option v-for="req in allRequirementOptions.filter(r => !r.isBuiltin)" :key="req.id" :value="req.id">
+                  {{ req.title }}
+                </option>
+              </optgroup>
+            </select>
+          </div>
           <textarea v-model="additionalRequirements" class="textarea-box" placeholder="例如：需要带有水的元素、寓意美好、两个字等..." rows="3"></textarea>
         </div>
 
@@ -311,6 +397,27 @@ function clearResults() {
   color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+.requirement-selector {
+  margin-bottom: 0.5rem;
+}
+
+.requirement-select {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.requirement-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  color: var(--text-primary);
 }
 
 .textarea-box {

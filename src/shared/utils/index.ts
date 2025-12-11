@@ -656,6 +656,78 @@ export function restoreCursorPosition(pos: ReturnType<typeof saveCursorPosition>
 }
 
 /**
+ * 保存光标的文本位置（基于纯文本偏移量，用于DOM重建后恢复）
+ * @param bodyRef 编辑器容器
+ * @returns 光标在纯文本中的偏移量
+ */
+export function saveCursorTextPosition(bodyRef: HTMLElement): number | null {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return null
+
+  const range = sel.getRangeAt(0)
+  const preCaretRange = range.cloneRange()
+  preCaretRange.selectNodeContents(bodyRef)
+  preCaretRange.setEnd(range.endContainer, range.endOffset)
+
+  return preCaretRange.toString().length
+}
+
+/**
+ * 根据文本偏移量恢复光标位置（用于DOM重建后）
+ * @param bodyRef 编辑器容器
+ * @param offset 光标在纯文本中的偏移量
+ */
+export function restoreCursorTextPosition(bodyRef: HTMLElement, offset: number | null) {
+  if (offset === null || offset === undefined) return
+
+  const sel = window.getSelection()
+  if (!sel) return
+
+  // 递归查找文本节点并定位光标位置
+  let currentOffset = 0
+  let found = false
+
+  function walkNodes(node: Node): boolean {
+    if (found) return true
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textLength = node.textContent?.length || 0
+      if (currentOffset + textLength >= offset) {
+        // 找到目标文本节点
+        const range = document.createRange()
+        const localOffset = offset - currentOffset
+        range.setStart(node, Math.min(localOffset, textLength))
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        found = true
+        return true
+      }
+      currentOffset += textLength
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 遍历子节点
+      for (let i = 0; i < node.childNodes.length; i++) {
+        if (walkNodes(node.childNodes[i])) {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
+  walkNodes(bodyRef)
+
+  // 如果没有找到合适位置，将光标移到最后
+  if (!found) {
+    const range = document.createRange()
+    range.selectNodeContents(bodyRef)
+    range.collapse(false)
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
+}
+
+/**
  * 轻量检测：光标是否在合法节点内（P节点内，无非法子节点）
  * @param bodyRef 编辑区DOM
  * @returns 是否合法

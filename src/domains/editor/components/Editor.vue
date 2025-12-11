@@ -5,7 +5,7 @@ import { EntityHover, EntityHoverAutoInsert } from '@domains/library'
 import { useEntityStore } from '@domains/library/stores/entities.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import type { Entity } from '@shared/types'
-import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getCleanedEditorContent, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@shared/utils'
+import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getCleanedEditorContent, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, restoreCursorTextPosition, saveCursorTextPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@shared/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -320,17 +320,21 @@ function handleBodyPaste(e: ClipboardEvent) {
   const cleanTextWithFormat = cleanedText.trim()
 
   insertText(cleanTextWithFormat)
-  scrollToCursor()
 
   // 粘贴后自动触发排版
   setTimeout(() => {
     const bodyElement = bodyRef.value
     if (!bodyElement) return
+
+    // 保存光标的文本位置（基于纯文本偏移量）
+    const cursorOffset = saveCursorTextPosition(bodyElement)
     const formattedContent = getCleanedEditorContent(bodyElement)
-    const cursorPos = saveCursorPosition()
     resetBody(formattedContent)
+
+    // 根据文本偏移量恢复光标位置
     setTimeout(() => {
-      restoreCursorPosition(cursorPos)
+      restoreCursorTextPosition(bodyRef.value, cursorOffset)
+      scrollToCursor()
       _forceSave()  // 粘贴后立即保存
     }, 10)
   }, 10)

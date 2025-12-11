@@ -215,13 +215,18 @@ defineExpose({
     <Popup title="📊 版本对比" ref="diffPopupRef" :mask-closable="true" @close="closeDiffPopup">
       <div class="diff-dialog">
         <div class="diff-info">
-          <div class="info-item">
-            <span class="label">选中版本：</span>
-            <span class="value">#{{ selectedHistory?.sequence }}</span>
+          <div class="info-left">
+            <div class="info-item">
+              <span class="label">选中版本：</span>
+              <span class="value">#{{ selectedHistory?.sequence }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">时间：</span>
+              <span class="value">{{ selectedHistory ? formatTime(selectedHistory.createdTime) : '' }}</span>
+            </div>
           </div>
-          <div class="info-item">
-            <span class="label">时间：</span>
-            <span class="value">{{ selectedHistory ? formatTime(selectedHistory.createdTime) : '' }}</span>
+          <div class="info-hint">
+            💡 以下差异展示的是：从当前版本回退到所选历史版本后的内容变化
           </div>
         </div>
 
@@ -372,10 +377,31 @@ defineExpose({
 }
 
 .diff-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
   padding: 1rem;
   background-color: var(--background-tertiary);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+.info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.info-hint {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: rgba(0, 122, 255, 0.1);
+  border-left: 3px solid var(--primary);
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
 }
 
 .info-item {

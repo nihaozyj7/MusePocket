@@ -10,8 +10,8 @@ const appInfo = {
   description: 'MusePocket 是一款专为创作者打造的本地写作管理系统。将你的每一个灵感、每一段文字安全地收纳在这个专属的创作空间里。无需联网，数据完全属于你，让创作更自由、更纯粹。',
   author: '热爱游戏的猫猫',
   homepage: 'https://github.com/nihaozyj7/MusePocket',
-  bilibili: 'https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27',
-  github: 'https://github.com/nihaozyj7?tab=repositories',
+  bilibili: 'https://space.bilibili.com/39942486',
+  github: 'https://github.com/nihaozyj7',
   license: 'MIT'
 }
 

@@ -566,7 +566,6 @@ MusePocket/
 - [Vite](https://vitejs.dev/) - 下一代前端构建工具
 - [Pinia](https://pinia.vuejs.org/) - Vue 状态管理
 - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) - 浏览器端数据库
-- [UnoCSS](https://unocss.dev/) - 即时原子化 CSS 引擎
 
 ## 🙋 常见问题
 

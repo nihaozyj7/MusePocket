@@ -64,6 +64,12 @@ const emit = defineEmits({
 
 
 onMounted(() => {
+  // 确保 DOM 元素存在
+  if (!bodyRef.value || !bodyBackgroundRef.value) {
+    console.error('Editor DOM elements not ready')
+    return
+  }
+
   observer = new ResizeObserver(handleResize)
   observer.observe(bodyRef.value)
   document.addEventListener('selectionchange', handleTextSelect)
@@ -97,10 +103,14 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  observer.disconnect()
+  if (observer) {
+    observer.disconnect()
+  }
   document.removeEventListener('selectionchange', handleTextSelect)
   styleManager?.clear()
-  chineseInputManager.destroy()
+  if (chineseInputManager) {
+    chineseInputManager.destroy()
+  }
   // 清理自动完成定时器
   if (autoCompleteTimer !== null) {
     clearTimeout(autoCompleteTimer)
@@ -564,7 +574,7 @@ defineExpose({
     <div class="tu-container">
       <!-- 文章标题 -->
       <div class="title">
-        <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.v.title" @blur="handleSaveArticleTitle"></input>
+        <input type="text" placeholder="请输入章节标题" v-model="selectedArticleStore.v.title" @blur="handleSaveArticleTitle" v-if="selectedArticleStore.v"></input>
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
@@ -576,7 +586,7 @@ defineExpose({
     <!-- 状态栏 -->
     <div class="statusbar">
       <div class="left">
-        <button @click="() => emit('create:article')">➕ 新章节</button>
+        <button @click="() => emit('create:article')">➥ 新章节</button>
         <button @click="settingStore.setEditorWidthMode(!settingStore.isAutoWidthMode)" class="margin-left">{{ settingStore.editorWidthModeText }}列宽</button>
       </div>
       <div class="center">{{ selectedArticleStore.v?.wordCount }}</div>

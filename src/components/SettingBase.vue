@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useSettingStore } from '@/stores/SettingStore'
 import type { GridLineStyle } from '@/types'
 import { $confirm } from '@/plugins/confirm'
@@ -9,6 +9,55 @@ const settingStore = useSettingStore()
 
 // 从 store 中获取设置
 const settings = settingStore.baseSettings
+
+// 临时输入值（用于失焦后才生效）
+const tempBaseFontSize = ref(settings.baseFontSize)
+const tempEditorFontSize = ref(settings.editorFontSize)
+const tempLineHeight = ref(settings.lineHeight)
+
+// 监听store的变化，同步临时变量（如重置设置时）
+watch(() => settings.baseFontSize, (newVal) => {
+  tempBaseFontSize.value = newVal
+})
+watch(() => settings.editorFontSize, (newVal) => {
+  tempEditorFontSize.value = newVal
+})
+watch(() => settings.lineHeight, (newVal) => {
+  tempLineHeight.value = newVal
+})
+
+// 基准尺寸失焦处理
+const handleBaseFontSizeBlur = () => {
+  const value = Number(tempBaseFontSize.value)
+  if (value >= 12 && value <= 24) {
+    settingStore.updateBaseFontSize(value)
+  } else {
+    // 如果不在范围内，恢复为store中的值
+    tempBaseFontSize.value = settings.baseFontSize
+  }
+}
+
+// 编辑区文字尺寸失焦处理
+const handleEditorFontSizeBlur = () => {
+  const value = Number(tempEditorFontSize.value)
+  if (value >= 0.5 && value <= 3) {
+    settingStore.updateEditorFontSize(value)
+  } else {
+    // 如果不在范围内，恢复为store中的值
+    tempEditorFontSize.value = settings.editorFontSize
+  }
+}
+
+// 行高失焦处理
+const handleLineHeightBlur = () => {
+  const value = Number(tempLineHeight.value)
+  if (value >= 1 && value <= 5) {
+    settingStore.updateLineHeight(value)
+  } else {
+    // 如果不在范围内，恢复为store中的值
+    tempLineHeight.value = settings.lineHeight
+  }
+}
 
 // 处理图片上传
 const handleImageUpload = () => {
@@ -46,7 +95,7 @@ const resetSettings = async () => {
         <label>
           <span class="label-text">基准尺寸，影响全局文字和UI</span>
           <div class="input-group">
-            <input type="number" :value="settings.baseFontSize" @input="e => settingStore.updateBaseFontSize(Number((e.target as HTMLInputElement).value))" min="12" max="24">
+            <input type="number" v-model="tempBaseFontSize" @blur="handleBaseFontSizeBlur" min="12" max="24">
             <span class="unit">px</span>
           </div>
         </label>
@@ -57,7 +106,7 @@ const resetSettings = async () => {
         <label>
           <span class="label-text">编辑区文字尺寸，该值为基准尺寸的倍数</span>
           <div class="input-group">
-            <input type="number" :value="settings.editorFontSize" @input="e => settingStore.updateEditorFontSize(Number((e.target as HTMLInputElement).value))" min="0.5" max="3" step="0.1">
+            <input type="number" v-model="tempEditorFontSize" @blur="handleEditorFontSizeBlur" min="0.5" max="3" step="0.1">
             <span class="unit">rem</span>
           </div>
         </label>
@@ -90,7 +139,7 @@ const resetSettings = async () => {
         <label>
           <span class="label-text">字体行高（默认2.5倍字体高度）</span>
           <div class="input-group">
-            <input type="number" :value="settings.lineHeight" @input="e => settingStore.updateLineHeight(Number((e.target as HTMLInputElement).value))" min="1" max="5" step="0.1">
+            <input type="number" v-model="tempLineHeight" @blur="handleLineHeightBlur" min="1" max="5" step="0.1">
             <span class="unit">倍字体高度</span>
           </div>
         </label>

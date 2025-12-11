@@ -224,7 +224,10 @@ async function handleArticleClick(e: MouseEvent) {
   const article = articles.value.find(article => article.id === id)
   if (article) {
     if (editorRef.value) {
-      saveArticle(editorRef.value.getBodyText())
+      // 切换文章前强制保存当前文章，不等待输入法
+      editorRef.value.forceSave()
+      // 等待一小段时间确保保存完成
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
     selectedArticleStore.v = article
     openArticle(article)

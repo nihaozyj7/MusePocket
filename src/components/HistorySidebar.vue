@@ -81,10 +81,10 @@ async function handleHistoryClick(history: DBHistoryRecord) {
     // 获取当前编辑器的实时文本（而不是缓存的 currentText）
     const realCurrentText = getCurrentTextCallback.value ? getCurrentTextCallback.value() : currentText.value
 
-    // 计算与当前版本的 diff
-    // 注意：第一个参数是旧版本（历史），第二个参数是新版本（当前）
-    // 这样能正确显示：历史版本有但当前没有的是删除（-），历史版本没有但当前有的是新增（+）
-    let diffs = computeVisualDiff(comparedText.value, realCurrentText)
+    // 计算回退后的变化：从当前版本回退到历史版本会发生什么变化
+    // 第一个参数：当前版本（旧），第二个参数：历史版本（新）
+    // 这样显示：当前有但历史没有的是删除（-），当前没有但历史有的是新增（+）
+    let diffs = computeVisualDiff(realCurrentText, comparedText.value)
 
     // 重新排序：删除的行放在前面，添加的行放在后面
     diffs = sortDiffByType(diffs)
@@ -314,7 +314,7 @@ defineExpose({
 }
 
 .history-item {
-  padding: 0.75rem;
+  padding: .5rem;
   margin-bottom: 0.5rem;
   background-color: var(--background-tertiary);
   border-radius: 0.5rem;

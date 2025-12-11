@@ -81,6 +81,19 @@ onMounted(() => {
     handleChineseInputMethodSubmission,
     bodyRef.value as HTMLInputElement
   )
+
+  // 监听中文输入法结束，执行延迟的保存操作
+  const checkPendingSave = () => {
+    if (!chineseInputManager.isChineseInput && pendingSave) {
+      _executeSave()
+      pendingSave = false
+    }
+  }
+
+  // 监听 compositionend 事件
+  bodyRef.value?.addEventListener('compositionend', () => {
+    setTimeout(checkPendingSave, 50)
+  })
 })
 
 onUnmounted(() => {
@@ -95,16 +108,33 @@ onUnmounted(() => {
   }
 })
 
-const _emitUpdate = () => {
+/** 执行保存逻辑（不考虑输入法状态） */
+const _executeSave = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
   history.push(text)
-
-  // 不再在这里记录历史，改为在 saveArticle 时统一处理
-  // if (selectedArticleStore.v?.id) {
-  //   historyStore.recordChange(text)
-  // }
-
   emit('update:articleBody', history.items[0], history.items[1])
+}
+
+/** 延迟保存的标记 */
+let pendingSave = false
+
+/** 触发内容更新事件（考虑中文输入法状态） */
+const _emitUpdate = () => {
+  // 如果正在进行中文输入，延迟保存
+  if (chineseInputManager && chineseInputManager.isChineseInput) {
+    pendingSave = true
+    return
+  }
+
+  // 正常保存
+  _executeSave()
+  pendingSave = false
+}
+
+/** 强制立即保存（不考虑输入法状态，用于失焦、Ctrl+S等场景） */
+const _forceSave = () => {
+  _executeSave()
+  pendingSave = false
 }
 /** 节流 触发内容更新事件 */
 const emitUpdate = throttle(_emitUpdate, props.updateThrottleTime)
@@ -237,7 +267,7 @@ function handleBodyPaste(e: ClipboardEvent) {
   const text = e.clipboardData.getData('text/plain')
   insertText(text)
   scrollToCursor()
-  _emitUpdate()
+  _forceSave()  // 粘贴后立即保存
 }
 
 /** 控制鼠标悬浮多少秒才会显示悬浮层 */
@@ -429,7 +459,7 @@ function handleBodyKeydown(e: KeyboardEvent) {
     }
   } else if (e.ctrlKey) {
     if (e.key === 's') {
-      _emitUpdate()
+      _forceSave()  // Ctrl+S 强制立即保存
       e.preventDefault()
     } else if (e.key === 'z') {
       // Ctrl+Z 撤销
@@ -518,6 +548,8 @@ defineExpose({
   getBody() { return bodyRef.value },
   /** 手动触发输入处理（用于外部插入内容后触发保存） */
   handleInput() { _emitUpdate() },
+  /** 强制立即保存（用于失焦、Ctrl+S等场景） */
+  forceSave() { _forceSave() },
   /** 撤销 */
   undo: handleUndo,
   /** 重做 */

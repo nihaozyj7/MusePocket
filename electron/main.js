@@ -3,8 +3,29 @@ const path = require('path')
 const fs = require('fs')
 const { fileURLToPath } = require('url')
 
-// 禁用硬件加速（可选，提高兼容性）
+// 禁用硬件加速(可选,提高兼容性)
 app.disableHardwareAcceleration()
+
+// 单实例锁定
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  // 如果获取锁失败,说明已经有实例在运行,直接退出
+  app.quit()
+} else {
+  // 当第二个实例尝试启动时,触发此事件
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // 如果主窗口存在,则显示它
+    if (mainWindow) {
+      // 如果窗口被最小化,则恢复它
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+      // 聚焦窗口
+      mainWindow.focus()
+    }
+  })
+}
 
 let mainWindow
 

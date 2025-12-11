@@ -20,7 +20,7 @@ import { useHistoryStore } from '@/stores/HistoryStore'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
-import { event_emit } from '@/eventManager'
+import { event_emit, event_on, event_off } from '@/eventManager'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -82,6 +82,14 @@ const findReplacePopupRef = ref<InstanceType<typeof FindReplacePopup> | null>(nu
 /** 右边侧栏工具按钮标题 列表 */
 const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '💡 AI建议', '📝 草稿', '⏱️ 历史版本']
 
+/** 处理实体标题更新 */
+function handleEntityTitleUpdate(entityId: string, newTitle: string) {
+  // 通知编辑器更新实体标题
+  if (editorRef.value) {
+    editorRef.value.updateEntityTitle(entityId, newTitle)
+  }
+}
+
 onMounted(() => {
   loadArticles()
   settingStore.setEditorWidthMode()
@@ -89,11 +97,15 @@ onMounted(() => {
   useEntityStore().load(selectedBookStore.v.id)
   // 监听快捷键
   document.addEventListener('keydown', handleGlobalKeydown)
+  // 监听实体标题更新事件
+  event_on('entity-title-updated', handleEntityTitleUpdate)
 })
 
 onUnmounted(() => {
   // 移除全局监听器
   document.removeEventListener('keydown', handleGlobalKeydown)
+  // 移除实体标题更新监听
+  event_off('entity-title-updated', handleEntityTitleUpdate)
 })
 
 /** 全局快捷键监听 */

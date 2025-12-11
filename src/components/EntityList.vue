@@ -8,7 +8,7 @@ import ContextMenu from './ContextMenu.vue'
 import { $tips } from '@/plugins/notyf'
 import Popup from './Popup.vue'
 import EntityCreate from './EntityCreate.vue'
-import { event_off, event_on } from '@/eventManager'
+import { event_off, event_on, event_emit } from '@/eventManager'
 import EntityDetail from './EntityDetail.vue'
 import { useEntityStore } from '@/stores/EntitysStore'
 
@@ -173,6 +173,10 @@ function handleEntityUpdate(entity: Entity) {
     entityTypes.add(entity.type)
   }
 
+  // 记录标题是否发生变化
+  const titleChanged = selectedEntity.value.title !== entity.title
+  const oldEntityId = selectedEntity.value.id
+
   selectedEntity.value.title = entity.title
   selectedEntity.value.description = entity.description
   selectedEntity.value.imgID = entity.imgID
@@ -183,6 +187,10 @@ function handleEntityUpdate(entity: Entity) {
   entitydb.updateEntity(selectedEntity.value).then(res => {
     if (res.success) {
       $tips.success('更新成功')
+      // 如果标题发生变化，触发事件通知编辑器更新
+      if (titleChanged) {
+        event_emit('entity-title-updated', oldEntityId, entity.title)
+      }
     } else {
       $tips.error('更新失败：' + res.message)
     }

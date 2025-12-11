@@ -11,6 +11,7 @@ import { openaiFetch, type OpenAiParams } from '@/apis'
 import type { Article, Entity } from '@/types'
 import { uid } from '@/utils'
 import { $tips } from '@/plugins/notyf'
+import { event_emit } from '@/eventManager'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
@@ -527,11 +528,22 @@ async function executeMerge() {
 
     // 2. 执行更新
     for (const updateItem of selectedUpdates) {
+      // 检查标题是否发生变化
+      const titleChanged = updateItem.updates.title && updateItem.updates.title !== updateItem.entity.title
+      const entityId = updateItem.entity.id
+      const newTitle = updateItem.updates.title
+
       await entitydb.updateEntity({
         ...updateItem.entity,
         ...updateItem.updates,
         modifiedTime: Date.now()
       })
+
+      // 如果标题发生变化，触发事件
+      if (titleChanged) {
+        event_emit('entity-title-updated', entityId, newTitle)
+      }
+
       updatedCount++
     }
 

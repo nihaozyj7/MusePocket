@@ -607,6 +607,24 @@ function setSaveState(state: string) {
   statusBarRight.value.saveState = state
 }
 
+/** 更新编辑器中所有指定实体的标题 */
+function updateEntityTitle(entityId: string, newTitle: string) {
+  if (!bodyRef.value) return
+
+  // 查找所有带有该实体ID的span元素
+  const entitySpans = bodyRef.value.querySelectorAll(`span[data-entity-id="${entityId}"]`)
+
+  // 更新每个span的文本内容
+  entitySpans.forEach(span => {
+    span.textContent = newTitle
+  })
+
+  // 如果更新了内容，触发保存
+  if (entitySpans.length > 0) {
+    _emitUpdate()
+  }
+}
+
 defineExpose({
   /** 重置编辑区内容 */
   resetBody,
@@ -626,6 +644,8 @@ defineExpose({
   undo: handleUndo,
   /** 重做 */
   redo: handleRedo,
+  /** 更新实体标题 */
+  updateEntityTitle,
 })
 
 </script>

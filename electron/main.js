@@ -77,6 +77,7 @@ function createWindow() {
 
   // 默认窗口配置
   let windowConfig = {
+    title: '写作助手',
     width: 1400,
     height: 900,
     minWidth: 1128,

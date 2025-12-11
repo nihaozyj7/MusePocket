@@ -21,7 +21,7 @@ if errorlevel 1 (
 echo ✅ Node.js 已安装
 
 echo.
-echo [2/5] 清理旧的打包文件...
+echo [2/4] 清理旧的打包文件...
 if exist release (
     echo 正在删除 release 目录...
     timeout /t 2 /nobreak >nul
@@ -38,7 +38,7 @@ if exist release (
 )
 
 echo.
-echo [3/5] 安装依赖...
+echo [3/4] 安装依赖...
 echo 这可能需要几分钟时间，请耐心等待...
 call npm install
 if errorlevel 1 (
@@ -49,17 +49,7 @@ if errorlevel 1 (
 echo ✅ 依赖安装完成
 
 echo.
-echo [4/5] 构建 Vue 应用...
-call npm run build
-if errorlevel 1 (
-    echo ❌ 构建失败
-    pause
-    exit /b 1
-)
-echo ✅ 构建完成
-
-echo.
-echo [5/5] 打包 Electron 应用...
+echo [4/4] 打包 Electron 应用...
 call npm run electron:build:win
 if errorlevel 1 (
     echo ❌ 打包失败

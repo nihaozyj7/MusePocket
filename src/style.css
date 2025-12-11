@@ -21,8 +21,6 @@ html, body, #app {
   background-color: var(--background-primary);
   font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   user-select: none;
-  min-width: 960px;
-  min-height: 600px;
 }
 
 

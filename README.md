@@ -1,11 +1,22 @@
-# MusePocket
+# MusePocket ✨
 
-✨ **专业的本地写作管理系统** - 为创作者打造的全功能写作工作台
+**你的创作灵感口袋** - 专业的本地写作管理系统
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Vue](https://img.shields.io/badge/Vue-3.5-brightgreen.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)
 ![Vite](https://img.shields.io/badge/Vite-7.2-646CFF.svg)
+![Electron](https://img.shields.io/badge/Electron-33.2-47848F.svg)
+
+<div align="center">
+  <p>
+    <a href="#-项目简介">项目简介</a> •
+    <a href="#-核心特性">核心特性</a> •
+    <a href="#-快速开始">快速开始</a> •
+    <a href="#️-技术栈">技术栈</a> •
+    <a href="#-贡献指南">贡献</a>
+  </p>
+</div>
 
 ## 📖 项目简介
 
@@ -478,7 +489,11 @@ MusePocket/
 
 ## 👨‍💻 作者
 
-**BeriCute**
+**热爱游戏的猫猫** (BeriCute)
+
+- 🎮 哔哩哔哩: [热爱游戏的猫猫](https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27)
+- 💻 GitHub: [@nihaozyj7](https://github.com/nihaozyj7?tab=repositories)
+- 💌 一个热爱创作、热爱游戏的开发者
 
 ## 🙏 致谢
 
@@ -511,8 +526,9 @@ A: 当前使用富文本编辑器,暂不支持 Markdown 语法。
 
 如果你在使用过程中遇到问题或有任何建议:
 
-- 💬 提交 [Issue](https://github.com/BeriCute/MusePocket/issues)
-- 📧 联系作者
+- 💬 提交 [Issue](https://github.com/nihaozyj7/MusePocket/issues)
+- 🎮 B站私信: [热爱游戏的猫猫](https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27)
+- 💻 GitHub: [@nihaozyj7](https://github.com/nihaozyj7?tab=repositories)
 
 ## 📄 开源协议
 
@@ -524,6 +540,8 @@ A: 当前使用富文本编辑器,暂不支持 Markdown 语法。
 
 **⭐ 如果这个项目对你有帮助,请给个 Star 支持一下!**
 
-**Made with ❤️ by BeriCute**
+**Made with ❤️ by 热爱游戏的猫猫**
+
+🎮 [B站主页](https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27) | 💻 [GitHub](https://github.com/nihaozyj7?tab=repositories)
 
 </div>

@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import { importExportdb } from '@/db'
 import type { ConfigExportData } from '@/types'
 import { $tips } from '@/plugins/notyf'
+import { useModelsStore } from '@/stores/ModelsStore'
+import { usePromptsStore } from '@/stores/PromptsStore'
+import { useTextSnippetsStore } from '@/stores/TextSnippetsStore'
 
 const emit = defineEmits<{
   importSuccess: []
@@ -80,8 +83,11 @@ function handleFileChange(event: Event) {
       const result = importExportdb.importConfigs(data, { merge: true })
 
       if (result.success) {
+        // 重新加载各个 Store 的数据以立即生效
+        reloadStores()
+
         const count = (data.models?.length || 0) + (data.prompts?.length || 0) + (data.textSnippets?.length || 0)
-        $tips.success(`成功导入 ${count} 项配置，请刷新页面以应用更改`)
+        $tips.success(`成功导入 ${count} 项配置`)
         emit('importSuccess')
       } else {
         $tips.error(`导入失败: ${result.message}`)
@@ -103,6 +109,33 @@ function handleFileChange(event: Event) {
 
   // 清空输入，允许重复选择同一文件
   input.value = ''
+}
+
+/** 重新加载所有配置 Store */
+function reloadStores() {
+  const modelsStore = useModelsStore()
+  const promptsStore = usePromptsStore()
+  const textSnippetsStore = useTextSnippetsStore()
+
+  // 从 localStorage 重新加载数据
+  const modelsData = localStorage.getItem('modelsStore')
+  const promptsData = localStorage.getItem('promptsStore')
+  const textSnippetsData = localStorage.getItem('textSnippetsStore')
+
+  if (modelsData) {
+    const parsed = JSON.parse(modelsData)
+    modelsStore.$patch({ v: parsed.v || [] })
+  }
+
+  if (promptsData) {
+    const parsed = JSON.parse(promptsData)
+    promptsStore.$patch({ v: parsed.v || [] })
+  }
+
+  if (textSnippetsData) {
+    const parsed = JSON.parse(textSnippetsData)
+    textSnippetsStore.$patch({ v: parsed.v || [] })
+  }
 }
 </script>
 
@@ -139,7 +172,7 @@ function handleFileChange(event: Event) {
           <li>配置包括：AI模型接口、提示词、文本预设</li>
           <li>导出的配置可以在不同设备间共享</li>
           <li>导入时会自动去重，不会产生重复配置</li>
-          <li>导入后需要刷新页面以应用更改</li>
+          <li>导入后会立即生效，无需刷新</li>
         </ul>
       </div>
     </div>

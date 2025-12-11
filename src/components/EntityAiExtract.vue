@@ -4,6 +4,7 @@ import { useModelsStore } from '@/stores/ModelsStore'
 import { usePromptsStore } from '@/stores/PromptsStore'
 import { useSettingStore } from '@/stores/SettingStore'
 import { useEntityStore } from '@/stores/EntitysStore'
+import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import { articledb, entitydb } from '@/db'
 import { openaiFetch, type OpenAiParams } from '@/apis'
@@ -15,6 +16,7 @@ const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
 const settingStore = useSettingStore()
 const entityStore = useEntityStore()
+const entityTypesStore = useEntityTypesStore()
 const selectedBookStore = useSelectedBookStore()
 
 /** 选中的模型 */
@@ -276,8 +278,9 @@ ${articleContents.join('\n\n')}`
       }
     }
 
-    // 6. 刷新实体列表
+    // 6. 刷新实体列表和类型统计
     entityStore.load(selectedBookStore.v!.id)
+    entityTypesStore.init(selectedBookStore.v!.id)
 
     progress.value = `完成！成功创建 ${successCount}/${entities.length} 个实体`
     $tips.success(`成功提取并创建 ${successCount} 个实体`)
@@ -532,8 +535,9 @@ async function executeMerge() {
       updatedCount++
     }
 
-    // 3. 刷新实体列表
+    // 3. 刷新实体列表和类型统计
     entityStore.load(selectedBookStore.v!.id)
+    entityTypesStore.init(selectedBookStore.v!.id)
 
     // 4. 清空建议列表
     mergeSuggestions.value = []

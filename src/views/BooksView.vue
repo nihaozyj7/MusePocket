@@ -797,6 +797,7 @@ function openSettings() {
 .book-item .cover img {
   height: 100%;
   width: 100%;
+  object-fit: cover;
   border-radius: .25rem;
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useEntityStore } from '@/stores/EntitysStore'
+import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import { entitydb } from '@/db'
 import type { Entity } from '@/types'
@@ -9,6 +10,7 @@ import { $tips } from '@/plugins/notyf'
 
 const selectedBookStore = useSelectedBookStore()
 const entityStore = useEntityStore()
+const entityTypesStore = useEntityTypesStore()
 
 /** 文件输入框ref */
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -122,8 +124,9 @@ function handleFileChange(event: Event) {
         }
       }
 
-      // 重新加载实体列表
+      // 重新加载实体列表和类型统计
       entityStore.load(selectedBookStore.v!.id)
+      entityTypesStore.init(selectedBookStore.v!.id)
 
       $tips.success(`成功导入 ${successCount}/${importedEntities.length} 个实体`)
       isImporting.value = false

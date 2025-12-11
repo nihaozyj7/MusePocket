@@ -2,7 +2,7 @@
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
 import { useSettingStore } from '@/stores/SettingStore'
 import { useHistoryStore } from '@/stores/HistoryStore'
-import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
+import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getCleanedEditorContent, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@/utils'
 import { throttle } from 'lodash-es'
 import { onMounted, onUnmounted, ref } from 'vue'
 import EntityHover from './EntityHover.vue'
@@ -249,6 +249,31 @@ function scrollToCursor() {
 }
 
 
+/** 文本复制时 */
+function handleBodyCopy(e: ClipboardEvent) {
+  // 如果不使用纯文本复制，则由浏览器接管
+  if (!settingStore.baseSettings.usePlainTextPaste) {
+    return
+  }
+
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return
+
+  e.preventDefault()
+
+  // 获取选中的内容
+  const range = sel.getRangeAt(0)
+  const fragment = range.cloneContents()
+
+  // 通过临时DOM清洗文本
+  const tempDiv = document.createElement('div')
+  tempDiv.appendChild(fragment)
+  const cleanedText = tempDiv.innerText
+
+  // 写入剪贴板
+  e.clipboardData?.setData('text/plain', cleanedText)
+}
+
 /** 文本输入时 */
 function handleBodyInput(e: InputEvent) {
   autoComplete(e)
@@ -273,11 +298,39 @@ function handleBodyInput(e: InputEvent) {
 
 /** 文本粘贴时 */
 function handleBodyPaste(e: ClipboardEvent) {
+  // 如果不使用纯文本粘贴，则由浏览器接管
+  if (!settingStore.baseSettings.usePlainTextPaste) {
+    return
+  }
+
   e.preventDefault()
-  const text = e.clipboardData.getData('text/plain')
-  insertText(text)
+
+  // 获取剪贴板的HTML内容或纯文本
+  let text = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain')
+
+  // 通过DOM清洗文本
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = text
+  const cleanedText = tempDiv.innerText
+
+  // 使用一键排版的逻辑清洗文本
+  const cleanTextWithFormat = cleanedText.trim()
+
+  insertText(cleanTextWithFormat)
   scrollToCursor()
-  _forceSave()  // 粘贴后立即保存
+
+  // 粘贴后自动触发排版
+  setTimeout(() => {
+    const bodyElement = bodyRef.value
+    if (!bodyElement) return
+    const formattedContent = getCleanedEditorContent(bodyElement)
+    const cursorPos = saveCursorPosition()
+    resetBody(formattedContent)
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+      _forceSave()  // 粘贴后立即保存
+    }, 10)
+  }, 10)
 }
 
 /** 控制鼠标悬浮多少秒才会显示悬浮层 */
@@ -495,8 +548,14 @@ function entityHoverAutoInsertClose(entity: Entity, coverLength?: number) {
     deleteTextBeforeCursor(coverLength)
   }
 
-  // 插入实体
-  insertVariableSpan(entity.id, entity.title)
+  // 根据配置决定插入实体还是纯文本
+  if (settingStore.baseSettings.insertEntityAsPlainText) {
+    // 插入纯文本
+    insertText(entity.title)
+  } else {
+    // 插入实体span元素
+    insertVariableSpan(entity.id, entity.title)
+  }
 }
 
 /** 撤销操作 */
@@ -578,7 +637,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
+        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @copy="handleBodyCopy" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>

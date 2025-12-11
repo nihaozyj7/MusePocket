@@ -72,7 +72,8 @@ export const useSettingStore = defineStore('setting', {
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
       backgroundImageId: '',
-      autoCompleteDelay: 0
+      autoCompleteDelay: 0,
+      autoCompleteConfirmKey: 'both' as const
     } as BaseSettings,
     /** AI工具配置 */
     aiToolsSettings: {
@@ -93,6 +94,11 @@ export const useSettingStore = defineStore('setting', {
 
   actions: {
     init() {
+      // 兼容性处理：如果旧配置没有 autoCompleteConfirmKey 字段，设置默认值
+      if (!this.baseSettings.autoCompleteConfirmKey) {
+        this.baseSettings.autoCompleteConfirmKey = 'both'
+      }
+
       this.setDark()
       this.applyBaseSettings()
     },

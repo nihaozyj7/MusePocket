@@ -38,13 +38,6 @@ function handleRedo() {
   }
 }
 
-/** 清除历史 */
-function handleClearHistory() {
-  if (confirm('确定要清除当前文章的所有历史记录吗？此操作不可恢复！')) {
-    historyStore.resetCurrent()
-  }
-}
-
 defineExpose({
   show,
   hide
@@ -72,19 +65,15 @@ defineExpose({
         <button class="action-btn redo" :disabled="!stats.canRedo" @click="handleRedo">
           ↪️ 重做一步
         </button>
-        <button class="action-btn clear" @click="handleClearHistory">
-          🗑️ 清除历史
-        </button>
       </div>
 
       <div class="info">
         <p>💡 提示：</p>
         <ul>
-          <li>历史记录会自动保存您的每次编辑（最多100步）</li>
+          <li>历史记录会自动保存您的每次编辑（最多500步）</li>
           <li>使用 <kbd>Ctrl+Z</kbd> 快捷键可快速撤销</li>
           <li>使用 <kbd>Ctrl+Y</kbd> 快捷键可快速重做</li>
           <li>切换文章时会保留各自的历史记录</li>
-          <li>历史记录仅保存在内存中，刷新页面后会清空</li>
         </ul>
       </div>
     </div>

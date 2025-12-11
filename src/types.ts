@@ -204,6 +204,8 @@ export interface BaseSettings {
   backgroundImageId: string
   /** 自动完成悬浮层延迟时间（毫秒） */
   autoCompleteDelay: number
+  /** 自动完成确认插入按键 */
+  autoCompleteConfirmKey: 'tab' | 'enter' | 'both'
 }
 
 /** 配置预设项（用于保存和应用基础设置） */

@@ -213,7 +213,7 @@ export class HistoryManager {
   private currentText: string = ''
   private maxHistorySize: number
 
-  constructor(initialText: string = '', maxHistorySize: number = 100) {
+  constructor(initialText: string = '', maxHistorySize: number = 500) {
     this.currentText = initialText
     this.maxHistorySize = maxHistorySize
   }

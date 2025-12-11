@@ -4,6 +4,7 @@ import type { Entity } from '@/types'
 import { ref } from 'vue'
 import EntityHover from './EntityHover.vue'
 import { useEntityStore } from '@/stores/EntitysStore'
+import { useSettingStore } from '@/stores/SettingStore'
 import { entries } from 'lodash-es'
 import { pinyin } from 'pinyin-pro'
 
@@ -27,6 +28,7 @@ const hoverRef = ref<HTMLElement | null>(null)
 const entityInfoRef = ref<InstanceType<typeof EntityHover>>()
 
 const entityStore = useEntityStore()
+const settingStore = useSettingStore()
 
 /** 匹配结果列表 */
 const matchResults = ref<MatchResult[]>([])
@@ -60,8 +62,14 @@ function onKeydown(e: KeyboardEvent) {
     matchResults.value = []
     hide()
   } else if (e.key === 'Tab' || e.key === 'Enter') {
-    // Tab 或 Enter 键选中当前项
-    if (matchResults.value.length > 0 && selectedIndex.value >= 0) {
+    // 根据配置决定哪个键可以确认插入
+    const confirmKey = settingStore.baseSettings.autoCompleteConfirmKey
+    const isTabAllowed = confirmKey === 'tab' || confirmKey === 'both'
+    const isEnterAllowed = confirmKey === 'enter' || confirmKey === 'both'
+
+    const shouldConfirm = (e.key === 'Tab' && isTabAllowed) || (e.key === 'Enter' && isEnterAllowed)
+
+    if (shouldConfirm && matchResults.value.length > 0 && selectedIndex.value >= 0) {
       const result = matchResults.value[selectedIndex.value]
       hide(result.entity, result.coverLength)
       e.preventDefault()

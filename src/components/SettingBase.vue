@@ -169,6 +169,18 @@ const resetSettings = async () => {
         </label>
       </div>
 
+      <!-- 自动完成确认按键 -->
+      <div class="setting-item">
+        <label>
+          <span class="label-text">自动完成确认插入按键</span>
+          <select :value="settings.autoCompleteConfirmKey" @change="e => settings.autoCompleteConfirmKey = (e.target as HTMLSelectElement).value as 'tab' | 'enter' | 'both'">
+            <option value="tab">Tab 键</option>
+            <option value="enter">Enter 键</option>
+            <option value="both">Tab 或 Enter 键</option>
+          </select>
+        </label>
+      </div>
+
       <!-- 字体行高 -->
       <div class="setting-item">
         <label>
@@ -218,7 +230,7 @@ const resetSettings = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.usePlainTextPaste" @change="e => settings.usePlainTextPaste = (e.target as HTMLInputElement).checked">
-          <span>复制粘贴时使用纯文本，开启后，复制文章中的实体节点，粘贴后将变更为普通文本</span>
+          <span>复制粘贴时使用纯文本，开启后，粘贴的时候对文本进行清洗，粘贴后将变更为普通文本</span>
         </label>
       </div>
 

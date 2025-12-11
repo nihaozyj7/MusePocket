@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useSettingStore } from '@/stores/SettingStore'
 import type { GridLineStyle } from '@/types'
 import { $confirm } from '@/plugins/confirm'
@@ -25,6 +25,46 @@ watch(() => settings.editorFontSize, (newVal) => {
 watch(() => settings.lineHeight, (newVal) => {
   tempLineHeight.value = newVal
 })
+
+// 颜色转换：将 8 位格式 (#rrggbbaa) 转换为 6 位格式 (#rrggbb)
+const toSixDigitColor = (color: string): string => {
+  if (color && color.length === 9) {
+    return color.substring(0, 7) // 去掉透明度部分
+  }
+  return color
+}
+
+// 颜色转换：将 6 位格式 (#rrggbb) 转换回 8 位格式 (#rrggbbaa)，保留原透明度
+const toEightDigitColor = (newColor: string, oldColor: string): string => {
+  if (oldColor && oldColor.length === 9 && newColor.length === 7) {
+    return newColor + oldColor.substring(7) // 保留原透明度
+  }
+  return newColor
+}
+
+// 实体样式颜色的计算属性（6位格式）
+const underlineColorSix = computed(() => toSixDigitColor(settings.entityStyle.underlineColor))
+const backgroundColorSix = computed(() => toSixDigitColor(settings.entityStyle.backgroundColor))
+const textColorSix = computed(() => toSixDigitColor(settings.entityStyle.color))
+
+// 处理颜色更新（保留透明度）
+const handleUnderlineColorChange = (e: Event) => {
+  const newColor = (e.target as HTMLInputElement).value
+  const fullColor = toEightDigitColor(newColor, settings.entityStyle.underlineColor)
+  settingStore.updateEntityStyle('underlineColor', fullColor)
+}
+
+const handleBackgroundColorChange = (e: Event) => {
+  const newColor = (e.target as HTMLInputElement).value
+  const fullColor = toEightDigitColor(newColor, settings.entityStyle.backgroundColor)
+  settingStore.updateEntityStyle('backgroundColor', fullColor)
+}
+
+const handleTextColorChange = (e: Event) => {
+  const newColor = (e.target as HTMLInputElement).value
+  const fullColor = toEightDigitColor(newColor, settings.entityStyle.color)
+  settingStore.updateEntityStyle('color', fullColor)
+}
 
 // 基准尺寸失焦处理
 const handleBaseFontSizeBlur = () => {
@@ -160,21 +200,21 @@ const resetSettings = async () => {
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.entityStyle.underline" @change="e => settingStore.updateEntityStyle('underline', (e.target as HTMLInputElement).checked)">
             <span>下划线</span>
-            <input type="color" :value="settings.entityStyle.underlineColor" @input="e => settingStore.updateEntityStyle('underlineColor', (e.target as HTMLInputElement).value)" :disabled="!settings.entityStyle.underline">
+            <input type="color" :value="underlineColorSix" @input="handleUnderlineColorChange" :disabled="!settings.entityStyle.underline">
           </label>
         </div>
         <div class="setting-item">
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.entityStyle.background" @change="e => settingStore.updateEntityStyle('background', (e.target as HTMLInputElement).checked)">
             <span>背景色</span>
-            <input type="color" :value="settings.entityStyle.backgroundColor" @input="e => settingStore.updateEntityStyle('backgroundColor', (e.target as HTMLInputElement).value)" :disabled="!settings.entityStyle.background">
+            <input type="color" :value="backgroundColorSix" @input="handleBackgroundColorChange" :disabled="!settings.entityStyle.background">
           </label>
         </div>
         <div class="setting-item">
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.entityStyle.textColor" @change="e => settingStore.updateEntityStyle('textColor', (e.target as HTMLInputElement).checked)">
             <span>文字色</span>
-            <input type="color" :value="settings.entityStyle.color" @input="e => settingStore.updateEntityStyle('color', (e.target as HTMLInputElement).value)" :disabled="!settings.entityStyle.textColor">
+            <input type="color" :value="textColorSix" @input="handleTextColorChange" :disabled="!settings.entityStyle.textColor">
           </label>
         </div>
       </div>
@@ -249,7 +289,6 @@ const resetSettings = async () => {
 
 .label-text {
   color: var(--text-secondary);
-  font-size: 0.85rem;
   flex: 1;
   min-width: 200px;
 }

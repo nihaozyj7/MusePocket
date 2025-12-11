@@ -10,6 +10,7 @@ import { EntityMappingService } from '@/entityMappingService'
 import { entitydb } from '@/db'
 import { useEntityStore } from '@/stores/EntitysStore'
 import { $tips } from '@/plugins/notyf'
+import { event_emit } from '@/eventManager'
 
 const titles = ['查看', '导入导出', '提取&合并', '新建'] as const
 
@@ -39,6 +40,8 @@ async function rebuildMappings() {
     // 重新加载实体数据以获取最新的映射
     const entities = await entitydb.getBookEntities(selectedBook.v.id)
     entityStore.v = entities
+    // 触发事件，通知所有相关组件刷新
+    event_emit('entity-mappings-rebuilt')
     $tips.success('实体映射重建完成')
   } catch (err: any) {
     $tips.error('重建映射失败：' + err.message)
@@ -55,7 +58,7 @@ async function rebuildMappings() {
     <header>
       <div class="title-row">
         <h4>实体管理</h4>
-        <button @click="rebuildMappings" :disabled="isRebuildingMappings" class="rebuild-btn" title="扫描所有文章，重新生成实体在章节中的引用映射">
+        <button @click="rebuildMappings" :disabled="isRebuildingMappings" v-show="selectedTitle === titles[0]" class="rebuild-btn" title="扫描所有文章，重新生成实体在章节中的引用映射">
           {{ isRebuildingMappings ? '🔄 重建中...' : '🔄 重建映射' }}
         </button>
       </div>
@@ -93,7 +96,7 @@ async function rebuildMappings() {
 header {
   background-color: var(--background-secondary);
   width: 100%;
-  height: 5rem;
+  height: 5.5rem;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -106,6 +109,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 0 0.5rem;
+  position: relative;
 }
 
 header>h4,
@@ -116,15 +120,17 @@ header>h4,
 }
 
 .rebuild-btn {
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
-  background-color: var(--info);
   color: white;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  position: absolute;
+  right: 0.5rem;
+  top: 0;
 }
 
 .rebuild-btn:hover:not(:disabled) {

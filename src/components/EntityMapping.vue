@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { Entity, EntityMapping } from '@/types'
-import { articledb } from '@/db'
-import { ref, onMounted, computed } from 'vue'
+import { articledb, entitydb } from '@/db'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { event_on, event_off } from '@/eventManager'
 
 const props = defineProps<{
   entity: Entity
@@ -28,7 +29,35 @@ const chapterCount = computed(() => {
 
 onMounted(async () => {
   await loadMappings()
+  // 监听映射重建完成事件
+  event_on('entity-mappings-rebuilt', handleMappingsRebuilt)
 })
+
+onUnmounted(() => {
+  // 组件卸载时移除事件监听
+  event_off('entity-mappings-rebuilt', handleMappingsRebuilt)
+})
+
+// 处理映射重建完成事件
+const handleMappingsRebuilt = async () => {
+  // 重新从数据库获取最新的实体数据
+  await refreshEntityData()
+}
+
+// 从数据库刷新实体数据
+async function refreshEntityData() {
+  try {
+    const updatedEntity = await entitydb.getBookEntities(props.entity.bookId)
+    const entity = updatedEntity.find(e => e.id === props.entity.id)
+    if (entity) {
+      // 更新 props.entity 的 mappings（通过重新加载）
+      props.entity.mappings = entity.mappings
+      await loadMappings()
+    }
+  } catch (err) {
+    console.error('刷新实体数据失败:', err)
+  }
+}
 
 async function loadMappings() {
   isLoading.value = true

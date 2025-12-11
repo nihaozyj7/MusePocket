@@ -7,7 +7,8 @@ const popupRef = ref<InstanceType<typeof Popup> | null>(null)
 const historyStore = useHistoryStore()
 
 const emit = defineEmits<{
-  restore: [text: string]
+  undo: []
+  redo: []
 }>()
 
 /** 历史记录统计信息 */
@@ -25,12 +26,16 @@ function hide() {
 
 /** 执行撤销 */
 function handleUndo() {
-  emit('restore', '')
+  if (historyStore.canUndo) {
+    emit('undo')
+  }
 }
 
 /** 执行重做 */
 function handleRedo() {
-  emit('restore', '')
+  if (historyStore.canRedo) {
+    emit('redo')
+  }
 }
 
 /** 清除历史 */

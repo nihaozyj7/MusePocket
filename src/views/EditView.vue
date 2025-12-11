@@ -699,7 +699,7 @@ function openSettings() {
   <!-- 插入预设弹出层 -->
   <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
   <!-- 历史记录弹出层 -->
-  <HistoryViewPopup ref="historyViewPopupRef" @restore="() => { }" />
+  <HistoryViewPopup ref="historyViewPopupRef" @undo="handleUndo" @redo="handleRedo" />
   <!-- 文章回收站弹出层 -->
   <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
   <!-- 搜索文章弹出层 -->

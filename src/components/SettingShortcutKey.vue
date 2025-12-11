@@ -146,7 +146,6 @@ const resetToDefault = async () => {
   min-width: 5rem;
   text-align: right;
   color: var(--text-secondary);
-  font-size: 0.85rem;
   font-weight: 500;
 }
 

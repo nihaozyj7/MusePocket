@@ -200,8 +200,8 @@ export interface BaseSettings {
   gridLineStyle: GridLineStyle
   /** 启用背景图片 */
   enableBackgroundImage: boolean
-  /** 背景图片（base64或URL） */
-  backgroundImage: string
+  /** 背景图片ID（指向images表中的图片） */
+  backgroundImageId: string
   /** 自动完成悬浮层延迟时间（毫秒） */
   autoCompleteDelay: number
 }

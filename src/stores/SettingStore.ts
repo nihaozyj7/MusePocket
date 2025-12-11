@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ShortcutKeys, BaseSettings } from '@/types'
-import { StyleManager } from '@/utils'
+import { StyleManager, getImageBase64ByID } from '@/utils'
 import { getDefaultBaseSettings } from '@/defaultObjects'
 
 // 全局样式管理器实例
@@ -55,7 +55,7 @@ export const useSettingStore = defineStore('setting', {
       enableGridLines: true,
       gridLineStyle: 'dashed' as const,
       enableBackgroundImage: false,
-      backgroundImage: '',
+      backgroundImageId: '',
       autoCompleteDelay: 0
     } as BaseSettings
   }),
@@ -218,18 +218,48 @@ export const useSettingStore = defineStore('setting', {
     },
 
     /** 应用背景图片 */
-    applyBackgroundImage() {
+    async applyBackgroundImage() {
       // 直接应用到 body 元素，这样所有视图都能共享背景图片，避免路由切换时闪烁
       const body = document.body
+      const root = document.documentElement
 
-      if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImage) {
-        body.style.backgroundImage = `url(${this.baseSettings.backgroundImage})`
-        body.style.backgroundSize = 'cover'
-        body.style.backgroundPosition = 'center'
-        body.style.backgroundRepeat = 'no-repeat'
-        body.style.backgroundAttachment = 'fixed'
+      if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImageId) {
+        // 启用背景图片时，从数据库读取图片
+        try {
+          const imageUrl = await getImageBase64ByID(this.baseSettings.backgroundImageId)
+          if (imageUrl && imageUrl !== '/cover/default.png') {
+            body.style.backgroundImage = `url(${imageUrl})`
+            body.style.backgroundSize = 'cover'
+            body.style.backgroundPosition = 'center'
+            body.style.backgroundRepeat = 'no-repeat'
+            body.style.backgroundAttachment = 'fixed'
+
+            // 使用半透明背景色变量（已在 variables.css 中定义）
+            root.style.setProperty('--background-primary', this.isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(248, 249, 250, 0.95)')
+            root.style.setProperty('--background-secondary', this.isDark ? 'rgba(37, 37, 38, 0.92)' : 'rgba(233, 236, 239, 0.92)')
+            root.style.setProperty('--background-tertiary', this.isDark ? 'rgba(51, 51, 51, 0.9)' : 'rgba(222, 226, 230, 0.9)')
+          } else {
+            // 图片不存在，清除背景
+            body.style.backgroundImage = 'none'
+            root.style.setProperty('--background-primary', this.isDark ? 'rgb(30, 30, 30)' : 'rgb(248, 249, 250)')
+            root.style.setProperty('--background-secondary', this.isDark ? 'rgb(37, 37, 38)' : 'rgb(233, 236, 239)')
+            root.style.setProperty('--background-tertiary', this.isDark ? 'rgb(51, 51, 51)' : 'rgb(222, 226, 230)')
+          }
+        } catch (err) {
+          console.error('加载背景图片失败:', err)
+          body.style.backgroundImage = 'none'
+          root.style.setProperty('--background-primary', this.isDark ? 'rgb(30, 30, 30)' : 'rgb(248, 249, 250)')
+          root.style.setProperty('--background-secondary', this.isDark ? 'rgb(37, 37, 38)' : 'rgb(233, 236, 239)')
+          root.style.setProperty('--background-tertiary', this.isDark ? 'rgb(51, 51, 51)' : 'rgb(222, 226, 230)')
+        }
       } else {
+        // 未启用背景图片时，使用不透明背景色，避免阴影效果
         body.style.backgroundImage = 'none'
+
+        // 使用不透明背景色
+        root.style.setProperty('--background-primary', this.isDark ? 'rgb(30, 30, 30)' : 'rgb(248, 249, 250)')
+        root.style.setProperty('--background-secondary', this.isDark ? 'rgb(37, 37, 38)' : 'rgb(233, 236, 239)')
+        root.style.setProperty('--background-tertiary', this.isDark ? 'rgb(51, 51, 51)' : 'rgb(222, 226, 230)')
       }
     },
 
@@ -240,8 +270,8 @@ export const useSettingStore = defineStore('setting', {
     },
 
     /** 设置背景图片 */
-    setBackgroundImage(imageData: string) {
-      this.baseSettings.backgroundImage = imageData
+    setBackgroundImage(imageId: string) {
+      this.baseSettings.backgroundImageId = imageId
       this.applyBackgroundImage()
     },
 
@@ -266,6 +296,8 @@ export const useSettingStore = defineStore('setting', {
       } else {
         document.documentElement.removeAttribute('data-theme')
       }
+      // 切换主题后重新应用背景色
+      this.applyBackgroundImage()
     },
 
     /** 更新快捷键配置 */

@@ -1185,7 +1185,6 @@ main {
 }
 
 .import-export-container {
-  padding: 1rem;
   max-height: 90vh;
   overflow-y: auto;
 }

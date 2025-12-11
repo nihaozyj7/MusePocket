@@ -3,12 +3,16 @@ import { ref, watch, computed } from 'vue'
 import { useSettingStore } from '@/stores/SettingStore'
 import type { GridLineStyle } from '@/types'
 import { $confirm } from '@/plugins/confirm'
+import SelectCoverPopup from './SelectCoverPopup.vue'
 
 const props = defineProps<{ title: string }>()
 const settingStore = useSettingStore()
 
 // 从 store 中获取设置
 const settings = settingStore.baseSettings
+
+/** 选择背景图片弹窗 */
+const selectBackgroundPopupRef = ref<InstanceType<typeof SelectCoverPopup>>()
 
 // 临时输入值（用于失焦后才生效）
 const tempBaseFontSize = ref(settings.baseFontSize)
@@ -101,21 +105,12 @@ const handleLineHeightBlur = () => {
 
 // 处理图片上传
 const handleImageUpload = () => {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.onchange = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
+  selectBackgroundPopupRef.value?.show(settings.backgroundImageId)
+}
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string
-      settingStore.setBackgroundImage(base64)
-    }
-    reader.readAsDataURL(file)
-  }
-  input.click()
+// 选择背景图片后的回调
+const handleSelectBackground = (imageId: string) => {
+  settingStore.setBackgroundImage(imageId)
 }
 
 // 重置设置
@@ -266,6 +261,9 @@ const resetSettings = async () => {
       </div>
     </div>
   </div>
+
+  <!-- 选择背景图片弹窗 -->
+  <SelectCoverPopup ref="selectBackgroundPopupRef" @select="handleSelectBackground" />
 </template>
 
 <style scoped>

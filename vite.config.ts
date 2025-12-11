@@ -5,6 +5,8 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 使用相对路径，确保在 file:// 协议下正常工作
+  base: './',
   plugins: [
     vue(),
     visualizer({
@@ -23,6 +25,10 @@ export default defineConfig({
     }
   },
   build: {
+    // 输出目录
+    outDir: 'dist',
+    // 确保资源使用相对路径
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
         manualChunks: {

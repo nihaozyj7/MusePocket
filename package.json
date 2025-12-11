@@ -1,12 +1,19 @@
 {
   "name": "musepocket",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "专业的本地写作管理系统",
+  "author": "BeriCute",
+  "license": "MIT",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
@@ -26,9 +33,14 @@
     "@unocss/preset-uno": "66.5.10-beta.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
-    "vue-tsc": "^3.1.4"
+    "vue-tsc": "^3.1.4",
+    "wait-on": "^8.0.1"
   }
 }

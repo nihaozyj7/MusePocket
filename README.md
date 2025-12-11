@@ -179,6 +179,26 @@ npm run build
 
 构建产物位于 `dist/` 目录,可直接部署到静态服务器或本地打开 `index.html` 使用
 
+### 打包为桌面应用 (Electron)
+
+```bash
+# 安装依赖
+npm install
+
+# 打包为 Windows exe
+npm run electron:build:win
+
+# 或使用批处理脚本（推荐）
+build-electron.bat
+```
+
+打包后的安装程序位于 `release/` 目录。详细说明请查看 [ELECTRON_GUIDE.md](./ELECTRON_GUIDE.md)
+
+**重要说明：**
+- Electron 版本使用 `file://` 协议，确保数据存储独立性
+- 数据存储在 `%APPDATA%\MusePocket` 目录，不受域名影响
+- 完全离线可用，数据完全本地化
+
 ### 预览构建
 
 ```bash
@@ -472,19 +492,19 @@ MusePocket/
 
 ## 🙋 常见问题
 
-**Q: 数据存储在哪里?**  
+**Q: 数据存储在哪里?**
 A: 所有数据都存储在浏览器的 IndexedDB 中,完全本地化,不会上传到任何服务器。
 
-**Q: 如何备份数据?**  
+**Q: 如何备份数据?**
 A: 使用导入导出功能,可以导出完整数据库或指定书籍到 JSON 文件。
 
-**Q: AI 功能需要付费吗?**  
+**Q: AI 功能需要付费吗?**
 A: 需要自行配置 OpenAI API Key,按 OpenAI 的收费标准计费。
 
-**Q: 可以在多台设备同步吗?**  
+**Q: 可以在多台设备同步吗?**
 A: 当前版本数据存储在本地,可通过导入导出功能手动同步。
 
-**Q: 支持 Markdown 吗?**  
+**Q: 支持 Markdown 吗?**
 A: 当前使用富文本编辑器,暂不支持 Markdown 语法。
 
 ## 📮 反馈与支持

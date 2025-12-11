@@ -13,6 +13,16 @@ dist-ssr
 *.local
 原生js实现
 
+# Electron 打包输出
+release
+*.exe
+*.dmg
+*.AppImage
+
+# Electron 缓存
+.cache
+*.cache
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -84,18 +84,6 @@ const entityContextMenuItems = [
         }
       })
     }
-  },
-  {
-    title: '🔧 复制为JSON',
-    callback() {
-      console.log('复制为JSON')
-    }
-  },
-  {
-    title: '📝 复制文本',
-    callback() {
-      console.log('复制文本')
-    }
   }
 ]
 
@@ -341,6 +329,7 @@ function handleItemClick(entity: Entity) {
   flex: 1;
   width: 0;
   font-size: 0.85rem;
+  margin-bottom: -.5rem
 }
 
 .current-filter-conditions span {

@@ -1,0 +1,1235 @@
+<script setup lang="ts">
+import InsertSnippetPopup from '@domains/editor/components/InsertSnippetPopup.vue'
+import { HistoryViewPopup } from '@shared/components'
+import HistorySidebar from '@domains/library/components/HistorySidebar.vue'
+import SearchArticlePopup from '@domains/editor/components/SearchArticlePopup.vue'
+import DraftManager from '@domains/editor/components/DraftManager.vue'
+import ProofreadTool from '@domains/editor/components/ProofreadTool.vue'
+import FindReplacePopup from '@domains/editor/components/FindReplacePopup.vue'
+import AiSuggestionTool from '@domains/editor/components/AiSuggestionTool.vue'
+import Editor from '@domains/editor/components/Editor.vue'
+import { articledb, bookdb, importExportdb } from '@shared/db'
+import { getDefaultArticle } from '@shared/constants/defaults'
+import { $tips } from '@app/plugins'
+import router from '@app/router'
+import { useEntityStore } from '@domains/library/stores/entities.store'
+import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
+import { useSelectedBookStore } from '@domains/library/stores/selected-book.store'
+import { useSettingStore } from '@domains/settings/stores/settings.store'
+import { useHistoryStore } from '@domains/editor/stores/history.store'
+import type { Article, ArticleBody } from '@shared/types'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@shared/utils'
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
+import { event_emit, event_on, event_off } from '@shared/utils/event-bus'
+import { EntityMappingService } from '@shared/utils/entity-mapping'
+
+// 懒加载组件
+const ContextMenu = defineAsyncComponent(() => import('@shared/components/ContextMenu.vue'))
+const EntityManager = defineAsyncComponent(() => import('@domains/library/components/EntityManager.vue'))
+const RecycleBinArticlePopup = defineAsyncComponent(() => import('@domains/library/components/RecycleBinArticlePopup.vue'))
+const NameGeneratorTool = defineAsyncComponent(() => import('@domains/editor/components/NameGeneratorTool.vue'))
+const ArticleImportExport = defineAsyncComponent(() => import('@domains/library/components/ArticleImportExport.vue'))
+const Popup = defineAsyncComponent(() => import('@shared/components/Popup.vue'))
+
+/** 文章列表 */
+const articles = ref<Article[]>([])
+/** 当前文章 */
+const selectedArticleStore = useSelectedArticleStore()
+/** 当前书籍 */
+const selectedBookStore = useSelectedBookStore()
+/** 当前打开的文章的内容 */
+const articleBody = ref<ArticleBody | null>(null)
+/** 右键菜单 */
+const articleContextMenuRef = ref(null)
+/** 文本编辑器 */
+const editorRef = ref(null)
+/** 侧边工具栏 */
+const rutilsRef = ref<HTMLElement | null>(null)
+/** 配置项 */
+const settingStore = useSettingStore()
+/** 历史记录 */
+const historyStore = useHistoryStore()
+
+/** 拖拽相关状态 */
+const draggedItem = ref<Article | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+/** 插入预设弹出层 */
+const insertSnippetPopupRef = ref<InstanceType<typeof InsertSnippetPopup> | null>(null)
+
+/** 历史记录弹出层 */
+const historyViewPopupRef = ref<InstanceType<typeof HistoryViewPopup> | null>(null)
+
+/** 历史记录侧栏 */
+const historySidebarRef = ref<InstanceType<typeof HistorySidebar> | null>(null)
+
+/** 文章回收站弹出层 */
+const recycleBinArticlePopupRef = ref(null)
+
+/** 搜索文章弹出层 */
+const searchArticlePopupRef = ref<InstanceType<typeof SearchArticlePopup> | null>(null)
+
+/** 导入导出弹出层 */
+const importExportPopupRef = ref(null)
+
+const eneityManagerRef = ref(null)
+
+/** 校对工具 */
+const proofreadToolRef = ref<InstanceType<typeof ProofreadTool> | null>(null)
+
+/** 查找替换弹出层 */
+const findReplacePopupRef = ref<InstanceType<typeof FindReplacePopup> | null>(null)
+
+/** 右边侧栏工具按钮标题 列表 */
+const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '💡 AI建议', '📝 草稿', '⏱️ 历史版本']
+
+/** 处理实体标题更新 */
+function handleEntityTitleUpdate(entityId: string, newTitle: string) {
+  // 通知编辑器更新实体标题
+  if (editorRef.value) {
+    editorRef.value.updateEntityTitle(entityId, newTitle)
+  }
+}
+
+onMounted(() => {
+  loadArticles()
+  settingStore.setEditorWidthMode()
+  rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
+  useEntityStore().load(selectedBookStore.v.id)
+  // 监听快捷键
+  document.addEventListener('keydown', handleGlobalKeydown)
+  // 监听实体标题更新事件
+  event_on('entity-title-updated', handleEntityTitleUpdate)
+})
+
+onUnmounted(() => {
+  // 移除全局监听器
+  document.removeEventListener('keydown', handleGlobalKeydown)
+  // 移除实体标题更新监听
+  event_off('entity-title-updated', handleEntityTitleUpdate)
+})
+
+/** 全局快捷键监听 */
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const keys: string[] = []
+  if (e.ctrlKey || e.metaKey) keys.push('Ctrl')
+  if (e.altKey) keys.push('Alt')
+  if (e.shiftKey) keys.push('Shift')
+  keys.push(e.key.toUpperCase())
+
+  const shortcut = keys.join('+')
+
+  // 搜索章节快捷键
+  if (shortcut === settingStore.shortcutKeys.search) {
+    e.preventDefault()
+    openSearchPopup()
+  }
+  // 查找替换快捷键
+  else if (shortcut === settingStore.shortcutKeys.replace) {
+    e.preventDefault()
+    openFindReplace()
+  }
+  // 一键排版快捷键
+  else if (shortcut === settingStore.shortcutKeys.format) {
+    e.preventDefault()
+    handleFormat()
+  }
+}
+
+const contextMenuHanders = {
+  edit(id: string) {
+    const article = articles.value.find(article => article.id === id)
+    if (!article) return $tips.error('文章不存在')
+    openArticle(article)
+  },
+  delete(id: string) {
+    articledb.softDelete(id).then(res => {
+      if (!res.success) return console.error(`删除文章失败, ${res.message}`)
+      $tips.success('删除成功')
+
+      // 先计算索引（在删除前）
+      let index = articles.value.findIndex(article => article.id === id) - 1
+      // 从列表中移除被删除的文章
+      articles.value = articles.value.filter(article => article.id !== id)
+
+      // 如果删除的不是当前选中的文章，直接返回
+      if (selectedArticleStore.v.id !== id) return
+
+      // 如果删除后没有文章了，创建新文章
+      if (articles.value.length === 0) {
+        creatreArticle()
+      } else {
+        // 选择前一个文章（如果索引<0则选择第一个）
+        const nextArticle = articles.value[Math.max(0, index)]
+        // 重要：调用 openArticle 来加载文章内容，而不是仅仅设置 selectedArticleStore.v
+        openArticle(nextArticle)
+      }
+    })
+  },
+  exportTxt(id: string) {
+    const article = articles.value.find(article => article.id === id)
+    articledb.getArticleBody(id).then(res => {
+      exportTxt(article?.title || '未命名', res.content || '内容未找到')
+    }).catch(err => {
+      $tips.error(`导出文章失败, ${err.message}`)
+    })
+  },
+  copy(id: string) {
+    if (editorRef.value) {
+      navigator.clipboard.writeText(trimAndReduceNewlines(editorRef.value.getBodyText()))
+    }
+    $tips.success('已复制')
+  },
+}
+
+function handleArticleContextmenu(e: MouseEvent) {
+  e.preventDefault()
+
+  const articleItem = (e.target as HTMLElement).closest<HTMLElement>('.article-item')
+  if (!articleItem) return
+  const aid = articleItem.dataset.articleId
+
+  articleContextMenuRef.value.show(e, [
+    { title: '✏️ 编辑', callback: () => contextMenuHanders.edit(aid) },
+    { title: '🗑️ 删除', callback: () => contextMenuHanders.delete(aid) },
+    { title: '📄 导出为TXT', callback: () => contextMenuHanders.exportTxt(aid) },
+    { title: '📋 复制到剪贴板', callback: () => contextMenuHanders.copy(aid) },
+  ])
+}
+
+function handleSaveArticleTitle(title: string) {
+  articledb.updateArticle(selectedArticleStore.v).then(res => {
+    if (!res.success) $tips.error(`更新标题失败, ${res.message}`)
+  })
+}
+
+async function saveArticle(text: string, oldText?: string, skipHistory: boolean = false) {
+
+  // 等待编辑器组件加载完成
+  if (!editorRef.value) {
+    console.error('Editor component not loaded')
+    return
+  }
+
+  // 清洗后的内容（这才是真正存入数据库的内容）
+  const cleanedContent = getCleanedEditorContent(editorRef.value.getBody())
+  articleBody.value.content = cleanedContent
+  selectedArticleStore.v.modifiedTime = Date.now()
+  selectedArticleStore.v.wordCount = countNonWhitespace(text)
+  selectedBookStore.v.modifiedTime = Date.now()
+
+  // 先记录历史（使用清洗后的内容）
+  if (!skipHistory && selectedArticleStore.v?.id) {
+    await historyStore.recordChange(cleanedContent)
+  }
+
+  // 保存到数据库
+  Promise.all([
+    articledb.updateArticle(selectedArticleStore.v, articleBody.value),
+    bookdb.updateBook(selectedBookStore.v)
+  ]).then(results => {
+    if (!results.every(result => result.success)) {
+      $tips.error('数据储存出现错误' + results.map(result => result.message).join('\n'))
+    }
+  })
+
+  bookdb.updateBook(selectedBookStore.v)
+  if (editorRef.value) {
+    editorRef.value.setSaveState('✅ 已保存')
+  }
+
+  // 更新历史侧栏的当前文本（使用清洗后的内容）
+  if (historySidebarRef.value) {
+    historySidebarRef.value.setCurrentText(cleanedContent)
+  }
+
+  // 更新实体映射
+  try {
+    await EntityMappingService.updateMappingsForArticle(
+      selectedArticleStore.v.id,
+      cleanedContent,
+      selectedBookStore.v.id
+    )
+  } catch (err) {
+    console.error('更新实体映射失败:', err)
+  }
+}
+
+async function handleArticleClick(e: MouseEvent) {
+  const articleItem = e.target instanceof Element ? (e.target as Element).closest<HTMLElement>('.article-item') : null
+  if (!articleItem) return
+  const id = articleItem.dataset.articleId
+  const article = articles.value.find(article => article.id === id)
+  if (article) {
+    if (editorRef.value) {
+      // 切换文章前强制保存当前文章，不等待输入法
+      editorRef.value.forceSave()
+      // 等待一小段时间确保保存完成
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    selectedArticleStore.v = article
+    openArticle(article)
+  } else {
+    selectedArticleStore.v = null
+  }
+}
+
+function isSelected(article: Article) {
+  return selectedArticleStore.v && selectedArticleStore.v.id === article.id
+}
+
+function goHome() {
+  selectedBookStore.v = null
+  router.push({ path: '/', replace: true })
+}
+
+function openArticle(article: Article) {
+  articledb.getArticleBody(article.id).then(res => {
+    selectedArticleStore.v = article
+    articleBody.value = res
+
+    // 等待编辑器成功加载后再设置内容
+    waitFor(() => editorRef.value, () => {
+      if (editorRef.value) {
+        editorRef.value.resetBody(res.content)
+        // 初始化历史记录（会自动加载历史列表）
+        historyStore.initArticle(article.id, res.content || '')
+        // 更新历史侧栏的当前文本
+        if (historySidebarRef.value) {
+          historySidebarRef.value.setCurrentText(res.content || '')
+          // 设置获取当前编辑器文本的回调（返回清洗后的内容）
+          historySidebarRef.value.setGetCurrentTextCallback(() => {
+            if (!editorRef.value) return ''
+            return getCleanedEditorContent(editorRef.value.getBody())
+          })
+        }
+      }
+    })
+
+  }).catch(err => {
+    $tips.error(`获取文章正文失败, ${err.message}`)
+    console.error(err)
+  })
+}
+
+/** 处理插入文本预设 */
+function handleInsertSnippet(content: string) {
+  insertText(content)
+  // 触发编辑器保存
+  if (editorRef.value) {
+    editorRef.value.handleInput()
+  }
+}
+
+/** 撤销 */
+function handleUndo() {
+  if (editorRef.value && historyStore.canUndo) {
+    editorRef.value.undo()
+  }
+}
+
+/** 重做 */
+function handleRedo() {
+  if (editorRef.value && historyStore.canRedo) {
+    editorRef.value.redo()
+  }
+}
+
+/** 显示历史记录弹窗 */
+function showHistoryPopup() {
+  historyViewPopupRef.value?.show()
+}
+
+/** 从历史版本恢复 */
+async function handleRestoreFromHistory(text: string) {
+
+  if (!text || typeof text !== 'string') {
+    console.error('无效的文本内容')
+    return
+  }
+
+  if (editorRef.value && selectedArticleStore.v) {
+
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
+    // 直接重置编辑器内容
+    editorRef.value.resetBody(text)
+
+    // 恢复光标位置
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+    }, 0)
+
+    // 保存到数据库，但不创建新的历史记录
+    await saveArticle(text, undefined, true)
+
+    // 更新历史侧栏的当前文本
+    if (historySidebarRef.value) {
+      historySidebarRef.value.setCurrentText(text)
+    }
+  } else {
+    console.error('编辑器未载入或器没有选中文章')
+  }
+}
+
+/** 处理校对修复 */
+function handleProofreadFix(issue: any) {
+  if (!editorRef.value) return
+
+  // 获取纯文本内容
+  const bodyText = editorRef.value.getBodyText()
+
+  // 替换文本
+  const newText = bodyText.replace(issue.original, issue.suggestion)
+
+  // 保存光标位置
+  const cursorPos = saveCursorPosition()
+
+  // 将换行符转换为 HTML 段落
+  const htmlContent = newText.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('')
+
+  // 重置编辑器内容
+  editorRef.value.resetBody(htmlContent)
+
+  // 恢复光标位置
+  setTimeout(() => {
+    restoreCursorPosition(cursorPos)
+    // 触发保存
+    if (editorRef.value) {
+      editorRef.value.handleInput()
+    }
+  }, 100)
+}
+
+
+
+function creatreArticle() {
+  const newArticle = getDefaultArticle(selectedBookStore.v.id, articles.value)
+  if (!newArticle) return $tips.error('获取默认文章失败')
+  articledb.createArticle(newArticle).then(res => {
+    if (res.success) {
+      articles.value.push(newArticle)
+      openArticle(articles.value[articles.value.length - 1])
+    } else {
+      $tips.error(`创建文章失败, ${res.message}`)
+    }
+  })
+}
+
+function loadArticles() {
+  articledb.getBookArticles(selectedBookStore.v.id).then(res => {
+    // 为没有sortOrder的旧数据设置默认值
+    res.forEach((article, index) => {
+      if (article.sortOrder === undefined || article.sortOrder === null) {
+        article.sortOrder = article.createdTime
+      }
+    })
+
+    articles.value = res
+    // 按sortOrder排序，如果sortOrder相同则按创建时间排序
+    articles.value.sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder
+      }
+      return a.createdTime - b.createdTime
+    })
+
+    // 如何存在历史打开的文章，则查找文章列表中是否存在该文章，如果存在则打开
+    const article = selectedArticleStore.v
+      && articles.value.find(article => article.id === selectedArticleStore.v.id)
+    // 用户离开页面时存在打开的文章，则恢复
+    if (article) openArticle(article)
+    // 不存在打开的文章，则打开最后一章
+    else if (res.length > 0) openArticle(articles.value[res.length - 1])
+    // 不存在文章，创建新文章
+    else creatreArticle()
+  }).catch(err => {
+    $tips.error(`获取文章列表失败, ${err.message}`)
+  })
+}
+
+/** 打开文章回收站 */
+function openRecycleBin() {
+  recycleBinArticlePopupRef.value?.show(selectedBookStore.v.id)
+}
+
+/** 打开搜索弹窗 */
+function openSearchPopup() {
+  searchArticlePopupRef.value?.show(articles.value)
+}
+
+/** 处理搜索选择文章 */
+function handleSearchSelectArticle(article: Article) {
+  openArticle(article)
+}
+
+/** 处理文章恢复 */
+function handleArticleRestored(article: Article) {
+  // 重新加载文章列表
+  loadArticles()
+  $tips.success(`文章《${article.title}》已恢复`)
+}
+
+function HandleUtilsPanelButtonsClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  const title = target?.innerText
+
+  if (title === settingStore.rutilsTitle) {
+    return settingStore.rutilsTitle = null
+  }
+
+  if (rutilsTitles.includes(title)) {
+    settingStore.rutilsTitle = title
+  }
+}
+
+function handleSplitLineMousedown(e: MouseEvent) {
+  let startX = e.clientX
+  const startWidth = settingStore.drawerWidth
+  const handleMousemove = (me: MouseEvent) => {
+    const deltaX = me.clientX - startX
+    settingStore.drawerWidth = Math.min(600, Math.max(startWidth - deltaX, 300))
+    rutilsRef.value.style.width = `${settingStore.drawerWidth}px`
+  }
+  document.addEventListener('mousemove', handleMousemove)
+  document.addEventListener('mouseup', () => {
+    document.removeEventListener('mousemove', handleMousemove)
+  }, { once: true })
+}
+
+/** 开始拖拽 */
+function handleDragStart(e: DragEvent, article: Article) {
+  draggedItem.value = article
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+  }
+}
+
+/** 拖拽结束 */
+function handleDragEnd() {
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+/** 拖拽经过 */
+function handleDragOver(e: DragEvent, index: number) {
+  e.preventDefault()
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'move'
+  }
+  dragOverIndex.value = index
+}
+
+/** 拖拽离开 */
+function handleDragLeave() {
+  dragOverIndex.value = null
+}
+
+/** 放置 */
+function handleDrop(e: DragEvent, targetIndex: number) {
+  e.preventDefault()
+
+  if (!draggedItem.value) return
+
+  const draggedIndex = articles.value.findIndex(a => a.id === draggedItem.value!.id)
+  if (draggedIndex === -1 || draggedIndex === targetIndex) {
+    draggedItem.value = null
+    dragOverIndex.value = null
+    return
+  }
+
+  // 重新排列数组
+  const newArticles = [...articles.value]
+  const [movedArticle] = newArticles.splice(draggedIndex, 1)
+  newArticles.splice(targetIndex, 0, movedArticle)
+
+  // 更新sortOrder
+  const updates = newArticles.map((article, index) => ({
+    id: article.id,
+    sortOrder: index + 1
+  }))
+
+  // 更新本地状态
+  articles.value = newArticles
+  articles.value.forEach((article, index) => {
+    article.sortOrder = index + 1
+  })
+
+  // 批量保存到数据库
+  articledb.batchUpdateSortOrder(updates).then(res => {
+    if (res.success) {
+      $tips.success('排序已保存')
+    } else {
+      $tips.error(`保存排序失败: ${res.message}`)
+      // 失败时重新加载
+      loadArticles()
+    }
+  })
+
+  draggedItem.value = null
+  dragOverIndex.value = null
+}
+
+/** 打开导入导出弹窗 */
+function openImportExportPopup() {
+  importExportPopupRef.value?.show()
+}
+
+/** 导入成功回调 */
+function handleImportSuccess() {
+  // 重新加载文章列表
+  loadArticles()
+  importExportPopupRef.value?.close()
+}
+
+/** 导出当前选中的文章 */
+async function exportCurrentArticle() {
+  if (!selectedArticleStore.v) {
+    $tips.error('请先选择一篇文章')
+    return
+  }
+
+  try {
+    const data = await importExportdb.exportArticle(selectedArticleStore.v.id)
+    if (!data) {
+      $tips.error('导出失败')
+      return
+    }
+
+    const jsonStr = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedArticleStore.v.title}_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    $tips.success(`已导出文章《${selectedArticleStore.v.title}》`)
+  } catch (err: any) {
+    $tips.error(`导出失败: ${err.message}`)
+  }
+}
+
+/** 导出所有文章 */
+async function exportAllArticles() {
+  if (articles.value.length === 0) {
+    $tips.error('当前书籍没有文章')
+    return
+  }
+
+  try {
+    const articleIds = articles.value.map(a => a.id)
+    const data = await importExportdb.exportArticles(articleIds)
+
+    if (data.length === 0) {
+      $tips.error('导出失败')
+      return
+    }
+
+    const jsonStr = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${selectedBookStore.v.title}_all_articles_${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    $tips.success(`已导出 ${data.length} 篇文章`)
+  } catch (err: any) {
+    $tips.error(`导出失败: ${err.message}`)
+  }
+}
+
+/** 打开设置弹窗 */
+function openSettings() {
+  event_emit('openSettings')
+}
+
+/** 一键排版 */
+function handleFormat() {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取当前编辑器的body元素
+  const bodyElement = editorRef.value.getBody()
+
+  // 使用和保存时相同的处理逻辑
+  const cleanedContent = getCleanedEditorContent(bodyElement)
+
+  // 保存光标位置
+  const cursorPos = saveCursorPosition()
+
+  // 重新设置内容
+  editorRef.value.resetBody(cleanedContent)
+
+  // 恢复光标位置
+  setTimeout(() => {
+    restoreCursorPosition(cursorPos)
+    // 触发保存
+    if (editorRef.value) {
+      editorRef.value.handleInput()
+    }
+    $tips.success('排版完成')
+  }, 100)
+}
+
+/** 打开查找替换弹窗 */
+function openFindReplace() {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取当前编辑器内容
+  const content = editorRef.value.getBodyText()
+  findReplacePopupRef.value?.show(content)
+}
+
+/** 处理查找替换 */
+function handleFindReplace(findText: string, replaceText: string, isRegex: boolean, replaceAll: boolean) {
+  if (!editorRef.value) {
+    $tips.error('编辑器未准备好')
+    return
+  }
+
+  // 获取纯文本内容
+  const bodyText = editorRef.value.getBodyText()
+
+  let newText = bodyText
+  let matchCount = 0
+
+  try {
+    if (isRegex) {
+      // 正则表达式模式
+      const regex = new RegExp(findText, replaceAll ? 'g' : '')
+
+      if (replaceAll) {
+        // 替换全部
+        newText = bodyText.replace(regex, replaceText)
+        // 计算匹配数
+        const matches = bodyText.match(regex)
+        matchCount = matches ? matches.length : 0
+      } else {
+        // 只替换第一个
+        if (regex.test(bodyText)) {
+          newText = bodyText.replace(regex, replaceText)
+          matchCount = 1
+        }
+      }
+    } else {
+      // 普通文本模式
+      if (replaceAll) {
+        // 替换全部
+        const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
+        newText = bodyText.replace(regex, replaceText)
+        // 计算匹配数
+        const matches = bodyText.match(regex)
+        matchCount = matches ? matches.length : 0
+      } else {
+        // 只替换第一个
+        const index = bodyText.indexOf(findText)
+        if (index !== -1) {
+          newText = bodyText.substring(0, index) + replaceText + bodyText.substring(index + findText.length)
+          matchCount = 1
+        }
+      }
+    }
+
+    if (matchCount === 0) {
+      $tips.error('未找到匹配内容')
+      return
+    }
+
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
+    // 重置编辑器内容
+    editorRef.value.resetBody(newText)
+
+    // 替换后立即执行一键排版
+    setTimeout(() => {
+      if (!editorRef.value) return
+
+      // 获取当前编辑器的body元素
+      const bodyElement = editorRef.value.getBody()
+
+      // 使用和保存时相同的处理逻辑进行排版
+      const cleanedContent = getCleanedEditorContent(bodyElement)
+
+      // 重新设置内容（已排版）
+      editorRef.value.resetBody(cleanedContent)
+
+      // 恢复光标位置
+      setTimeout(() => {
+        restoreCursorPosition(cursorPos)
+        // 触发保存
+        if (editorRef.value) {
+          editorRef.value.handleInput()
+        }
+        $tips.success(`已替换 ${matchCount} 处并完成排版`)
+      }, 50)
+    }, 100)
+
+  } catch (error) {
+    $tips.error('正则表达式格式错误')
+  }
+}
+
+</script>
+
+<template>
+  <div class="container">
+    <div class="sidebar">
+      <!-- 搜索栏 -->
+      <div class="search" @click="openSearchPopup">搜索章节</div>
+      <!-- 操作按钮 -->
+      <div class="operations">
+        <!-- 回到主页 -->
+        <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
+        <!-- 占位符 -->
+        <div style="flex: 1;"></div>
+        <!-- 回收站 -->
+        <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
+        <!-- 新建书籍 -->
+        <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
+      </div>
+      <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
+        <div class="scroll-container">
+          <div class="article-item" :class="{
+            'selected': isSelected(article),
+            'dragging': draggedItem && draggedItem.id === article.id,
+            'drag-over': dragOverIndex === index
+          }" v-for="(article, index) in articles" :data-article-id="article.id" :key="article.id" draggable="true" @dragstart="handleDragStart($event, article)" @dragend="handleDragEnd" @dragover="handleDragOver($event, index)" @dragleave="handleDragLeave" @drop="handleDrop($event, index)">
+            <span>📜</span>
+            <h4>{{ article.title }}</h4>
+            <div class="count">{{ article.wordCount }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="right-container">
+      <header class="toolbar">
+        <!-- 面包屑 -->
+        <div class="breadcrumb">
+          <span style="font-size: 1.2rem; display: block; margin-top: -.3rem;">📖</span>
+          <span>{{ selectedBookStore.v?.title }}</span>
+        </div>
+        <!-- 工具按钮 -->
+        <div class="tools">
+          <button title="对当前文章进行排版" @click="handleFormat">✨ 一键排版</button>
+          <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
+          <button title="查找与替换" @click="openFindReplace">🔍 查找替换</button>
+          <div class="button-group">
+            <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
+              ↩️
+            </button>
+            <button title="重做(Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo">
+              ↪️
+            </button>
+          </div>
+          <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
+          <button title="导出备份文件和从备份文件导入" @click="openImportExportPopup">💾 导入导出</button>
+          <button title="软件设置" @click="openSettings">⚙️ 配置</button>
+        </div>
+      </header>
+      <div class="bottom">
+        <!-- 编辑器 -->
+        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
+        <!-- 工具窗口 -->
+        <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
+          <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
+          <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
+          <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" @apply-fix="handleProofreadFix" />
+          <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
+          <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
+          <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />
+          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
+        </div>
+        <!-- 侧边工具栏 -->
+        <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">
+          <button :class="{ selected: settingStore.rutilsTitle === rt }" v-for="rt in rutilsTitles">{{ rt }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 右键菜单 -->
+  <ContextMenu ref="articleContextMenuRef" />
+  <!-- 插入预设弹出层 -->
+  <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
+  <!-- 历史记录弹出层 -->
+  <HistoryViewPopup ref="historyViewPopupRef" @undo="handleUndo" @redo="handleRedo" />
+  <!-- 文章回收站弹出层 -->
+  <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
+  <!-- 搜索文章弹出层 -->
+  <SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
+  <!-- 查找替换弹出层 -->
+  <FindReplacePopup ref="findReplacePopupRef" @replace="handleFindReplace" />
+
+  <!-- 导入导出弹出层 -->
+  <Popup ref="importExportPopupRef" title="💾 文章导入导出">
+    <div class="import-export-container">
+      <!-- 导入文章 -->
+      <div class="section">
+        <h3>📂 导入文章</h3>
+        <ArticleImportExport :bookId="selectedBookStore.v?.id || ''" @importSuccess="handleImportSuccess" />
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 导出文章 -->
+      <div class="section">
+        <h3>💾 导出文章</h3>
+        <p class="description">
+          导出当前选中的文章或所有文章为 JSON 文件
+        </p>
+        <div class="button-group">
+          <button @click="exportCurrentArticle" class="btn-primary">📝 导出当前文章</button>
+          <button @click="exportAllArticles" class="btn-primary">📚 导出所有文章</button>
+        </div>
+      </div>
+    </div>
+  </Popup>
+</template>
+
+<style scoped>
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  height: 100%;
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+.search {
+  height: 2.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  border-bottom: 1px solid var(--border-color);
+  padding-left: .5rem;
+  color: var(--text-tertiary);
+  font-size: .9rem;
+  cursor: text;
+}
+
+.operations {
+  display: flex;
+  height: 2.5rem;
+  align-items: center;
+  padding: 0 .25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.operations button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.operations button:last-child {
+  margin-right: 0;
+}
+
+.bookshelf {
+  flex: 1;
+  height: 0;
+  padding: .5rem 0;
+}
+
+.book-item {
+  display: flex;
+  align-items: start;
+  cursor: pointer;
+  border-radius: .25rem;
+  padding: .5rem;
+  margin: 0 .25rem .25rem .25rem;
+}
+
+.book-item.checked {
+  background-color: var(--background-tertiary);
+}
+
+.book-item .cover {
+  height: 8rem;
+  width: 5rem;
+  border-radius: .25rem;
+  margin-right: .5rem;
+  overflow: hidden;
+}
+
+.book-item .cover img {
+  height: 100%;
+  width: 100%;
+}
+
+.bookInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 0;
+}
+
+.book-item>div>:nth-child(1) {
+  color: var(--text-primary);
+  margin-top: .25rem;
+}
+
+.book-item>div>:nth-child(2) {
+  font-size: .8rem;
+  margin-top: .6rem;
+}
+
+.book-item>div>:nth-child(3) {
+  font-size: .8rem;
+  margin-top: .6rem;
+  line-height: 1.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.right-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  height: 2.7rem;
+  border-bottom: 1px solid var(--border-color);
+  justify-content: space-between;
+  background-color: var(--background-secondary);
+}
+
+.breadcrumb {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb span {
+  display: block;
+  margin-left: .5rem;
+  font-size: .8rem;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  margin-right: .5rem;
+}
+
+.tools>button {
+  margin-left: 0.5rem;
+  background-color: var(--background-tertiary);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+}
+
+.button-group button {
+  font-size: 1rem;
+  padding: 0.19rem;
+  margin: 0;
+}
+
+.button-group button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.right-container .bottom {
+  display: flex;
+  flex: 1;
+  height: 0;
+}
+
+.utils-panel {
+  width: 2.7rem;
+  padding-top: .5rem;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--background-secondary);
+  overflow-y: hidden;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: sideways;
+  white-space: nowrap;
+  display: inline-block;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  user-select: text;
+}
+
+.utils-panel button {
+  background-color: var(--background-tertiary);
+  padding: .5rem .1rem .5rem .25rem !important;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+
+.utils-panel button.selected {
+  background-color: var(--primary-dark);
+  color: var(--text-primary);
+}
+
+.articleshelf {
+  flex: 1;
+  height: 0;
+  padding: .25rem 0;
+}
+
+.article-item {
+  display: flex;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  border-radius: 0.25rem;
+  margin: 0 0.5rem 0.5rem 0.5rem;
+  border: 1px solid transparent;
+}
+
+.article-item:active {
+  cursor: grabbing;
+}
+
+.article-item.dragging {
+  opacity: 0.5;
+}
+
+.article-item.drag-over {
+  border-top: 2px solid var(--primary);
+  margin-top: 2px;
+}
+
+.article-item:hover h4 {
+  color: var(--primary-light);
+}
+
+.article-item .count {
+  font-size: .6rem;
+  color: var(--text-tertiary);
+  display: block;
+  margin-top: .25rem;
+}
+
+.article-item.selected {
+  background-color: var(--background-tertiary);
+}
+
+.article-item.selected h4 {
+  color: var(--primary);
+}
+
+.article-item span {
+  width: 2rem;
+}
+
+.article-item h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .8rem;
+  flex: 1;
+}
+
+.utils-drawer {
+  display: flex;
+}
+
+.utils-drawer .split-line {
+  width: .5rem;
+  background-color: var(--background-secondary);
+  cursor: col-resize;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+::v-deep(.utils-drawer>*:nth-child(2)) {
+  flex: 1;
+  width: 0;
+}
+
+.import-export-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.import-export-container .section {
+  margin-bottom: 1.5rem;
+}
+
+.import-export-container h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.import-export-container .description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.import-export-container .button-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.import-export-container .btn-primary {
+  padding: .5rem 1rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+  flex: 1;
+}
+
+.import-export-container .btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.import-export-container .divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 0;
+}
+</style>

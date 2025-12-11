@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import SettingPopup from '@/components/SettingPopup.vue'
-import { useSettingStore } from '@/stores/SettingStore'
+import { ConfirmDialog } from '@shared/components'
+import SettingPopup from '@domains/settings/components/SettingPopup.vue'
+import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { onMounted, ref } from 'vue'
-import { event_on } from '@/eventManager'
+import { event_on } from '@shared/utils/event-bus'
 
 const settingStore = useSettingStore()
 

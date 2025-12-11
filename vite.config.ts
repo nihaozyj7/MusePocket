@@ -21,7 +21,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      '@app': path.resolve(__dirname, 'src/app'),
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      '@core': path.resolve(__dirname, 'src/core'),
+      '@domains': path.resolve(__dirname, 'src/domains'),
+      '@pages': path.resolve(__dirname, 'src/pages')
     }
   },
   build: {

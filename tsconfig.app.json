@@ -11,6 +11,21 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@app/*": [
+        "./src/app/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ],
+      "@core/*": [
+        "./src/core/*"
+      ],
+      "@domains/*": [
+        "./src/domains/*"
+      ],
+      "@pages/*": [
+        "./src/pages/*"
       ]
     }
   },

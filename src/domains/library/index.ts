@@ -1,0 +1,20 @@
+// Library domain components
+export { default as HistorySidebar } from './components/HistorySidebar.vue'
+export { default as RecycleBinArticlePopup } from './components/RecycleBinArticlePopup.vue'
+export { default as RecycleBinBookPopup } from './components/RecycleBinBookPopup.vue'
+export { default as ArticleImportExport } from './components/ArticleImportExport.vue'
+export { default as BookImportExport } from './components/BookImportExport.vue'
+export { default as EntityManager } from './components/EntityManager.vue'
+export { default as EntityAiExtract } from './components/EntityAiExtract.vue'
+export { default as EntityCreate } from './components/EntityCreate.vue'
+export { default as EntityDetail } from './components/EntityDetail.vue'
+export { default as EntityHover } from './components/EntityHover.vue'
+export { default as EntityHoverAutoInsert } from './components/EntityHoverAutoInsert.vue'
+export { default as EntityImportExport } from './components/EntityImportExport.vue'
+export { default as EntityList } from './components/EntityList.vue'
+export { default as EntityMapping } from './components/EntityMapping.vue'
+
+// Library domain stores
+export * from './stores/selected-book.store'
+export * from './stores/entities.store'
+export * from './stores/entity-types.store'

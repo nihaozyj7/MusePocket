@@ -80,7 +80,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     minWidth: 1128,
-    minHeight: 650,
+    minHeight: 700,
     backgroundColor: '#ffffff',
     webPreferences: {
       nodeIntegration: false,

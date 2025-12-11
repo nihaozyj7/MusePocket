@@ -621,7 +621,7 @@ main {
 }
 
 .tu-container.narrow-margin {
-  padding: 2rem calc((100% - 720px) / 2);
+  padding: 2rem calc((100% - 720px) / 2) .5rem calc((100% - 720px) / 2);
 }
 
 .tu-container .title {

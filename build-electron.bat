@@ -66,4 +66,5 @@ echo 安装包位置: release\MusePocket-1.0.0-x64.exe
 echo.
 echo 按任意键打开 release 文件夹...
 pause >nul
+
 explorer release

@@ -4,7 +4,6 @@ import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
 import HistorySidebar from '@/components/HistorySidebar.vue'
 import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import DraftManager from '@/components/DraftManager.vue'
-import OutlineNavigator from '@/components/OutlineNavigator.vue'
 import ProofreadTool from '@/components/ProofreadTool.vue'
 import FindReplacePopup from '@/components/FindReplacePopup.vue'
 import Editor from '@/components/Editor.vue'
@@ -80,7 +79,7 @@ const proofreadToolRef = ref<InstanceType<typeof ProofreadTool> | null>(null)
 const findReplacePopupRef = ref<InstanceType<typeof FindReplacePopup> | null>(null)
 
 /** 右边侧栏工具按钮标题 列表 */
-const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '📋 大纲', '⏱️ 历史版本']
+const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '⏱️ 历史版本']
 
 onMounted(() => {
   loadArticles()
@@ -368,21 +367,7 @@ function handleProofreadFix(issue: any) {
   }, 100)
 }
 
-/** 大纲插入 */
-function handleOutlineInsert(markdown: string) {
-  if (editorRef.value) {
-    // 获取当前编辑器内容
-    const currentContent = editorRef.value.getBodyText()
-    // 插入markdown到当前光标位置或末尾
-    insertText(markdown + '\n\n')
-    // 触发保存
-    setTimeout(() => {
-      if (editorRef.value) {
-        editorRef.value.handleInput()
-      }
-    }, 100)
-  }
-}
+
 
 function creatreArticle() {
   const newArticle = getDefaultArticle(selectedBookStore.v.id, articles.value)
@@ -827,8 +812,7 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
           <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" @apply-fix="handleProofreadFix" />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
           <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[3]" :bookId="selectedBookStore.v?.id || ''" />
-          <OutlineNavigator v-show="settingStore.rutilsTitle === rutilsTitles[4]" :articleId="selectedArticleStore.v?.id || ''" @insert="handleOutlineInsert" />
-          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
+          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[4]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
         </div>
         <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">

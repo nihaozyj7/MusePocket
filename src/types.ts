@@ -285,18 +285,6 @@ export interface Draft extends Time {
   isAutoSave: boolean
 }
 
-/** 大纲项 */
-export interface OutlineItem {
-  /** 标题文本 */
-  text: string
-  /** 标题级别(1-6) */
-  level: number
-  /** 在文档中的位置 */
-  position: number
-  /** 子标题 */
-  children?: OutlineItem[]
-}
-
 /** 书籍导出数据 */
 export interface BookExportData {
   /** 书籍信息 */

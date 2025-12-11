@@ -106,10 +106,20 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 
   const shortcut = keys.join('+')
 
-  // 搜索快捷键
+  // 搜索章节快捷键
   if (shortcut === settingStore.shortcutKeys.search) {
     e.preventDefault()
     openSearchPopup()
+  }
+  // 查找替换快捷键
+  else if (shortcut === settingStore.shortcutKeys.replace) {
+    e.preventDefault()
+    openFindReplace()
+  }
+  // 一键排版快捷键
+  else if (shortcut === settingStore.shortcutKeys.format) {
+    e.preventDefault()
+    handleFormat()
   }
 }
 

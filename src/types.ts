@@ -149,11 +149,9 @@ export interface ShortcutKeys {
   save: string
   /** 一键排版快捷键 */
   format: string
-  /** 查找快捷键 */
-  find: string
-  /** 替换快捷键 */
+  /** 查找替换快捷键 */
   replace: string
-  /** 搜索快捷键 */
+  /** 搜索章节快捷键 */
   search: string
 }
 

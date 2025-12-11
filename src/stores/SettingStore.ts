@@ -338,7 +338,6 @@ export const useSettingStore = defineStore('setting', {
       this.shortcutKeys = {
         save: 'Ctrl+S',
         format: 'Ctrl+Shift+F',
-        find: 'Ctrl+F',
         replace: 'Ctrl+H',
         search: 'Ctrl+P'
       }

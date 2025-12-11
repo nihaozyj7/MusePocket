@@ -163,7 +163,7 @@ defineExpose({
 </script>
 
 <template>
-  <Popup ref="popupRef" title="🔍 查找替换">
+  <Popup ref="popupRef" title="🔍 查找替换" draggable>
     <div class="find-replace-container">
       <div class="form-group">
         <label>查找内容：</label>

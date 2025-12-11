@@ -82,14 +82,7 @@ const resetToDefault = async () => {
       <div class="shortcut-group">
         <div class="shortcut-item">
           <label>
-            <span class="label-text">查找：</span>
-            <input type="text" readonly :value="settingStore.shortcutKeys.find" @keydown="e => handleKeyDown(e, 'find')" @focus="() => handleFocus('find')" @blur="handleBlur" placeholder="按下快捷键组合">
-          </label>
-        </div>
-
-        <div class="shortcut-item">
-          <label>
-            <span class="label-text">替换：</span>
+            <span class="label-text">查找替换：</span>
             <input type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
           </label>
         </div>

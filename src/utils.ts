@@ -1187,3 +1187,47 @@ export class ChineseInputManager {
     this.isChineseInput = false
   }
 }
+
+/**
+ * 统计HTML内容中某个实体的出现次数
+ * @param htmlContent HTML内容字符串
+ * @param entityId 实体ID
+ * @returns 出现次数
+ */
+export function countEntityInContent(htmlContent: string, entityId: string): number {
+  if (!htmlContent || !entityId) return 0
+
+  // 创建临时DOM元素来解析HTML
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = htmlContent
+
+  // 查找所有带有该实体ID的span元素
+  const entitySpans = tempDiv.querySelectorAll(`span[data-entity-id="${entityId}"]`)
+
+  return entitySpans.length
+}
+
+/**
+ * 扫描所有文章内容，生成实体的映射统计
+ * @param entityId 实体ID
+ * @param articles 文章列表（包含内容）
+ * @returns EntityMapping数组
+ */
+export function generateEntityMappings(
+  entityId: string,
+  articles: Array<{ id: string; content: string }>
+): Array<{ articleId: string; count: number }> {
+  const mappings: Array<{ articleId: string; count: number }> = []
+
+  for (const article of articles) {
+    const count = countEntityInContent(article.content, entityId)
+    if (count > 0) {
+      mappings.push({
+        articleId: article.id,
+        count
+      })
+    }
+  }
+
+  return mappings
+}

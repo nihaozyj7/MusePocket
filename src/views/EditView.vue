@@ -21,6 +21,7 @@ import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 import { event_emit, event_on, event_off } from '@/eventManager'
+import { EntityMappingService } from '@/entityMappingService'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -240,6 +241,17 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
   // 更新历史侧栏的当前文本（使用清洗后的内容）
   if (historySidebarRef.value) {
     historySidebarRef.value.setCurrentText(cleanedContent)
+  }
+
+  // 更新实体映射
+  try {
+    await EntityMappingService.updateMappingsForArticle(
+      selectedArticleStore.v.id,
+      cleanedContent,
+      selectedBookStore.v.id
+    )
+  } catch (err) {
+    console.error('更新实体映射失败:', err)
   }
 }
 

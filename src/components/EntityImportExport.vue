@@ -43,6 +43,7 @@ function exportEntities() {
       description: entity.description,
       imgID: entity.imgID,
       attrs: entity.attrs,
+      mappings: entity.mappings, // 导出映射信息
       createdTime: entity.createdTime,
       modifiedTime: entity.modifiedTime,
       deletedTime: entity.deletedTime
@@ -109,6 +110,7 @@ function handleFileChange(event: Event) {
           description: entity.description || '',
           imgID: entity.imgID || '',
           attrs: entity.attrs || [],
+          mappings: [], // 导入时清空映射，需要重新扫描生成
           createdTime: now,
           modifiedTime: now,
           deletedTime: 0

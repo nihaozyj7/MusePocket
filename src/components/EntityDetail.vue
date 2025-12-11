@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Entity } from '@/types'
+import EntityMapping from './EntityMapping.vue'
 
 const props = defineProps<{ entity: Entity }>()
 </script>
@@ -21,6 +22,8 @@ const props = defineProps<{ entity: Entity }>()
         </li>
       </ul>
     </div>
+    <!-- 实体映射模块 -->
+    <EntityMapping :entity="props.entity" />
   </div>
 </template>
 

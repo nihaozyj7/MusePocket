@@ -55,6 +55,14 @@ export interface EntityAttr {
   sortIndex: number
 }
 
+/** 实体映射信息（记录实体在特定章节中的出现次数） */
+export interface EntityMapping {
+  /** 章节ID */
+  articleId: string
+  /** 在该章节中出现的次数 */
+  count: number
+}
+
 /** 自定义实体 */
 export interface Entity extends Time {
   /** 实体ID */
@@ -71,6 +79,8 @@ export interface Entity extends Time {
   imgID: string
   /** 自定义属性列表 */
   attrs?: EntityAttr[]
+  /** 实体映射（记录该实体在哪些章节中出现及次数） */
+  mappings?: EntityMapping[]
 }
 
 /** 获取图片URL */

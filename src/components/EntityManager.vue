@@ -6,10 +6,17 @@ import EntityImportExport from './EntityImportExport.vue'
 import EntityList from './EntityList.vue'
 import { useEntityTypesStore } from '@/stores/EntityTypesStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
+import { EntityMappingService } from '@/entityMappingService'
+import { entitydb } from '@/db'
+import { useEntityStore } from '@/stores/EntitysStore'
+import { $tips } from '@/plugins/notyf'
 
 const titles = ['查看', '导入导出', '提取&合并', '新建'] as const
 
 const selectedTitle = ref<typeof titles[number]>('查看')
+const isRebuildingMappings = ref(false)
+const selectedBook = useSelectedBookStore()
+const entityStore = useEntityStore()
 
 onMounted(() => {
   // 初始化类型
@@ -20,12 +27,38 @@ function handleHeaderButtonClick(e: MouseEvent) {
   selectedTitle.value = (e.target as HTMLElement).innerText as typeof titles[number]
 }
 
+async function rebuildMappings() {
+  if (!selectedBook.v?.id) {
+    $tips.error('请先选择一本书籍')
+    return
+  }
+
+  isRebuildingMappings.value = true
+  try {
+    await EntityMappingService.rebuildMappingsForBook(selectedBook.v.id)
+    // 重新加载实体数据以获取最新的映射
+    const entities = await entitydb.getBookEntities(selectedBook.v.id)
+    entityStore.v = entities
+    $tips.success('实体映射重建完成')
+  } catch (err: any) {
+    $tips.error('重建映射失败：' + err.message)
+    console.error(err)
+  } finally {
+    isRebuildingMappings.value = false
+  }
+}
+
 </script>
 
 <template>
   <div class="container">
     <header>
-      <h4>实体管理</h4>
+      <div class="title-row">
+        <h4>实体管理</h4>
+        <button @click="rebuildMappings" :disabled="isRebuildingMappings" class="rebuild-btn" title="扫描所有文章，重新生成实体在章节中的引用映射">
+          {{ isRebuildingMappings ? '🔄 重建中...' : '🔄 重建映射' }}
+        </button>
+      </div>
       <div class="buttons">
         <button @click="handleHeaderButtonClick" :class="{ selected: selectedTitle === title }" v-for="title in titles">{{ title }}</button>
       </div>
@@ -68,10 +101,40 @@ header {
   border-bottom: 1px solid var(--border-color);
 }
 
-header>h4 {
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 0.5rem;
+}
+
+header>h4,
+.title-row>h4 {
+  padding: 0;
   margin: 0;
   color: var(--text-primary);
+}
+
+.rebuild-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  background-color: var(--info);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.rebuild-btn:hover:not(:disabled) {
+  background-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.rebuild-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .buttons {

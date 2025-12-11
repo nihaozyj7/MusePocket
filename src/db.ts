@@ -415,6 +415,12 @@ export const articledb = new class {
     return includeDeleted ? articles : articles.filter(a => a.deletedTime === 0)
   }
 
+  /** 根据ID获取单篇文章 */
+  async getArticle(id: string): Promise<Article | undefined> {
+    const store = db.transaction(['articles'], 'readonly').objectStore('articles')
+    return store.get(id)
+  }
+
   /** 批量更新文章排序 */
   async batchUpdateSortOrder(updates: { id: string; sortOrder: number }[]): Promise<Status> {
     try {
@@ -521,7 +527,32 @@ export const entitydb = new class {
     const entities = await store.index('by-book').getAll(bookId)
     return includeDeleted ? entities : entities.filter(e => e.deletedTime === 0)
   }
-}()
+
+  /**
+   * 批量更新实体映射信息
+   * @param updates 更新列表，每项包含 entityId 和 mappings
+   */
+  async batchUpdateMappings(updates: Array<{ entityId: string; mappings: Array<{ articleId: string; count: number }> }>): Promise<Status> {
+    try {
+      const tx = db.transaction(['entities'], 'readwrite')
+      const store = tx.objectStore('entities')
+
+      for (const update of updates) {
+        const entity = await store.get(update.entityId)
+        if (entity) {
+          entity.mappings = update.mappings
+          entity.modifiedTime = Date.now()
+          await store.put(entity)
+        }
+      }
+
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+}
 
 /** 图片操作类 */
 export const imagedb = new class {

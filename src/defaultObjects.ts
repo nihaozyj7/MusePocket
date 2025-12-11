@@ -44,7 +44,8 @@ export function getDefaultEntity(bookId: string): Entity {
     type: '',
     description: '',
     imgID: '',
-    deletedTime: 0
+    deletedTime: 0,
+    mappings: []
   }
 }
 

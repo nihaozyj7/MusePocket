@@ -19,6 +19,7 @@ interface AiToolsSettings {
   aiSuggestion?: AiToolConfig
   proofread?: AiToolConfig
   entityExtract?: AiToolConfig
+  nameGenerator?: AiToolConfig
 }
 
 // 全局样式管理器实例
@@ -80,7 +81,8 @@ export const useSettingStore = defineStore('setting', {
     aiToolsSettings: {
       aiSuggestion: {},
       proofread: {},
-      entityExtract: {}
+      entityExtract: {},
+      nameGenerator: {}
     } as AiToolsSettings
   }),
 

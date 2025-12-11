@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useModelsStore } from '@domains/settings/stores/models.store'
 import { usePromptsStore } from '@domains/settings/stores/prompts.store'
+import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { openaiFetch, type OpenAiParams } from '@core/api'
 import { $tips } from '@app/plugins'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
+const settingStore = useSettingStore()
 
 /** 内置额外要求提示词 */
 const BUILTIN_REQUIREMENTS = [
@@ -109,9 +111,35 @@ const canGenerate = computed(() => {
 })
 
 onMounted(() => {
-  // 默认选择第一个模型
-  if (modelOptions.value.length > 0) {
-    selectedModel.value = modelOptions.value[0]
+  // 尝试从持久化配置中恢复
+  const savedConfig = settingStore.getAiToolConfig('nameGenerator')
+
+  if (savedConfig.modelId) {
+    // 根据 modelId 查找对应的模型
+    const model = modelOptions.value.find(m =>
+      `${m.baseUrl}_${m.model}` === savedConfig.modelId
+    )
+    if (model) {
+      selectedModel.value = model
+    } else {
+      // 模型被删除，使用默认第一个模型
+      if (modelOptions.value.length > 0) {
+        selectedModel.value = modelOptions.value[0]
+      }
+    }
+  } else {
+    // 默认选择第一个模型
+    if (modelOptions.value.length > 0) {
+      selectedModel.value = modelOptions.value[0]
+    }
+  }
+})
+
+// 监听选中的模型变化，保存到持久化配置
+watch(selectedModel, (newModel) => {
+  if (newModel) {
+    const modelId = `${newModel.baseUrl}_${newModel.model}`
+    settingStore.saveAiToolConfig('nameGenerator', { modelId })
   }
 })
 

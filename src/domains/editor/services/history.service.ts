@@ -1,4 +1,4 @@
-import type { DiffOperation } from './types'
+import type { DiffOperation } from '@/shared/types'
 
 /**
  * 计算两个文本之间的差异（简化版 Myers diff 算法）

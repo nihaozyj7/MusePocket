@@ -1,6 +1,8 @@
 {
   "appId": "com.bericute.musepocket",
-  "productName": "MusePocket",
+  "productName": "写作助手",
+  "version": "0.0.1",
+  "icon": "build/icon.png",
   "directories": {
     "output": "release"
   },

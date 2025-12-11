@@ -23,7 +23,7 @@
 npm install -g electron-icon-builder
 
 # 从 PNG 生成所有平台图标
-electron-icon-builder --input=./logo.png --output=./public
+electron-icon-builder --input=./logo.png --output=./build
 ```
 
 ## 临时方案
@@ -32,10 +32,10 @@ electron-icon-builder --input=./logo.png --output=./public
 
 **electron/main.js**
 ```javascript
-// icon: path.join(__dirname, '../public/icon.png'),
+// icon: path.join(__dirname, '../build/icon.png'),
 ```
 
 **electron-builder.json**
 ```json
-// "icon": "public/icon.ico",
+// "icon": "build/icon.ico",
 ```

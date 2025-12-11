@@ -156,7 +156,7 @@ function closeEditor() {
   width: 0;
   flex-direction: column;
   height: 100%;
-  background-color: var(--background-primary);
+  background-color: var(--background-secondary);
 }
 
 .header {

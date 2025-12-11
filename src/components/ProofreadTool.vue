@@ -416,7 +416,7 @@ defineExpose({
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--background-primary);
+  background-color: var(--background-secondary);
 }
 
 .tool-header {

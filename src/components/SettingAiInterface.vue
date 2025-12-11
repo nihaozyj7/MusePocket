@@ -189,7 +189,6 @@ function copy(text: string) {
 
 .label-text {
   color: var(--text-secondary);
-  font-size: 0.85rem;
   font-weight: 500;
 }
 

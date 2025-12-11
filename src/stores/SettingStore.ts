@@ -235,15 +235,15 @@ export const useSettingStore = defineStore('setting', {
             body.style.backgroundAttachment = 'fixed'
 
             // 使用半透明背景色变量（已在 variables.css 中定义）
-            root.style.setProperty('--background-primary', this.isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(248, 249, 250, 0.95)')
-            root.style.setProperty('--background-secondary', this.isDark ? 'rgba(37, 37, 38, 0.92)' : 'rgba(233, 236, 239, 0.92)')
-            root.style.setProperty('--background-tertiary', this.isDark ? 'rgba(51, 51, 51, 0.9)' : 'rgba(222, 226, 230, 0.9)')
+            root.style.setProperty('--background-primary', this.isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(184, 186, 189, 0.9)')
+            root.style.setProperty('--background-secondary', this.isDark ? 'rgba(37, 37, 38, 0.7)' : 'rgba(189, 189, 189, 0.7)')
+            root.style.setProperty('--background-tertiary', this.isDark ? 'rgba(51, 51, 51, 0.8)' : 'rgba(196, 206, 215, 0.8)')
           } else {
             // 图片不存在，清除背景
             body.style.backgroundImage = 'none'
-            root.style.setProperty('--background-primary', this.isDark ? 'rgb(30, 30, 30)' : 'rgb(248, 249, 250)')
-            root.style.setProperty('--background-secondary', this.isDark ? 'rgb(37, 37, 38)' : 'rgb(233, 236, 239)')
-            root.style.setProperty('--background-tertiary', this.isDark ? 'rgb(51, 51, 51)' : 'rgb(222, 226, 230)')
+            root.style.setProperty('--background-primary', this.isDark ? 'rgb(30, 30, 30)' : 'rgb(184, 186, 189)')
+            root.style.setProperty('--background-secondary', this.isDark ? 'rgb(37, 37, 38)' : 'rgb(189, 189, 189, 0.7)')
+            root.style.setProperty('--background-tertiary', this.isDark ? 'rgb(51, 51, 51)' : 'rgb(196, 206, 215)')
           }
         } catch (err) {
           console.error('加载背景图片失败:', err)

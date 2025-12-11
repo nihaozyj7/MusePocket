@@ -34,12 +34,12 @@ html * {
   width: .3rem;
 }
 
-::-webkit-scrollbar-track {
+/* ::-webkit-scrollbar-track {
   background-color: var(--background-secondary);
-}
+} */
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--background-tertiary);
+  background-color: var(--background-secondary);
   border-radius: .25rem;
   cursor: grab;
 }

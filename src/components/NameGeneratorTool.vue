@@ -252,7 +252,7 @@ function clearResults() {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--background-primary);
+  background-color: var(--background-secondary);
 }
 
 .content {

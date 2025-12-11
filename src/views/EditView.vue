@@ -6,6 +6,7 @@ import SearchArticlePopup from '@/components/SearchArticlePopup.vue'
 import DraftManager from '@/components/DraftManager.vue'
 import ProofreadTool from '@/components/ProofreadTool.vue'
 import FindReplacePopup from '@/components/FindReplacePopup.vue'
+import AiSuggestionTool from '@/components/AiSuggestionTool.vue'
 import Editor from '@/components/Editor.vue'
 import { articledb, bookdb, importExportdb } from '@/db.ts'
 import { getDefaultArticle } from '@/defaultObjects'
@@ -79,7 +80,7 @@ const proofreadToolRef = ref<InstanceType<typeof ProofreadTool> | null>(null)
 const findReplacePopupRef = ref<InstanceType<typeof FindReplacePopup> | null>(null)
 
 /** 右边侧栏工具按钮标题 列表 */
-const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '📝 草稿', '⏱️ 历史版本']
+const rutilsTitles = ['✒️ 取名工具', '✅ 校对', '📁 实体管理', '💡 AI建议', '📝 草稿', '⏱️ 历史版本']
 
 onMounted(() => {
   loadArticles()
@@ -811,8 +812,9 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
           <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
           <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" @apply-fix="handleProofreadFix" />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
-          <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[3]" :bookId="selectedBookStore.v?.id || ''" />
-          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[4]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
+          <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
+          <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />
+          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
         </div>
         <!-- 侧边工具栏 -->
         <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">

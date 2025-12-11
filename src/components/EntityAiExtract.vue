@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useModelsStore } from '@/stores/ModelsStore'
 import { usePromptsStore } from '@/stores/PromptsStore'
+import { useSettingStore } from '@/stores/SettingStore'
 import { useEntityStore } from '@/stores/EntitysStore'
 import { useSelectedBookStore } from '@/stores/SelectedBookStore'
 import { articledb, entitydb } from '@/db'
@@ -12,6 +13,7 @@ import { $tips } from '@/plugins/notyf'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
+const settingStore = useSettingStore()
 const entityStore = useEntityStore()
 const selectedBookStore = useSelectedBookStore()
 
@@ -73,10 +75,56 @@ const canExtract = computed(() => {
 
 onMounted(() => {
   loadArticles()
-  // 默认选择第一个模型
-  if (modelOptions.value.length > 0) {
+
+  // 加载保存的配置
+  const savedConfig = settingStore.getAiToolConfig('entityExtract')
+
+  // 恢复模型选择
+  if (savedConfig.modelId) {
+    const model = modelOptions.value.find(m => getModelId(m) === savedConfig.modelId)
+    if (model) {
+      selectedModel.value = model
+    } else {
+      // 如果保存的模型不存在，使用默认第一个模型
+      if (modelOptions.value.length > 0) {
+        selectedModel.value = modelOptions.value[0]
+      }
+    }
+  } else if (modelOptions.value.length > 0) {
+    // 没有保存的配置，使用默认第一个模型
     selectedModel.value = modelOptions.value[0]
   }
+
+  // 恢复提示词
+  if (savedConfig.systemPrompt) {
+    selectedPrompt.value = savedConfig.systemPrompt
+  }
+
+  // 恢复其他配置
+  if (savedConfig.includeExistingEntities !== undefined) {
+    includeExistingEntities.value = savedConfig.includeExistingEntities
+  }
+})
+
+/** 生成模型的唯一标识 */
+function getModelId(model: OpenAiParams): string {
+  return `${model.baseUrl}|${model.model}`
+}
+
+/** 保存配置（当用户修改时） */
+function saveConfig() {
+  if (!selectedModel.value) return
+
+  settingStore.saveAiToolConfig('entityExtract', {
+    modelId: getModelId(selectedModel.value),
+    systemPrompt: selectedPrompt.value,
+    includeExistingEntities: includeExistingEntities.value
+  })
+}
+
+// 监听配置变化，自动保存
+watch([selectedModel, selectedPrompt, includeExistingEntities], () => {
+  saveConfig()
 })
 
 /** 加载文章列表 */

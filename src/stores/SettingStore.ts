@@ -4,6 +4,22 @@ import type { ShortcutKeys, BaseSettings } from '@/types'
 import { StyleManager, getImageBase64ByID } from '@/utils'
 import { getDefaultBaseSettings } from '@/defaultObjects'
 
+/** AI工具配置 */
+interface AiToolConfig {
+  modelId?: string  // 模型的唯一标识（baseUrl + model）
+  systemPrompt?: string
+  userPrompt?: string
+  selectedPromptId?: string
+  includeExistingEntities?: boolean
+}
+
+/** AI工具持久化配置 */
+interface AiToolsSettings {
+  aiSuggestion?: AiToolConfig
+  proofread?: AiToolConfig
+  entityExtract?: AiToolConfig
+}
+
 // 全局样式管理器实例
 let styleManager: StyleManager | null = null
 
@@ -57,7 +73,13 @@ export const useSettingStore = defineStore('setting', {
       enableBackgroundImage: false,
       backgroundImageId: '',
       autoCompleteDelay: 0
-    } as BaseSettings
+    } as BaseSettings,
+    /** AI工具配置 */
+    aiToolsSettings: {
+      aiSuggestion: {},
+      proofread: {},
+      entityExtract: {}
+    } as AiToolsSettings
   }),
 
   getters: {
@@ -320,6 +342,21 @@ export const useSettingStore = defineStore('setting', {
     resetBaseSettings() {
       this.baseSettings = getDefaultBaseSettings()
       this.applyBaseSettings()
+    },
+
+    /** 保存AI工具配置 */
+    saveAiToolConfig(toolName: keyof AiToolsSettings, config: AiToolConfig) {
+      this.aiToolsSettings[toolName] = { ...config }
+    },
+
+    /** 获取AI工具配置 */
+    getAiToolConfig(toolName: keyof AiToolsSettings): AiToolConfig {
+      return this.aiToolsSettings[toolName] || {}
+    },
+
+    /** 清空AI工具配置 */
+    clearAiToolConfig(toolName: keyof AiToolsSettings) {
+      this.aiToolsSettings[toolName] = {}
     }
   }
 })

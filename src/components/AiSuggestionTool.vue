@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useModelsStore } from '@/stores/ModelsStore'
 import { usePromptsStore } from '@/stores/PromptsStore'
+import { useSettingStore } from '@/stores/SettingStore'
 import { openaiFetch, type OpenAiParams } from '@/apis'
 import { $tips } from '@/plugins/notyf'
 import { useSelectedArticleStore } from '@/stores/SelectedArticleStore'
@@ -10,6 +11,7 @@ import { articledb } from '@/db'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
+const settingStore = useSettingStore()
 const selectedArticleStore = useSelectedArticleStore()
 const selectedBookStore = useSelectedBookStore()
 
@@ -48,19 +50,61 @@ const canGenerate = computed(() => {
 })
 
 onMounted(async () => {
-  // 默认选择第一个模型
-  if (modelOptions.value.length > 0) {
+  // 加载保存的配置
+  const savedConfig = settingStore.getAiToolConfig('aiSuggestion')
+
+  // 恢复模型选择
+  if (savedConfig.modelId) {
+    const model = modelOptions.value.find(m => getModelId(m) === savedConfig.modelId)
+    if (model) {
+      selectedModel.value = model
+    } else {
+      // 如果保存的模型不存在，使用默认第一个模型
+      if (modelOptions.value.length > 0) {
+        selectedModel.value = modelOptions.value[0]
+      }
+    }
+  } else if (modelOptions.value.length > 0) {
+    // 没有保存的配置，使用默认第一个模型
     selectedModel.value = modelOptions.value[0]
+  }
+
+  // 恢复提示词
+  if (savedConfig.systemPrompt) {
+    systemPrompt.value = savedConfig.systemPrompt
+  } else {
+    systemPrompt.value = getDefaultSystemPrompt()
+  }
+
+  if (savedConfig.userPrompt) {
+    userPrompt.value = savedConfig.userPrompt
+  } else {
+    userPrompt.value = getDefaultUserPrompt()
   }
 
   // 加载当前书籍的所有文章
   await loadArticles()
+})
 
-  // 设置默认系统提示词
-  systemPrompt.value = getDefaultSystemPrompt()
+/** 生成模型的唯一标识 */
+function getModelId(model: OpenAiParams): string {
+  return `${model.baseUrl}|${model.model}`
+}
 
-  // 设置默认用户提示词
-  userPrompt.value = getDefaultUserPrompt()
+/** 保存配置（当用户修改时） */
+function saveConfig() {
+  if (!selectedModel.value) return
+
+  settingStore.saveAiToolConfig('aiSuggestion', {
+    modelId: getModelId(selectedModel.value),
+    systemPrompt: systemPrompt.value,
+    userPrompt: userPrompt.value
+  })
+}
+
+// 监听配置变化，自动保存
+watch([selectedModel, systemPrompt, userPrompt], () => {
+  saveConfig()
 })
 
 /** 加载文章列表 */

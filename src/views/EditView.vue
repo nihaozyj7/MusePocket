@@ -184,11 +184,19 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
     return
   }
 
-  articleBody.value.content = getCleanedEditorContent(editorRef.value.getBody())
+  // 清洗后的内容（这才是真正存入数据库的内容）
+  const cleanedContent = getCleanedEditorContent(editorRef.value.getBody())
+  articleBody.value.content = cleanedContent
   selectedArticleStore.v.modifiedTime = Date.now()
   selectedArticleStore.v.wordCount = countNonWhitespace(text)
   selectedBookStore.v.modifiedTime = Date.now()
 
+  // 先记录历史（使用清洗后的内容）
+  if (!skipHistory && selectedArticleStore.v?.id) {
+    await historyStore.recordChange(cleanedContent)
+  }
+
+  // 保存到数据库
   Promise.all([
     articledb.updateArticle(selectedArticleStore.v, articleBody.value),
     bookdb.updateBook(selectedBookStore.v)
@@ -203,17 +211,9 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
     editorRef.value.setSaveState('✅ 已保存')
   }
 
-  // 更新历史侧栏的当前文本
+  // 更新历史侧栏的当前文本（使用清洗后的内容）
   if (historySidebarRef.value) {
-    historySidebarRef.value.setCurrentText(text)
-  }
-
-  // 如果不是从撤销/重做触发的，则记录历史
-  if (!skipHistory) {
-    // 正常编辑保存，会在 Editor.vue 的 _emitUpdate 中自动记录
-  } else {
-    console.log('撤销/重做保存，跳过历史记录')
-    // 撤销/重做，不创建新的历史记录
+    historySidebarRef.value.setCurrentText(cleanedContent)
   }
 }
 
@@ -256,6 +256,11 @@ function openArticle(article: Article) {
         // 更新历史侧栏的当前文本
         if (historySidebarRef.value) {
           historySidebarRef.value.setCurrentText(res.content || '')
+          // 设置获取当前编辑器文本的回调（返回清洗后的内容）
+          historySidebarRef.value.setGetCurrentTextCallback(() => {
+            if (!editorRef.value) return ''
+            return getCleanedEditorContent(editorRef.value.getBody())
+          })
         }
       }
     })

@@ -99,10 +99,10 @@ const _emitUpdate = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
   history.push(text)
 
-  // 记录到历史管理器
-  if (selectedArticleStore.v?.id) {
-    historyStore.recordChange(text)
-  }
+  // 不再在这里记录历史，改为在 saveArticle 时统一处理
+  // if (selectedArticleStore.v?.id) {
+  //   historyStore.recordChange(text)
+  // }
 
   emit('update:articleBody', history.items[0], history.items[1])
 }

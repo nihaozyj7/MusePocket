@@ -11,6 +11,7 @@ const historyStore = useHistoryStore()
 
 const emit = defineEmits<{
   restore: [text: string]
+  getCurrentText: []
 }>()
 
 /** 历史记录列表（从 Pinia Store 读取） */
@@ -25,6 +26,8 @@ const comparedText = ref('')
 const visualDiffs = ref<VisualDiff[]>([])
 /** diff 弹出层引用 */
 const diffPopupRef = ref<InstanceType<typeof Popup> | null>(null)
+/** 获取当前编辑器文本的回调函数 */
+const getCurrentTextCallback = ref<(() => string) | null>(null)
 
 /** 格式化时间 */
 function formatTime(timestamp: number): string {
@@ -54,47 +57,17 @@ function formatTime(timestamp: number): string {
 
 /** 重建指定历史版本的文本 */
 async function reconstructHistoryText(targetHistory: DBHistoryRecord): Promise<string> {
-  // 找到最近的快照
+  // 使用 HistoryStore 的统一重建逻辑
   const targetIndex = histories.value.findIndex(h => h.id === targetHistory.id)
   if (targetIndex === -1) return ''
 
-  // 向前查找最近的快照
-  let baseText = ''
-  let startIndex = targetIndex
+  // 调用 HistoryStore 的 reconstructTextAtIndex 方法，确保与回退逻辑一致
+  const text = await historyStore.reconstructTextAtIndex(
+    selectedArticleStore.v?.id || '',
+    targetIndex
+  )
 
-  for (let i = targetIndex; i >= 0; i--) {
-    if (histories.value[i].isSnapshot && histories.value[i].fullContent) {
-      baseText = histories.value[i].fullContent!
-      startIndex = i
-      break
-    }
-  }
-
-  // 如果没有找到快照，使用第一条记录
-  if (!baseText && histories.value.length > 0) {
-    const first = histories.value[0]
-    if (first.fullContent) {
-      baseText = first.fullContent
-      startIndex = 0
-    }
-  }
-
-  // 从快照或起点应用所有 diff 到目标版本
-  let text = baseText
-  for (let i = startIndex; i <= targetIndex; i++) {
-    const record = histories.value[i]
-    if (i === startIndex && record.isSnapshot) continue // 跳过快照自身
-
-    try {
-      const diffs = JSON.parse(record.diffsJson)
-      const { applyDiff } = await import('@/historyUtils')
-      text = applyDiff(text, diffs)
-    } catch (err) {
-      console.error('应用 diff 失败:', err)
-    }
-  }
-
-  return text
+  return text || ''
 }
 
 /** 点击历史记录 */
@@ -105,10 +78,13 @@ async function handleHistoryClick(history: DBHistoryRecord) {
     // 重建历史版本的文本
     comparedText.value = await reconstructHistoryText(history)
 
+    // 获取当前编辑器的实时文本（而不是缓存的 currentText）
+    const realCurrentText = getCurrentTextCallback.value ? getCurrentTextCallback.value() : currentText.value
+
     // 计算与当前版本的 diff
     // 注意：第一个参数是旧版本（历史），第二个参数是新版本（当前）
     // 这样能正确显示：历史版本有但当前没有的是删除（-），历史版本没有但当前有的是新增（+）
-    let diffs = computeVisualDiff(currentText.value, comparedText.value)
+    let diffs = computeVisualDiff(comparedText.value, realCurrentText)
 
     // 重新排序：删除的行放在前面，添加的行放在后面
     diffs = sortDiffByType(diffs)
@@ -183,6 +159,11 @@ function setCurrentText(text: string) {
   currentText.value = text
 }
 
+/** 设置获取当前文本的回调函数 */
+function setGetCurrentTextCallback(callback: () => string) {
+  getCurrentTextCallback.value = callback
+}
+
 /** 刷新历史记录 */
 async function refresh() {
   await historyStore.refreshHistories()
@@ -196,6 +177,7 @@ watch(() => selectedArticleStore.v?.id, () => {
 
 defineExpose({
   setCurrentText,
+  setGetCurrentTextCallback,
   refresh
 })
 </script>

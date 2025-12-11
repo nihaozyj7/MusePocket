@@ -165,8 +165,35 @@ export function insertText(text: string) {
     : container.parentElement
 
   // 找到光标所在的顶层p标签（确保不处理嵌套p）
-  const targetP = targetElement?.closest('p')
-  if (!targetP) return
+  let targetP = targetElement?.closest('p')
+
+  // 如果没有找到p标签（空编辑器或光标在非p元素内），创建一个新的p标签
+  if (!targetP) {
+    // 查找编辑器根容器（contenteditable的div）
+    let editorRoot = targetElement
+    while (editorRoot && !editorRoot.hasAttribute('contenteditable')) {
+      editorRoot = editorRoot.parentElement
+    }
+
+    if (editorRoot) {
+      // 创建新的p标签并插入到编辑器中
+      targetP = document.createElement('p')
+      editorRoot.appendChild(targetP)
+
+      // 将光标移动到新创建的p标签内
+      const newRange = document.createRange()
+      newRange.selectNodeContents(targetP)
+      newRange.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(newRange)
+
+      // 更新range引用
+      range.setStart(targetP, 0)
+      range.setEnd(targetP, 0)
+    } else {
+      return // 找不到编辑器根容器，无法插入
+    }
+  }
 
   // 1. 拆分原p标签中光标前后的内容
   // 光标前内容

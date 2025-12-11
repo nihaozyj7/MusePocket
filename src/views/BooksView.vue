@@ -9,6 +9,7 @@ import { onMounted, ref, defineAsyncComponent, computed } from 'vue'
 import { $tips } from '@/plugins/notyf'
 import { articledb, entitydb } from '@/db.ts'
 import { $confirm } from '@/plugins/confirm'
+import { event_emit } from '@/eventManager'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -474,6 +475,11 @@ async function importFullDatabaseMerge() {
   }
 }
 
+/** 打开设置弹窗 */
+function openSettings() {
+  event_emit('openSettings')
+}
+
 </script>
 
 <template>
@@ -530,7 +536,7 @@ async function importFullDatabaseMerge() {
             <span v-if="settingStore.isDark">🌝 切换主题</span>
             <span v-else>☀️ 切换主题</span>
           </button>
-          <button style="margin-left: 1rem;">⚙️ 设置</button>
+          <button style="margin-left: 1rem;" @click="openSettings">⚙️ 设置</button>
         </div>
       </header>
       <main>
@@ -659,7 +665,7 @@ async function importFullDatabaseMerge() {
   <EditBookPopup ref="createBookPopupRef" @status:save="addBook" />
 
   <!-- 修改书籍弹出层 -->
-  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" title="✍️ 修改书籍信息" />
+  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" />
 
   <!-- 书籍回收站弹出层 -->
   <RecycleBinBookPopup ref="recycleBinBookPopupRef" @restored="handleBookRestored" />
@@ -717,7 +723,7 @@ async function importFullDatabaseMerge() {
 }
 
 .logo {
-  height: 2.5rem;
+  height: 2.7rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -731,7 +737,7 @@ async function importFullDatabaseMerge() {
 
 .operations {
   display: flex;
-  height: 2.2rem;
+  height: 2.5rem;
   align-items: center;
   padding: 0 .25rem;
   border-bottom: 1px solid var(--border-color);
@@ -836,7 +842,7 @@ async function importFullDatabaseMerge() {
 
 .toolbar {
   display: flex;
-  height: 2.5rem;
+  height: 2.7rem;
   border-bottom: 1px solid var(--border-color);
   justify-content: space-between;
   background-color: var(--background-secondary);

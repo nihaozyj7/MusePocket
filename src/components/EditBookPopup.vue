@@ -11,6 +11,11 @@ type Type = 'create' | 'edit'
 
 const editType = ref<Type>('create')
 
+// 计算弹窗标题
+const popupTitle = computed(() => {
+  return editType.value === 'edit' ? '✍️ 修改书籍信息' : '📓 新书'
+})
+
 const emit = defineEmits({
   'status:save': (book: Book) => true
 })
@@ -63,7 +68,7 @@ defineExpose({
 </script>
 
 <template>
-  <Popup title="📓 新书" ref="popupRef">
+  <Popup :title="popupTitle" ref="popupRef">
     <div style="width: 30rem; display: flex; align-items: center;">
       <div class="cover">
         <img :src="coverUrl" :alt="`${book.title}的封面`"></img>
@@ -79,7 +84,7 @@ defineExpose({
           <button @click="popupRef.close" style="margin-right: .5rem;">取消</button>
           <button @click="saveBook">保存修改</button>
         </div>
-        <button @click="saveBook" v-else>保存修改</button>
+        <button @click="saveBook" v-else>创建新书</button>
       </div>
     </div>
   </Popup>

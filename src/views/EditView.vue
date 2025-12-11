@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import SettingPopup from '@/components/SettingPopup.vue'
 import InsertSnippetPopup from '@/components/InsertSnippetPopup.vue'
 import HistoryViewPopup from '@/components/HistoryViewPopup.vue'
 import HistorySidebar from '@/components/HistorySidebar.vue'
@@ -20,6 +19,7 @@ import { useHistoryStore } from '@/stores/HistoryStore'
 import type { Article, ArticleBody } from '@/types.ts'
 import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@/utils.ts'
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
+import { event_emit } from '@/eventManager'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@/components/ContextMenu.vue'))
@@ -51,9 +51,6 @@ const historyStore = useHistoryStore()
 /** 拖拽相关状态 */
 const draggedItem = ref<Article | null>(null)
 const dragOverIndex = ref<number | null>(null)
-
-/** 设置弹出层 */
-const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
 
 /** 插入预设弹出层 */
 const insertSnippetPopupRef = ref<InstanceType<typeof InsertSnippetPopup> | null>(null)
@@ -614,6 +611,11 @@ async function exportAllArticles() {
   }
 }
 
+/** 打开设置弹窗 */
+function openSettings() {
+  event_emit('openSettings')
+}
+
 </script>
 
 <template>
@@ -669,7 +671,7 @@ async function exportAllArticles() {
           </div>
           <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
           <button title="导出备份文件和从备份文件导入" @click="openImportExportPopup">💾 导入导出</button>
-          <button title="软件设置" @click="settingPopupRef.show">⚙️ 配置</button>
+          <button title="软件设置" @click="openSettings">⚙️ 配置</button>
         </div>
       </header>
       <div class="bottom">
@@ -694,8 +696,6 @@ async function exportAllArticles() {
   </div>
   <!-- 右键菜单 -->
   <ContextMenu ref="articleContextMenuRef" />
-  <!-- 设置弹出层 -->
-  <SettingPopup ref="settingPopupRef" />
   <!-- 插入预设弹出层 -->
   <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
   <!-- 历史记录弹出层 -->

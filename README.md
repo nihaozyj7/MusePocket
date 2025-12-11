@@ -589,7 +589,7 @@ A: 当前使用富文本编辑器,暂不支持 Markdown 语法。
 如果你在使用过程中遇到问题或有任何建议:
 
 - 💬 提交 [Issue](https://github.com/nihaozyj7/MusePocket/issues)
-- 🎮 B站私信: [热爱游戏的猫猫](https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27)
+- 🎮 B站私信: [热爱游戏的猫猫](https://space.bilibili.com/39942486)
 - 💻 GitHub: [@nihaozyj7](https://github.com/nihaozyj7?tab=repositories)
 
 ## 📄 开源协议
@@ -604,6 +604,6 @@ A: 当前使用富文本编辑器,暂不支持 Markdown 语法。
 
 **Made with ❤️ by 热爱游戏的猫猫**
 
-🎮 [B站主页](https://www.bilibili.com/video/BV1HDmxBcEHQ/?spm_id_from=333.1007.tianma.2-3-6.click&vd_source=cb5b4f84bcb3ce17ed093809fcb41e27) | 💻 [GitHub](https://github.com/nihaozyj7?tab=repositories)
+🎮 [B站主页](https://space.bilibili.com/39942486) | 💻 [GitHub](https://github.com/nihaozyj7?tab=repositories)
 
 </div>

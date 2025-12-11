@@ -108,6 +108,12 @@ export const useSettingStore = defineStore('setting', {
       // 应用基准字体大小
       document.documentElement.style.fontSize = `${this.baseSettings.baseFontSize}px`
 
+      // 应用编辑区文字尺寸
+      const editor = document.querySelector('.tu-container .edit .body') as HTMLElement
+      if (editor) {
+        editor.style.fontSize = `${this.baseSettings.editorFontSize}rem`
+      }
+
       // 初始化样式管理器并应用行高和段间距
       const manager = getStyleManager()
       manager.add('.body>p', { minHeight: this.baseSettings.lineHeight + 'rem' })

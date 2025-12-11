@@ -590,14 +590,14 @@ export const historydb = new class {
   }
 
   /**
-   * 获取文章的所有历史记录（按序号排序）
+   * 获取文章的所有历史记录（按序号倒序排序，最新的在前）
    */
   async getArticleHistories(articleId: string): Promise<DBHistoryRecord[]> {
     try {
       const store = db.transaction(['histories'], 'readonly').objectStore('histories')
       const records = await store.index('by-article').getAll(articleId)
-      // 按序号排序
-      return records.sort((a, b) => a.sequence - b.sequence)
+      // 按序号倒序排序，最新的在前
+      return records.sort((a, b) => b.sequence - a.sequence)
     } catch (err: any) {
       console.error('获取历史记录失败:', err)
       return []

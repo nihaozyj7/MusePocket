@@ -75,6 +75,9 @@ onMounted(() => {
   document.addEventListener('selectionchange', handleTextSelect)
   settingStore.setEditorWidthMode()
 
+  // 应用编辑区文字尺寸
+  bodyRef.value.style.fontSize = `${settingStore.baseSettings.editorFontSize}rem`
+
   if (settingStore.baseSettings.enableParagraphSpacing) {
     styleManager.add('.body>p', {
       'margin-bottom': settingStore.baseSettings.lineHeight + 'rem'

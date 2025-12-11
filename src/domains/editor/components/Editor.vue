@@ -264,10 +264,21 @@ function handleBodyCopy(e: ClipboardEvent) {
   const range = sel.getRangeAt(0)
   const fragment = range.cloneContents()
 
-  // 通过临时DOM清洗文本
+  // 通过临时DOM提取文本，保留段落换行
   const tempDiv = document.createElement('div')
   tempDiv.appendChild(fragment)
-  const cleanedText = tempDiv.innerText
+
+  // 遍历所有<p>标签，用换行符连接
+  const paragraphs = Array.from(tempDiv.querySelectorAll('p'))
+  let cleanedText = ''
+
+  if (paragraphs.length > 0) {
+    // 如果有p标签，按p标签提取文本并用换行连接
+    cleanedText = paragraphs.map(p => p.innerText || p.textContent || '').join('\n')
+  } else {
+    // 如果没有p标签（单行选择），直接使用innerText
+    cleanedText = tempDiv.innerText || tempDiv.textContent || ''
+  }
 
   // 写入剪贴板
   e.clipboardData?.setData('text/plain', cleanedText)
@@ -308,18 +319,21 @@ function handleBodyPaste(e: ClipboardEvent) {
 
   e.preventDefault()
 
-  // 获取剪贴板的HTML内容或纯文本
-  let text = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain')
+  // 优先获取纯文本格式，保留换行符
+  let cleanedText = e.clipboardData.getData('text/plain')
 
-  // 通过DOM清洗文本
-  const tempDiv = document.createElement('div')
-  tempDiv.innerHTML = text
-  const cleanedText = tempDiv.innerText
+  // 如果没有纯文本，则尝试从HTML中提取
+  if (!cleanedText) {
+    const htmlText = e.clipboardData.getData('text/html')
+    if (htmlText) {
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = htmlText
+      cleanedText = tempDiv.innerText
+    }
+  }
 
-  // 使用一键排版的逻辑清洗文本
-  const cleanTextWithFormat = cleanedText.trim()
-
-  insertText(cleanTextWithFormat)
+  // 不要使用trim()，保留换行符
+  insertText(cleanedText)
 
   // 粘贴后自动触发排版
   setTimeout(() => {

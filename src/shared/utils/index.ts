@@ -591,8 +591,8 @@ export function getCleanedEditorContent(container: HTMLElement): string {
    */
   function traverse(node: Node) {
     if (node.nodeType === Node.TEXT_NODE) {
-      // 压缩空格，去掉首尾换行
-      const text = node.textContent?.replace(/\s+/g, ' ') ?? ''
+      // 获取文本内容，保留换行符
+      const text = node.textContent ?? ''
       if (text.trim()) {
         result.push(text)
       }
@@ -618,13 +618,17 @@ export function getCleanedEditorContent(container: HTMLElement): string {
 
   // 最后统一处理多行和首尾空格
   let content = result.join('')
-  content = content
-    .split(/\n+/)        // 多个换行压缩为一个
-    .map(line => line.trim()) // 每行去掉首尾空格
-    .filter(line => line.length > 0) // 去掉空行
-    .join('\n')
 
-  return content
+  // 按换行分割
+  let lines = content.split('\n')
+
+  // 每行去掉首尾空格
+  lines = lines.map(line => line.trim())
+
+  // 移除所有空行（不保留任何空行）
+  lines = lines.filter(line => line !== '')
+
+  return lines.join('\n')
 }
 
 

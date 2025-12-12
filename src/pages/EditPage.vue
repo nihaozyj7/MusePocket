@@ -18,7 +18,7 @@ import { useSelectedBookStore } from '@domains/library/stores/selected-book.stor
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { useHistoryStore } from '@domains/editor/stores/history.store'
 import type { Article, ArticleBody } from '@shared/types'
-import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition } from '@shared/utils'
+import { countNonWhitespace, exportTxt, getCleanedEditorContent, trimAndReduceNewlines, waitFor, insertText, saveCursorPosition, restoreCursorPosition, saveCursorTextPosition, restoreCursorTextPosition } from '@shared/utils'
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
 import { event_emit, event_on, event_off } from '@shared/utils/event-bus'
 import { EntityMappingService } from '@shared/utils/entity-mapping'
@@ -345,20 +345,20 @@ function handleInsertSnippet(content: string) {
 async function handleUndo() {
   if (!historyStore.canUndo || !editorRef.value) return
 
+  // 保存光标的文本位置（基于文本偏移量）
+  const cursorOffset = saveCursorTextPosition(editorRef.value.getBody())
+
   const content = await historyStore.undo()
   if (content !== null) {
-    // 保存光标位置
-    const cursorPos = saveCursorPosition()
-
     // 重置编辑器内容
     editorRef.value.resetBody(content)
 
-    // 恢复光标位置
+    // 根据文本偏移量恢复光标位置
     setTimeout(() => {
-      restoreCursorPosition(cursorPos)
+      if (cursorOffset !== null && editorRef.value) {
+        restoreCursorTextPosition(editorRef.value.getBody(), cursorOffset)
+      }
     }, 50)
-
-    $tips.success('已撤销')
   }
 }
 
@@ -366,20 +366,20 @@ async function handleUndo() {
 async function handleRedo() {
   if (!historyStore.canRedo || !editorRef.value) return
 
+  // 保存光标的文本位置（基于文本偏移量）
+  const cursorOffset = saveCursorTextPosition(editorRef.value.getBody())
+
   const content = await historyStore.redo()
   if (content !== null) {
-    // 保存光标位置
-    const cursorPos = saveCursorPosition()
-
     // 重置编辑器内容
     editorRef.value.resetBody(content)
 
-    // 恢复光标位置
+    // 根据文本偏移量恢复光标位置
     setTimeout(() => {
-      restoreCursorPosition(cursorPos)
+      if (cursorOffset !== null && editorRef.value) {
+        restoreCursorTextPosition(editorRef.value.getBody(), cursorOffset)
+      }
     }, 50)
-
-    $tips.success('已重做')
   }
 }
 
@@ -392,6 +392,9 @@ function showHistoryPopup() {
 async function handleRestoreFromHistory(historyId: string) {
   if (!editorRef.value) return
 
+  // 保存光标的文本位置（基于文本偏移量）
+  const cursorOffset = saveCursorTextPosition(editorRef.value.getBody())
+
   // 获取目标版本内容
   const content = await historyStore.revertToHistory(historyId)
   if (content === null) {
@@ -401,6 +404,13 @@ async function handleRestoreFromHistory(historyId: string) {
 
   // 重置编辑器内容（不保存新版本，只移动指针）
   editorRef.value.resetBody(content)
+
+  // 根据文本偏移量恢复光标位置
+  setTimeout(() => {
+    if (cursorOffset !== null && editorRef.value) {
+      restoreCursorTextPosition(editorRef.value.getBody(), cursorOffset)
+    }
+  }, 50)
 
   // 更新数据库
   articleBody.value.content = content

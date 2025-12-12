@@ -238,6 +238,15 @@ function handleTextSelect() {
 
   if (!sel.isCollapsed) {
     statusBarRight.value.selectedWordCount = countNonWhitespace(sel.toString())
+    // 当用户选中了文本，隐藏悬浮层并阻止后续触发
+    if (hoverTimerId) {
+      clearTimeout(hoverTimerId)
+      hoverTimerId = null
+    }
+    if (isHovering) {
+      entityHoverRef.value.hide()
+      isHovering = false
+    }
   } else {
     statusBarRight.value.selectedWordCount = 0
   }
@@ -371,13 +380,21 @@ let isHovering = false
 let hoverTimerId: number | null = null
 /** 上次悬浮层关闭的时间，如果小于 hoverTimer ，则无需等待，直接显示 */
 let lastTimer = 0
+/** 用户是否正在选择文本 */
+let isSelecting = false
 
 /** 鼠标进入时 */
 function handleBodyMouseover(e: MouseEvent) {
+  // 如果用户正在选择文本，不触发悬浮层
+  if (isSelecting) return
+
   const target = e.target as HTMLElement
   const _ht = (Date.now() - lastTimer < hoverTimer) ? 0 : hoverTimer
   if (target.dataset.entityId) {
     hoverTimerId = setTimeout(() => {
+      // 再次检查是否正在选择
+      if (isSelecting) return
+
       isHovering = true
       document.addEventListener('mousemove', handleBodyMousemove)
       entityHoverRef.value.show(entityStore.v.find(e => e.id === target.dataset.entityId), e.clientX + 20, e.clientY)
@@ -400,6 +417,20 @@ function handleBodyMouseout(e: MouseEvent) {
     lastTimer = Date.now()
     document.removeEventListener('mousemove', handleBodyMousemove)
   }
+}
+
+/** 鼠标按下时 */
+function handleBodyMousedown(e: MouseEvent) {
+  // 用户按下鼠标，可能要开始选择文本
+  isSelecting = true
+}
+
+/** 鼠标抬起时 */
+function handleBodyMouseup(e: MouseEvent) {
+  // 延迟重置选择状态，确保 selectionchange 事件先触发
+  setTimeout(() => {
+    isSelecting = false
+  }, 10)
 }
 
 /** 鼠标单击时 */
@@ -669,7 +700,7 @@ defineExpose({
       </div>
       <!-- 文字编辑区 -->
       <div class="edit scroll-container">
-        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @copy="handleBodyCopy" @keydown="handleBodyKeydown" @click="handleBodyClick" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
+        <div class="body" contenteditable ref="bodyRef" @input="handleBodyInput" @paste="handleBodyPaste" @copy="handleBodyCopy" @keydown="handleBodyKeydown" @click="handleBodyClick" @mousedown="handleBodyMousedown" @mouseup="handleBodyMouseup" @mouseover="handleBodyMouseover" @mouseout="handleBodyMouseout"></div>
         <!-- 绘制背景，比如编辑区自定义图片，网格，线段等 -->
         <canvas ref="bodyBackgroundRef" @click="moveCaretToEndAndScrollToBottom(bodyRef)"></canvas>
       </div>

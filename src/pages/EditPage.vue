@@ -232,11 +232,11 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
       }
 
       const { saveNewVersion } = await import('@domains/editor/services/history.service')
+      // saveNewVersion 内部已经更新 KV 存储
       await saveNewVersion(selectedArticleStore.v.id, oldText, cleanedContent)
 
-      // 刷新历史记录列表并重置索引到栈顶
-      await historyStore.refreshHistories()
-      historyStore.resetIndex()
+      // 重新加载历史记录列表（从数据库加载，从 KV 恢复当前版本）
+      await historyStore.loadHistories(selectedArticleStore.v.id, true)
     } catch (err) {
       console.error('保存历史记录失败:', err)
     }

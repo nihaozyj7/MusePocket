@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { historydb } from '@shared/db'
+import { historydb, kvdb } from '@shared/db'
 import { uid } from '@shared/utils'
 import type { ArticleHistoryRecord } from '@shared/types'
 import { reconstructContentAtIndex, saveNewVersion } from '@domains/editor/services/history.service'
@@ -93,24 +93,52 @@ export const useHistoryStore = defineStore('history', {
 
     /**
      * 从数据库加载历史记录
+     * @param resetIndex 是否从数据库加载当前版本（默认 true）
      */
-    async loadHistories(articleId: string) {
+    async loadHistories(articleId: string, resetIndex: boolean = true) {
       const histories = await historydb.getArticleHistories(articleId)
       this.currentHistories = histories
 
+      let currentIndex = -1
+
+      if (resetIndex) {
+        // 从数据库加载当前历史版本 ID
+        const currentHistoryId = await kvdb.getCurrentHistoryId(articleId)
+        if (currentHistoryId) {
+          // 查找该历史记录的索引
+          const index = histories.findIndex(h => h.id === currentHistoryId)
+          if (index !== -1) {
+            currentIndex = index
+            console.log(`[加载历史] 从数据库恢复当前版本索引: ${currentIndex} (ID: ${currentHistoryId})`)
+          } else {
+            console.warn(`[加载历史] 当前版本 ID ${currentHistoryId} 未找到，重置为 -1`)
+          }
+        }
+      } else {
+        // 保持内存中的状态
+        const existingState = this.articleStates.get(articleId)
+        currentIndex = existingState ? existingState.currentIndex : -1
+      }
+
+      // 边界检查
+      if (currentIndex >= histories.length) {
+        console.warn(`[加载历史] currentIndex (${currentIndex}) 超出范围 (${histories.length})，重置为 -1`)
+        currentIndex = -1
+      }
+
       // 更新状态
       this.articleStates.set(articleId, {
-        currentIndex: -1, // -1 表示在最新版本
+        currentIndex,
         totalCount: histories.length
       })
     },
 
     /**
-     * 刷新当前文章的历史记录列表
+     * 刷新当前文章的历史记录列表（保持当前索引位置）
      */
     async refreshHistories() {
       if (!this.currentArticleId) return
-      await this.loadHistories(this.currentArticleId)
+      await this.loadHistories(this.currentArticleId, false) // 不重新加载当前版本
     },
 
     /**
@@ -131,6 +159,9 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
+
+      // 持久化当前版本
+      await this.saveCurrentVersion()
 
       return content
     },
@@ -153,6 +184,8 @@ export const useHistoryStore = defineStore('history', {
         if (!topHistory || !topHistory.fullContent) return null
 
         state.currentIndex = -1
+        // 持久化当前版本
+        await this.saveCurrentVersion()
         return topHistory.fullContent
       }
 
@@ -162,6 +195,9 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
+
+      // 持久化当前版本
+      await this.saveCurrentVersion()
 
       return content
     },
@@ -187,6 +223,8 @@ export const useHistoryStore = defineStore('history', {
       if (state) {
         state.currentIndex = targetIndex
         console.log(`[回退] currentIndex 设置为: ${targetIndex}`)
+        // 持久化当前版本
+        await this.saveCurrentVersion()
       }
 
       return content
@@ -246,13 +284,24 @@ export const useHistoryStore = defineStore('history', {
 
     /**
      * 重置索引到栈顶（-1）
+     * @param newTopHistoryId 新的栈顶历史记录 ID（可选，用于更新 KV 存储）
      */
-    resetIndex() {
+    async resetIndex(newTopHistoryId?: string) {
       if (!this.currentArticleId) return
       const state = this.articleStates.get(this.currentArticleId)
       if (state) {
         state.currentIndex = -1
         console.log(`[重置] currentIndex 设置为: -1`)
+
+        // 如果提供了新栈顶 ID，更新 KV 存储
+        if (newTopHistoryId) {
+          await kvdb.setCurrentHistoryId(this.currentArticleId, newTopHistoryId)
+          console.log(`[重置] 已更新 KV 存储的栈顶 ID: ${newTopHistoryId}`)
+        } else {
+          // 否则删除 KV 记录（表示在最新版本）
+          await kvdb.deleteCurrentHistoryId(this.currentArticleId)
+          console.log(`[重置] 已删除 KV 记录，当前在最新版本`)
+        }
       }
     },
 
@@ -275,6 +324,30 @@ export const useHistoryStore = defineStore('history', {
       }
 
       console.log(`[舍弃记录] 共删除 ${recordsToDelete.length} 条记录`)
+    },
+
+    /**
+     * 保存当前版本到数据库（使用 KV 存储）
+     */
+    async saveCurrentVersion() {
+      if (!this.currentArticleId) return
+
+      const state = this.articleStates.get(this.currentArticleId)
+      if (!state) return
+
+      // 如果在最新版本，删除 KV 记录
+      if (state.currentIndex === -1) {
+        await kvdb.deleteCurrentHistoryId(this.currentArticleId)
+        console.log(`[保存版本] 已删除 KV 记录，当前在最新版本`)
+        return
+      }
+
+      // 获取当前版本的历史 ID
+      const currentHistory = this.currentHistories[state.currentIndex]
+      if (currentHistory) {
+        await kvdb.setCurrentHistoryId(this.currentArticleId, currentHistory.id)
+        console.log(`[保存版本] 已保存当前版本 ID: ${currentHistory.id} (索引: ${state.currentIndex})`)
+      }
     }
   }
 })

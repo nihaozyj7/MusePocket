@@ -150,6 +150,12 @@ export interface AppDB extends DBSchema {
       'by-article': string
     }
   }
+
+  /** KV 存储表（用于存储当前历史版本等键值对） */
+  kvStore: {
+    key: string
+    value: KVRecord
+  }
 }
 
 export type Status = { success: boolean; message?: string }
@@ -247,6 +253,14 @@ export interface ArticleHistoryRecord extends Time {
   diffFromPrev: string | null
   /** 完整快照内容（只有栈顶版本有值，其他为 null）*/
   fullContent: string | null
+}
+
+/** KV 存储记录类型 */
+export interface KVRecord {
+  /** 键名 */
+  key: string
+  /** 值（JSON 字符串或普通字符串） */
+  value: string
 }
 
 /** 草稿 */

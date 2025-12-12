@@ -1,5 +1,5 @@
 import { diffLines, type Change } from 'diff'
-import { historydb } from '@shared/db'
+import { historydb, kvdb } from '@shared/db'
 import { uid } from '@shared/utils'
 import type { ArticleHistoryRecord } from '@shared/types'
 
@@ -129,12 +129,13 @@ export async function reconstructContentAtIndex(
  * @param articleId 文章 ID
  * @param oldContent 旧内容（数据库中的当前内容）
  * @param newContent 新内容
+ * @returns 新创建的历史记录 ID
  */
 export async function saveNewVersion(
   articleId: string,
   oldContent: string,
   newContent: string
-): Promise<void> {
+): Promise<string> {
   try {
     const now = Date.now()
 
@@ -161,6 +162,13 @@ export async function saveNewVersion(
     // 3. 清除旧栈顶的快照（在新记录创建后）
     const clearResult = await historydb.clearOldTopSnapshot(articleId)
     console.log(`[保存版本] 清除旧快照: ${clearResult.success}`)
+
+    // 4. 更新 KV 存储中的当前版本为新栈顶 ID
+    await kvdb.setCurrentHistoryId(articleId, newRecord.id)
+    console.log(`[保存版本] 已更新 KV 存储的当前版本 ID: ${newRecord.id}`)
+
+    // 5. 返回新记录的 ID
+    return newRecord.id
   } catch (err: any) {
     console.error('保存版本失败:', err)
     throw err

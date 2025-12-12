@@ -132,21 +132,22 @@ export interface AppDB extends DBSchema {
     key: string
     value: ImageBase64
   }
-  /** 历史记录表（已废弃，功能已移除） */
-  // histories: {
-  //   key: string
-  //   value: DBHistoryRecord
-  //   indexes: {
-  //     'by-article': string
-  //     'by-sequence': number
-  //   }
-  // }
+
   /** 草稿表 */
   drafts: {
     key: string
     value: Draft
     indexes: {
       'by-book': string
+    }
+  }
+
+  /** 历史记录表 */
+  articleHistories: {
+    key: string
+    value: ArticleHistoryRecord
+    indexes: {
+      'by-article': string
     }
   }
 }
@@ -236,7 +237,17 @@ export interface TextSnippet {
   content: string
 }
 
-// 历史记录相关类型已完全移除（DiffOperation, HistoryRecord, DBHistoryRecord）
+/** 历史记录类型 */
+export interface ArticleHistoryRecord extends Time {
+  /** 历史记录ID */
+  id: string
+  /** 所属文章ID */
+  articleId: string
+  /** 从上一版本到本版本的 diff（JSON 字符串）*/
+  diffFromPrev: string | null
+  /** 完整快照内容（只有栈顶版本有值，其他为 null）*/
+  fullContent: string | null
+}
 
 /** 草稿 */
 export interface Draft extends Time {

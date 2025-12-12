@@ -1,29 +1,11 @@
 import { defineStore } from 'pinia'
-// historydb 已删除，功能已移除
-// import { historydb } from '@shared/db'
+import { historydb } from '@shared/db'
 import { uid } from '@shared/utils'
-// DBHistoryRecord 类型已删除
-// import type { DBHistoryRecord } from '@shared/types'
-// computeDiff 功能已删除
-// import { computeDiff } from '@domains/editor/services/history.service'
-
-// 为 UI 组件提供的 mock 类型
-interface MockHistoryRecord {
-  id: string
-  articleId: string
-  sequence: number
-  diffsJson: string
-  fullContent?: string
-  isSnapshot: boolean
-  createdTime: number
-  modifiedTime: number
-  deletedTime: number
-}
+import type { ArticleHistoryRecord } from '@shared/types'
+import { reconstructContentAtIndex, saveNewVersion } from '@domains/editor/services/history.service'
 
 interface ArticleHistoryState {
-  /** 当前栈顶快照（用于下次对比和撤销操作的基准） */
-  topSnapshot: string
-  /** 当前索引位置（指向当前正在编辑的版本，-1表示在最新版本） */
+  /** 当前索引位置（指向当前正在编辑的版本，-1 表示在最新版本）*/
   currentIndex: number
   /** 总历史记录数 */
   totalCount: number
@@ -34,17 +16,14 @@ interface HistoryState {
   articleStates: Map<string, ArticleHistoryState>
   /** 当前激活的文章ID */
   currentArticleId: string | null
-  /** 每个文章的序号计数器 */
-  sequenceCounters: Map<string, number>
-  /** 当前文章的历史记录列表（用于UI展示，mock数据） */
-  currentHistories: MockHistoryRecord[]
+  /** 当前文章的历史记录列表（用于 UI 展示）*/
+  currentHistories: ArticleHistoryRecord[]
 }
 
 export const useHistoryStore = defineStore('history', {
   state: (): HistoryState => ({
     articleStates: new Map(),
     currentArticleId: null,
-    sequenceCounters: new Map(),
     currentHistories: []
   }),
 
@@ -107,112 +86,195 @@ export const useHistoryStore = defineStore('history', {
     /**
      * 初始化或切换到指定文章
      */
-    async initArticle(articleId: string, initialText: string = '') {
-      // 功能已移除，仅保留空实现
+    async initArticle(articleId: string) {
+      this.currentArticleId = articleId
+      await this.loadHistories(articleId)
     },
 
     /**
      * 从数据库加载历史记录
      */
-    async loadHistoriesFromDB(articleId: string, initialText: string) {
-      // 功能已移除，仅保留空实现
-    },
+    async loadHistories(articleId: string) {
+      const histories = await historydb.getArticleHistories(articleId)
+      this.currentHistories = histories
 
-    /**
-     * 获取下一个序号
-     */
-    getNextSequence(articleId: string): number {
-      // 功能已移除，仅保留空实现
-      return 0
+      // 更新状态
+      this.articleStates.set(articleId, {
+        currentIndex: -1, // -1 表示在最新版本
+        totalCount: histories.length
+      })
     },
 
     /**
      * 刷新当前文章的历史记录列表
      */
     async refreshHistories() {
-      // 功能已移除，仅保留空实现
-    },
-
-    /**
-     * 记录文本变更
-     * @param newText 新文本
-     * @param oldText 旧文本（栈顶快照）
-     */
-    async recordChange(newText: string, oldText: string) {
-      // 功能已移除，仅保留空实现
-    },
-
-    /**
-     * 删除指定索引之后的所有历史记录
-     */
-    async deleteHistoriesAfterIndex(articleId: string, index: number) {
-      // 功能已移除，仅保留空实现
-    },
-
-    /**
-     * 保存变更到数据库
-     * 逻辑：
-     * 1. 移除旧栈顶的快照（如果存在）
-     * 2. 保存新记录到栈顶：快照(newText) + diff(oldText->newText)
-     */
-    async saveChangeToDB(articleId: string, oldText: string, newText: string) {
-      // 功能已移除，仅保留空实现
+      if (!this.currentArticleId) return
+      await this.loadHistories(this.currentArticleId)
     },
 
     /**
      * 撤销：向历史方向移动
      */
     async undo(): Promise<string | null> {
-      // 功能已移除，仅保留空实现
-      return null
+      if (!this.canUndo || !this.currentArticleId) return null
+
+      const state = this.articleStates.get(this.currentArticleId)
+      if (!state) return null
+
+      // 计算目标索引
+      const targetIndex = state.currentIndex === -1 ? 0 : state.currentIndex + 1
+
+      // 重建内容
+      const content = await reconstructContentAtIndex(this.currentArticleId, targetIndex)
+      if (content === null) return null
+
+      // 更新索引
+      state.currentIndex = targetIndex
+
+      return content
     },
 
     /**
      * 重做：向当前方向移动
      */
     async redo(): Promise<string | null> {
-      // 功能已移除，仅保留空实现
-      return null
+      if (!this.canRedo || !this.currentArticleId) return null
+
+      const state = this.articleStates.get(this.currentArticleId)
+      if (!state) return null
+
+      // 计算目标索引
+      const targetIndex = state.currentIndex - 1
+
+      // 如果目标是 -1，直接返回栈顶快照
+      if (targetIndex === -1) {
+        const topHistory = await historydb.getTopHistory(this.currentArticleId)
+        if (!topHistory || !topHistory.fullContent) return null
+
+        state.currentIndex = -1
+        return topHistory.fullContent
+      }
+
+      // 重建内容
+      const content = await reconstructContentAtIndex(this.currentArticleId, targetIndex)
+      if (content === null) return null
+
+      // 更新索引
+      state.currentIndex = targetIndex
+
+      return content
     },
 
     /**
-     * 重建指定索引位置的文本
-     * 逻辑：
-     * 1. 从栈顶快照开始
-     * 2. 从栈顶向目标索引方向反向应用diff
+     * 回退到指定的历史版本（移动指针，不创建新版本）
+     * @param historyId 历史记录 ID
+     * @returns 重建的内容
      */
-    async reconstructTextAtIndex(articleId: string, index: number): Promise<string | null> {
-      // 功能已移除，仅保留空实现
-      return null
+    async revertToHistory(historyId: string): Promise<string | null> {
+      if (!this.currentArticleId) return null
+
+      // 查找目标历史记录的索引
+      const targetIndex = this.currentHistories.findIndex(h => h.id === historyId)
+      if (targetIndex === -1) return null
+
+      // 重建内容
+      const content = await reconstructContentAtIndex(this.currentArticleId, targetIndex)
+      if (content === null) return null
+
+      // 移动指针到目标位置
+      const state = this.articleStates.get(this.currentArticleId)
+      if (state) {
+        state.currentIndex = targetIndex
+        console.log(`[回退] currentIndex 设置为: ${targetIndex}`)
+      }
+
+      return content
     },
 
     /**
-     * 回退到指定的历史版本
+     * 获取指定版本的内容（用于预览）
      */
-    async restoreToHistory(historyId: string): Promise<string | null> {
-      // 功能已移除，仅保留空实现
-      return null
+    async getHistoryContent(historyId: string): Promise<string | null> {
+      if (!this.currentArticleId) return null
+
+      const targetIndex = this.currentHistories.findIndex(h => h.id === historyId)
+      if (targetIndex === -1) return null
+
+      return await reconstructContentAtIndex(this.currentArticleId, targetIndex)
     },
 
     /**
      * 清除指定文章的历史记录
      */
-    clearArticleHistory(articleId: string) {
-      // 功能已移除，仅保留空实现
+    async clearArticleHistory(articleId: string) {
+      await historydb.deleteArticleHistories(articleId)
+      this.articleStates.delete(articleId)
+      if (this.currentArticleId === articleId) {
+        this.currentHistories = []
+      }
     },
 
     /**
      * 清除所有历史记录
      */
     clearAll() {
-      // 功能已移除，仅保留空实现
+      this.articleStates.clear()
+      this.currentArticleId = null
+      this.currentHistories = []
     },
 
     /**
-     * 重置当前文章的历史记录
+     * 重置当前文章的状态
      */
-    resetCurrent(text: string = '') {
-      // 功能已移除，仅保留空实现
+    resetCurrent() {
+      if (!this.currentArticleId) return
+      const state = this.articleStates.get(this.currentArticleId)
+      if (state) {
+        state.currentIndex = -1
+      }
+    },
+
+    /**
+     * 获取当前索引
+     */
+    getCurrentIndex(): number {
+      if (!this.currentArticleId) return -1
+      const state = this.articleStates.get(this.currentArticleId)
+      return state ? state.currentIndex : -1
+    },
+
+    /**
+     * 重置索引到栈顶（-1）
+     */
+    resetIndex() {
+      if (!this.currentArticleId) return
+      const state = this.articleStates.get(this.currentArticleId)
+      if (state) {
+        state.currentIndex = -1
+        console.log(`[重置] currentIndex 设置为: -1`)
+      }
+    },
+
+    /**
+     * 舍弃当前索引到栈顶之间的记录
+     * @param currentIndex 当前索引
+     */
+    async discardRecordsAfterIndex(currentIndex: number) {
+      if (!this.currentArticleId || currentIndex <= 0) return
+
+      console.log(`[舍弃记录] 开始舍弃索引 0 到 ${currentIndex - 1} 的记录`)
+
+      // 获取需要删除的记录 ID
+      const recordsToDelete = this.currentHistories.slice(0, currentIndex)
+
+      // 从数据库中删除
+      for (const record of recordsToDelete) {
+        await historydb.deleteHistory(record.id)
+        console.log(`[舍弃记录] 已删除: ${record.id}`)
+      }
+
+      console.log(`[舍弃记录] 共删除 ${recordsToDelete.length} 条记录`)
     }
   }
 })

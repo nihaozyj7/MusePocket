@@ -1,53 +1,30 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
-import { computeVisualDiff, type VisualDiff } from '@domains/editor/services/history.service'
+import { useHistoryStore } from '@domains/editor/stores/history.store'
+import { computeDiff, type DiffOperation } from '@domains/editor/services/history.service'
 import { Popup } from '@shared/components'
-import { uid } from '@/shared/utils'
-
-// 为 UI 提供的 mock 类型
-interface MockHistoryRecord {
-  id: string
-  articleId: string
-  difference: [],
-  fullContent?: string
-  createdTime: number
-}
+import type { ArticleHistoryRecord } from '@shared/types'
 
 const selectedArticleStore = useSelectedArticleStore()
+const historyStore = useHistoryStore()
 
 const emit = defineEmits<{
-  restore: [text: string]
-  getCurrentText: []
+  restore: [historyId: string]
 }>()
-const mockHistories = ref<MockHistoryRecord[]>([
-  {
-    id: uid(),
-    articleId: '',
-    difference: [],
-    fullContent: '得到',
-    createdTime: Date.now() - 3600000,
-  },
-  {
-    id: uid(),
-    articleId: '',
-    difference: [],
-    createdTime: Date.now() - 4600000,
-  },
-  {
-    id: uid(),
-    articleId: '',
-    difference: [],
-    createdTime: Date.now() - 5600000,
-  }
-])
 
-const histories = computed(() => mockHistories.value)
+
+const histories = computed(() => historyStore.currentHistories)
 /** 选中的历史记录 */
-const selectedHistory = ref<MockHistoryRecord | null>(null)
+const selectedHistory = ref<ArticleHistoryRecord | null>(null)
 /** 当前文章的文本 */
 const currentText = ref('')
 /** 可视化 diff 结果 */
+interface VisualDiff {
+  type: 'added' | 'removed' | 'unchanged'
+  content: string
+  lineNumber?: number
+}
 const visualDiffs = ref<VisualDiff[]>([])
 /** diff 弹出层引用 */
 const diffPopupRef = ref<InstanceType<typeof Popup> | null>(null)
@@ -96,15 +73,72 @@ function formatTime(timestamp: number): string {
 }
 
 /** 点击历史记录 */
-async function handleHistoryClick(history: MockHistoryRecord) {
-  // 功能已移除，仅保留空实现
+async function handleHistoryClick(history: ArticleHistoryRecord) {
   selectedHistory.value = history
-  diffPopupRef.value.show()
+
+  // 获取目标版本内容
+  const historyContent = await historyStore.getHistoryContent(history.id)
+  if (historyContent === null) {
+    console.error('无法重建历史版本内容')
+    return
+  }
+
+  // 获取当前内容
+  const current = getCurrentTextCallback.value ? getCurrentTextCallback.value() : currentText.value
+
+  // 计算 diff（注意：从当前版本到目标版本）
+  const diffs = computeDiff(current, historyContent)
+
+  // 转换为可视化 diff
+  visualDiffs.value = convertToVisualDiff(diffs, current, historyContent)
+
+  diffPopupRef.value?.show()
+}
+
+/** 将 diff 操作转换为可视化格式 */
+function convertToVisualDiff(diffs: DiffOperation[], oldText: string, newText: string): VisualDiff[] {
+  const result: VisualDiff[] = []
+  let lineNumber = 1
+
+  for (const diff of diffs) {
+    const lines = diff.value.split('\n')
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+
+      // 跳过最后一个空行（split 后的副产品）
+      if (i === lines.length - 1 && line === '') continue
+
+      if (diff.type === 'add') {
+        result.push({
+          type: 'added',
+          content: line,
+          lineNumber: lineNumber++
+        })
+      } else if (diff.type === 'remove') {
+        result.push({
+          type: 'removed',
+          content: line,
+          lineNumber: lineNumber++
+        })
+      } else {
+        result.push({
+          type: 'unchanged',
+          content: line,
+          lineNumber: lineNumber++
+        })
+      }
+    }
+  }
+
+  return result
 }
 
 /** 回退到选中的历史版本 */
 async function handleRestore() {
-  // 功能已移除，仅保留空实现
+  if (!selectedHistory.value) return
+  emit('restore', selectedHistory.value.id)
+  diffPopupRef.value?.close()
 }
 
 /** 关闭 diff 弹出层 */
@@ -124,7 +158,7 @@ function setGetCurrentTextCallback(callback: () => string) {
 
 /** 刷新历史记录 */
 async function refresh() {
-  // 功能已移除，仅保留空实现
+  await historyStore.refreshHistories()
 }
 
 // 监听文章切换，关闭弹窗

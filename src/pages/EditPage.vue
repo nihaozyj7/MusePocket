@@ -218,7 +218,29 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
   selectedArticleStore.v.wordCount = countNonWhitespace(text)
   selectedBookStore.v.modifiedTime = Date.now()
 
-  // 历史记录功能已移除
+  // 保存历史记录（使用清洗后的内容）
+  if (!skipHistory && oldText !== undefined && oldText !== cleanedContent) {
+    try {
+      // 检查当前是否在历史版本中（非栈顶位置）
+      const currentIndex = historyStore.getCurrentIndex()
+      console.log(`[保存] 当前索引: ${currentIndex}, 内容已变化，准备保存历史`)
+
+      // 如果在非栈顶位置保存，需要先舍弃当前索引到栈顶之间的记录
+      if (currentIndex > 0) {
+        console.log(`[保存] 检测到在索引 ${currentIndex} 位置保存，将舍弃该索引之前的 ${currentIndex} 条记录`)
+        await historyStore.discardRecordsAfterIndex(currentIndex)
+      }
+
+      const { saveNewVersion } = await import('@domains/editor/services/history.service')
+      await saveNewVersion(selectedArticleStore.v.id, oldText, cleanedContent)
+
+      // 刷新历史记录列表并重置索引到栈顶
+      await historyStore.refreshHistories()
+      historyStore.resetIndex()
+    } catch (err) {
+      console.error('保存历史记录失败:', err)
+    }
+  }
 
   // 保存到数据库
   Promise.all([
@@ -285,11 +307,13 @@ function openArticle(article: Article) {
     selectedArticleStore.v = article
     articleBody.value = res
 
+    // 初始化历史记录
+    historyStore.initArticle(article.id)
+
     // 等待编辑器成功加载后再设置内容
     waitFor(() => editorRef.value, () => {
       if (editorRef.value) {
         editorRef.value.resetBody(res.content)
-        // 历史记录功能已移除
         // 更新历史侧栏的当前文本
         if (historySidebarRef.value) {
           historySidebarRef.value.setCurrentText(res.content || '')
@@ -318,13 +342,45 @@ function handleInsertSnippet(content: string) {
 }
 
 /** 撤销 */
-function handleUndo() {
-  // 功能已移除，仅保留空实现
+async function handleUndo() {
+  if (!historyStore.canUndo || !editorRef.value) return
+
+  const content = await historyStore.undo()
+  if (content !== null) {
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
+    // 重置编辑器内容
+    editorRef.value.resetBody(content)
+
+    // 恢复光标位置
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+    }, 50)
+
+    $tips.success('已撤销')
+  }
 }
 
 /** 重做 */
-function handleRedo() {
-  // 功能已移除，仅保留空实现
+async function handleRedo() {
+  if (!historyStore.canRedo || !editorRef.value) return
+
+  const content = await historyStore.redo()
+  if (content !== null) {
+    // 保存光标位置
+    const cursorPos = saveCursorPosition()
+
+    // 重置编辑器内容
+    editorRef.value.resetBody(content)
+
+    // 恢复光标位置
+    setTimeout(() => {
+      restoreCursorPosition(cursorPos)
+    }, 50)
+
+    $tips.success('已重做')
+  }
 }
 
 /** 显示历史记录弹窗 */
@@ -333,8 +389,30 @@ function showHistoryPopup() {
 }
 
 /** 从历史版本恢复 */
-async function handleRestoreFromHistory(text: string) {
-  // 功能已移除，仅保留空实现
+async function handleRestoreFromHistory(historyId: string) {
+  if (!editorRef.value) return
+
+  // 获取目标版本内容
+  const content = await historyStore.revertToHistory(historyId)
+  if (content === null) {
+    $tips.error('恢复失败')
+    return
+  }
+
+  // 重置编辑器内容（不保存新版本，只移动指针）
+  editorRef.value.resetBody(content)
+
+  // 更新数据库
+  articleBody.value.content = content
+  selectedArticleStore.v.modifiedTime = Date.now()
+  selectedArticleStore.v.wordCount = countNonWhitespace(content)
+
+  await Promise.all([
+    articledb.updateArticle(selectedArticleStore.v, articleBody.value),
+    bookdb.updateBook(selectedBookStore.v)
+  ])
+
+  $tips.success('已回退到该版本')
 }
 
 /** 处理校对修复 */
@@ -803,7 +881,7 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
       </header>
       <div class="bottom">
         <!-- 编辑器 -->
-        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" />
+        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" @undo="handleUndo" @redo="handleRedo" />
         <!-- 工具窗口 -->
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>

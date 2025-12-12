@@ -1,9 +1,9 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, Draft, BookExportData, ArticleExportData, FullDatabaseExportData, ConfigExportData } from '@shared/types'
+import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, Draft, BookExportData, ArticleExportData, FullDatabaseExportData, ConfigExportData, ArticleHistoryRecord } from '@shared/types'
 import { uid } from '@shared/utils'
 
 const DATABASE_NAME = 'musepocket_db'
-const DATABASE_VERSION = 3
+const DATABASE_VERSION = 4
 
 async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
   return openDB<AppDB>(DATABASE_NAME, DATABASE_VERSION, {
@@ -44,6 +44,14 @@ async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
         if (!db.objectStoreNames.contains('drafts')) {
           const store = db.createObjectStore('drafts', { keyPath: 'id' })
           store.createIndex('by-book', 'bookId')
+        }
+      }
+
+      // Version 4: 添加历史记录表
+      if (oldVersion < 4) {
+        if (!db.objectStoreNames.contains('articleHistories')) {
+          const store = db.createObjectStore('articleHistories', { keyPath: 'id' })
+          store.createIndex('by-article', 'articleId')
         }
       }
     },
@@ -573,7 +581,115 @@ export const imagedb = new class {
   }
 }()
 
-// 历史记录功能已完全移除
+// 历史记录操作类
+export const historydb = new class {
+  /**
+   * 创建历史记录
+   */
+  async createHistory(record: ArticleHistoryRecord): Promise<Status> {
+    try {
+      const tx = db.transaction(['articleHistories'], 'readwrite')
+      await tx.objectStore('articleHistories').add({ ...record })
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  /**
+   * 更新历史记录
+   */
+  async updateHistory(record: ArticleHistoryRecord): Promise<Status> {
+    try {
+      const tx = db.transaction(['articleHistories'], 'readwrite')
+      await tx.objectStore('articleHistories').put({ ...record })
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  /**
+   * 删除历史记录
+   */
+  async deleteHistory(id: string): Promise<Status> {
+    try {
+      const tx = db.transaction(['articleHistories'], 'readwrite')
+      await tx.objectStore('articleHistories').delete(id)
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  /**
+   * 获取文章的所有历史记录（按创建时间倒序）
+   */
+  async getArticleHistories(articleId: string): Promise<ArticleHistoryRecord[]> {
+    try {
+      const store = db.transaction(['articleHistories'], 'readonly').objectStore('articleHistories')
+      const histories = await store.index('by-article').getAll(articleId)
+      // 按创建时间倒序排列，最新的在前
+      return histories.sort((a, b) => b.createdTime - a.createdTime)
+    } catch (err: any) {
+      console.error('获取历史记录失败:', err)
+      return []
+    }
+  }
+
+  /**
+   * 删除文章的所有历史记录
+   */
+  async deleteArticleHistories(articleId: string): Promise<Status> {
+    try {
+      const tx = db.transaction(['articleHistories'], 'readwrite')
+      const store = tx.objectStore('articleHistories')
+      const histories = await store.index('by-article').getAll(articleId)
+      for (const history of histories) {
+        await store.delete(history.id)
+      }
+      await tx.done
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+
+  /**
+   * 获取最新的历史记录（栈顶）
+   */
+  async getTopHistory(articleId: string): Promise<ArticleHistoryRecord | null> {
+    const histories = await this.getArticleHistories(articleId)
+    return histories.length > 0 ? histories[0] : null
+  }
+
+  /**
+   * 清除旧栈顶的快照，保留 diff
+   * 注意：这个方法应该在创建新记录之后调用，所以需要清除的是第二条记录
+   */
+  async clearOldTopSnapshot(articleId: string): Promise<Status> {
+    try {
+      const histories = await this.getArticleHistories(articleId)
+      // 如果只有一条或没有记录，不需要清除
+      if (histories.length <= 1) {
+        return { success: true }
+      }
+
+      // 清除第二条记录（原来的栈顶）的快照
+      const oldTopHistory = histories[1]
+      if (oldTopHistory && oldTopHistory.fullContent !== null) {
+        oldTopHistory.fullContent = null
+        return await this.updateHistory(oldTopHistory)
+      }
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  }
+}()
 
 /** 草稿操作类 */
 export const draftdb = new class {

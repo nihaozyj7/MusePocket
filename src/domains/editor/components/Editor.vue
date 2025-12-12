@@ -18,6 +18,8 @@ const props = defineProps<Props>()
 
 /** 新旧内容 */
 const history = getQueue<string>(3)
+/** 上一次保存的内容（用于生成历史记录 diff）*/
+const lastSavedContent = ref<string>('')
 /** 编辑区容器 */
 const bodyRef = ref<HTMLDivElement>()
 /** 绘制背景的画布 */
@@ -56,7 +58,11 @@ const emit = defineEmits({
   /** 文章标题更新 */
   'update:articleTitle': (title: string) => true,
   /** 新建章节 */
-  'create:article': () => true
+  'create:article': () => true,
+  /** 撤销 */
+  'undo': () => true,
+  /** 重做 */
+  'redo': () => true
 })
 
 
@@ -121,7 +127,10 @@ onUnmounted(() => {
 /** 执行保存逻辑（不考虑输入法状态） */
 const _executeSave = () => {
   const text = trimAndReduceNewlines(bodyRef.value.innerText, { removeBlankLines: true })
-  emit('update:articleBody', text, undefined)
+  // 传递旧内容用于生成历史记录
+  emit('update:articleBody', text, lastSavedContent.value)
+  // 更新上次保存的内容
+  lastSavedContent.value = text
 }
 
 /** 延迟保存的标记 */
@@ -581,16 +590,18 @@ function entityHoverAutoInsertClose(entity: Entity, coverLength?: number) {
 
 /** 撤销操作 */
 async function handleUndo() {
-  // 功能已移除，仅保留空实现
+  emit('undo')
 }
 
 /** 重做操作 */
 async function handleRedo() {
-  // 功能已移除，仅保留空实现
+  emit('redo')
 }
 
 function resetBody(text: string = "") {
   bodyRef.value.innerHTML = newlineToP(text, { collapse: true })
+  // 初始化上次保存的内容
+  lastSavedContent.value = trimAndReduceNewlines(text, { removeBlankLines: true })
 }
 
 function focus() {

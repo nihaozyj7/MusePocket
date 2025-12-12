@@ -169,7 +169,7 @@ defineExpose({
 }
 
 .article-item {
-  padding: 1rem;
+  padding: .5rem;
   margin-bottom: 0.5rem;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);

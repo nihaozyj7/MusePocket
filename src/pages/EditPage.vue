@@ -981,9 +981,9 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   height: 2.7rem;
   display: flex;
   align-items: center;
-  justify-content: start;
   border-bottom: 1px solid var(--border-color);
-  padding-left: .5rem;
+  padding-left: 1rem;
+  font-weight: bold;
   color: var(--text-tertiary);
   font-size: .9rem;
   cursor: text;

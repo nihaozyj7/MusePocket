@@ -252,12 +252,10 @@ defineExpose({
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--border-color);
 }
 
 .btn-convert,
 .btn-convert-all {
-  padding: 0.5rem 1rem;
   border: none;
   border-radius: 0.25rem;
   font-size: 0.85rem;

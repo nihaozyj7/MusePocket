@@ -125,92 +125,54 @@ const resetSettings = async () => {
   <div class="base-setting">
     <div class="title">{{ props.title }}</div>
     <div class="content">
-      <!-- 基准尺寸 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">基准尺寸，影响全局文字和UI</span>
-          <div class="input-group">
-            <input type="number" v-model="tempBaseFontSize" @blur="handleBaseFontSizeBlur" min="12" max="24">
-            <span class="unit">px</span>
-          </div>
-        </label>
-      </div>
+      <!-- 字体与排版 -->
+      <div class="setting-group">
+        <div class="group-title">📝 字体与排版</div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">基准尺寸</span>
+            <span class="label-desc">影响全局文字和UI</span>
+            <div class="input-group">
+              <input type="number" v-model="tempBaseFontSize" @blur="handleBaseFontSizeBlur" min="12" max="24">
+              <span class="unit">px</span>
+            </div>
+          </label>
+        </div>
 
-      <!-- 编辑区文字尺寸 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">编辑区文字尺寸，该值为基准尺寸的倍数</span>
-          <div class="input-group">
-            <input type="number" v-model="tempEditorFontSize" @blur="handleEditorFontSizeBlur" min="0.5" max="3" step="0.1">
-            <span class="unit">rem</span>
-          </div>
-        </label>
-      </div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">编辑区文字尺寸</span>
+            <span class="label-desc">该值为基准尺寸的倍数</span>
+            <div class="input-group">
+              <input type="number" v-model="tempEditorFontSize" @blur="handleEditorFontSizeBlur" min="0.5" max="3" step="0.1">
+              <span class="unit">rem</span>
+            </div>
+          </label>
+        </div>
 
-      <!-- 自动保存间隔 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">自动保存间隔</span>
-          <div class="input-group">
-            <input type="number" :value="settings.autoSaveInterval" @input="e => settingStore.updateAutoSaveInterval(Number((e.target as HTMLInputElement).value))" min="1" max="60">
-            <span class="unit">秒（默认3秒）</span>
-          </div>
-        </label>
-      </div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">字体行高</span>
+            <span class="label-desc">默认2.5倍字体高度</span>
+            <div class="input-group">
+              <input type="number" v-model="tempLineHeight" @blur="handleLineHeightBlur" min="1" max="5" step="0.1">
+              <span class="unit">倍字体高度</span>
+            </div>
+          </label>
+        </div>
 
-      <!-- 自动完成延迟 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">自动完成悬浮层延迟（输入后多久显示实体匹配提示）</span>
-          <div class="input-group">
-            <input type="number" :value="settings.autoCompleteDelay" @input="e => settingStore.updateAutoCompleteDelay(Number((e.target as HTMLInputElement).value))" min="0" max="2000" step="50">
-            <span class="unit">毫秒（默认0，即立即显示）</span>
-          </div>
-        </label>
-      </div>
-
-      <!-- 自动完成确认按键 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">自动完成确认插入按键</span>
-          <select :value="settings.autoCompleteConfirmKey" @change="e => settings.autoCompleteConfirmKey = (e.target as HTMLSelectElement).value as 'tab' | 'enter' | 'both'">
-            <option value="tab">Tab 键</option>
-            <option value="enter">Enter 键</option>
-            <option value="both">Tab 或 Enter 键</option>
-          </select>
-        </label>
-      </div>
-
-      <!-- 自动完成默认选中第一个 -->
-      <div class="setting-item">
-        <label class="checkbox-label">
-          <input type="checkbox" :checked="settings.autoCompleteDefaultSelect" @change="e => settings.autoCompleteDefaultSelect = (e.target as HTMLInputElement).checked">
-          <span>自动完成建议默认选中第一个（关闭后需要使用上下方向键手动选择）</span>
-        </label>
-      </div>
-
-      <!-- 字体行高 -->
-      <div class="setting-item">
-        <label>
-          <span class="label-text">字体行高（默认2.5倍字体高度）</span>
-          <div class="input-group">
-            <input type="number" v-model="tempLineHeight" @blur="handleLineHeightBlur" min="1" max="5" step="0.1">
-            <span class="unit">倍字体高度</span>
-          </div>
-        </label>
-      </div>
-
-      <!-- 段间距 -->
-      <div class="setting-item">
-        <label class="checkbox-label">
-          <input type="checkbox" :checked="settings.enableParagraphSpacing" @change="e => settingStore.toggleParagraphSpacing((e.target as HTMLInputElement).checked)">
-          <span>段间距，开启后，段落之间会有一个不可编辑的当前行高的空白行</span>
-        </label>
+        <div class="setting-item">
+          <label class="checkbox-label">
+            <input type="checkbox" :checked="settings.enableParagraphSpacing" @change="e => settingStore.toggleParagraphSpacing((e.target as HTMLInputElement).checked)">
+            <span>启用段间距</span>
+            <span class="label-desc">段落之间会有一个不可编辑的当前行高的空白行</span>
+          </label>
+        </div>
       </div>
 
       <!-- 实体样式 -->
       <div class="setting-group">
-        <div class="group-title">突出文章中实体的样式</div>
+        <div class="group-title">🏷️ 实体样式</div>
         <div class="setting-item">
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.entityStyle.underline" @change="e => settingStore.updateEntityStyle('underline', (e.target as HTMLInputElement).checked)">
@@ -232,31 +194,78 @@ const resetSettings = async () => {
             <input type="color" :value="textColorSix" @input="handleTextColorChange" :disabled="!settings.entityStyle.textColor">
           </label>
         </div>
+        <div class="setting-item">
+          <label class="checkbox-label">
+            <input type="checkbox" :checked="settings.insertEntityAsPlainText" @change="e => settings.insertEntityAsPlainText = (e.target as HTMLInputElement).checked">
+            <span>插入实体为普通文本</span>
+            <span class="label-desc">不勾选时插入的是实体节点，实体内容将同步更新文章中的节点</span>
+          </label>
+        </div>
       </div>
 
-      <!-- 纯文本粘贴 -->
-      <div class="setting-item">
-        <label class="checkbox-label">
-          <input type="checkbox" :checked="settings.usePlainTextPaste" @change="e => settings.usePlainTextPaste = (e.target as HTMLInputElement).checked">
-          <span>复制粘贴时使用纯文本，开启后，粘贴的时候对文本进行清洗，粘贴后将变更为普通文本</span>
-        </label>
-      </div>
-
-      <!-- 插入实体为文本 -->
-      <div class="setting-item">
-        <label class="checkbox-label">
-          <input type="checkbox" :checked="settings.insertEntityAsPlainText" @change="e => settings.insertEntityAsPlainText = (e.target as HTMLInputElement).checked">
-          <span>插入实体为普通文本，不勾选时插入的是实体节点，实体内容将同步更新文章中的节点</span>
-        </label>
-      </div>
-
-      <!-- 网格线和背景 -->
+      <!-- 编辑行为 -->
       <div class="setting-group">
-        <div class="group-title">配置背景</div>
+        <div class="group-title">⚙️ 编辑行为</div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">自动保存间隔</span>
+            <div class="input-group">
+              <input type="number" :value="settings.autoSaveInterval" @input="e => settingStore.updateAutoSaveInterval(Number((e.target as HTMLInputElement).value))" min="1" max="60">
+              <span class="unit">秒</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label class="checkbox-label">
+            <input type="checkbox" :checked="settings.usePlainTextPaste" @change="e => settings.usePlainTextPaste = (e.target as HTMLInputElement).checked">
+            <span>使用纯文本粘贴</span>
+            <span class="label-desc">粘贴时对文本进行清洗，粘贴后将变更为普通文本</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 自动完成 -->
+      <div class="setting-group">
+        <div class="group-title">💡 自动完成</div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">悬浮层延迟</span>
+            <span class="label-desc">输入后多久显示实体匹配提示</span>
+            <div class="input-group">
+              <input type="number" :value="settings.autoCompleteDelay" @input="e => settingStore.updateAutoCompleteDelay(Number((e.target as HTMLInputElement).value))" min="0" max="2000" step="50">
+              <span class="unit">毫秒</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label>
+            <span class="label-text">确认插入按键</span>
+            <select :value="settings.autoCompleteConfirmKey" @change="e => settings.autoCompleteConfirmKey = (e.target as HTMLSelectElement).value as 'tab' | 'enter' | 'both'">
+              <option value="tab">Tab 键</option>
+              <option value="enter">Enter 键</option>
+              <option value="both">Tab 或 Enter 键</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label class="checkbox-label">
+            <input type="checkbox" :checked="settings.autoCompleteDefaultSelect" @change="e => settings.autoCompleteDefaultSelect = (e.target as HTMLInputElement).checked">
+            <span>默认选中第一个建议</span>
+            <span class="label-desc">关闭后需要使用上下方向键手动选择</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 视觉背景 -->
+      <div class="setting-group">
+        <div class="group-title">🎨 视觉背景</div>
         <div class="setting-item">
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.enableGridLines" @change="e => settingStore.toggleGridLines((e.target as HTMLInputElement).checked)">
-            <span>编辑区启用网格线</span>
+            <span>启用网格线</span>
             <select :value="settings.gridLineStyle" @change="e => settingStore.updateGridLineStyle((e.target as HTMLSelectElement).value as GridLineStyle)" :disabled="!settings.enableGridLines">
               <option value="dashed">虚线</option>
               <option value="solid">实线</option>
@@ -266,13 +275,12 @@ const resetSettings = async () => {
         <div class="setting-item">
           <label class="checkbox-label">
             <input type="checkbox" :checked="settings.enableBackgroundImage" @change="e => settingStore.toggleBackgroundImage((e.target as HTMLInputElement).checked)">
-            <span>编辑界面启用图片背景</span>
+            <span>启用图片背景</span>
             <button @click="handleImageUpload" :disabled="!settings.enableBackgroundImage">
               🖼️ 选择图片
             </button>
           </label>
         </div>
-
       </div>
 
       <!-- 重置按钮 -->
@@ -300,13 +308,29 @@ const resetSettings = async () => {
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   cursor: pointer;
 }
 
+.checkbox-label input[type="checkbox"] {
+  margin-top: 0.2rem;
+}
+
+.checkbox-label>span:first-of-type {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 .label-text {
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
+.label-desc {
   color: var(--text-secondary);
+  font-size: 0.85rem;
   flex: 1;
   min-width: 200px;
 }
@@ -324,20 +348,27 @@ const resetSettings = async () => {
 }
 
 .setting-group {
-  margin: 1.5rem 0;
-  padding: 1rem;
+  margin: 0 0 1.5rem 0;
+  padding: 1.25rem;
   background-color: var(--background-secondary);
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
 }
 
+.setting-group:first-of-type {
+  margin-top: 0;
+}
+
 .group-title {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .range-input {

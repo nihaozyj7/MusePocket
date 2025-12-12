@@ -315,7 +315,6 @@ function applyPreset(presetId: string) {
       userPrompt.value = preset.userPrompt
     }
     selectedPreset.value = presetId
-    $tips.success(`已应用「${preset.title}」场景`)
   }
 }
 

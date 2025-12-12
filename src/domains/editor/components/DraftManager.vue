@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { draftdb } from '@shared/db'
 import type { Draft } from '@shared/types'
 import { uid } from '@shared/utils'
-import { $tips } from '@app/plugins'
+import { $tips, $confirm } from '@app/plugins'
 
 interface Props {
   bookId: string
@@ -88,7 +88,8 @@ async function saveDraft() {
 
 /** 删除草稿 */
 async function deleteDraft(draft: Draft) {
-  if (!confirm(`确定要删除草稿"${draft.title}"吗？`)) return
+  const confirmed = await $confirm(`确定要删除草稿"${draft.title}"吗？`, '删除草稿')
+  if (!confirmed) return
 
   const result = await draftdb.deleteDraft(draft.id)
   if (result.success) {

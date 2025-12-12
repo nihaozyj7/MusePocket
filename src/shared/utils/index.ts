@@ -5,6 +5,9 @@ import { imagedb } from "@shared/db"
 /** 生成一个唯一的 UUID v4 */
 export const uid = customAlphabet('023456789ABCDEFGHIKLMNOPQRSTUVWXYZ', 10)
 
+// 导出 z-index 管理器
+export { zIndexManager } from './z-index-manager'
+
 /** 图片缓存 */
 const imageCache = new Map<string, string>()
 

@@ -686,7 +686,7 @@ defineExpose({
     <!-- 状态栏 -->
     <div class="statusbar">
       <div class="left">
-        <button @click="() => emit('create:article')">➥ 新章节</button>
+        <button @click="() => emit('create:article')">➕ 新章节</button>
         <button @click="settingStore.setEditorWidthMode(!settingStore.isAutoWidthMode)" class="margin-left">{{ settingStore.editorWidthModeText }}列宽</button>
       </div>
       <div class="center">{{ selectedArticleStore.v?.wordCount }}</div>
@@ -780,6 +780,13 @@ main .statusbar .left {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+}
+
+main .statusbar .left button {
+  font-size: .8rem;
+  padding: .25rem .5rem !important;
+  background-color: transparent !important;
+  border: none;
 }
 
 main .statusbar .right {

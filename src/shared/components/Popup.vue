@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onUnmounted, nextTick, watch, computed } from 'vue'
+import { zIndexManager } from '@shared/utils/z-index-manager'
 
 const props = defineProps({
   /** 弹出层标题 */
@@ -23,8 +24,10 @@ const emit = defineEmits(['close'])
 const headerRef = ref<HTMLElement | null>(null)
 /** 窗口元素引用 */
 const windowRef = ref<HTMLElement | null>(null)
-/** 显示状态（内部控制） */
+/** 显示状态(内部控制) */
 const isVisible = ref(false)
+/** 当前弹窗的 z-index */
+const currentZIndex = ref<number>(999)
 
 /** 当前窗口内联样式（用于 left/top/transform）——便于调试与绑定 */
 const windowStyle = computed(() => ({ left: windowLeft.value, top: windowTop.value, transform: windowTransform.value }))
@@ -72,6 +75,8 @@ function clearDragEvents() {
 
 /** 打开弹窗 */
 function show() {
+  // 获取新的 z-index 值
+  currentZIndex.value = zIndexManager.getNext()
   isVisible.value = true
   if (props.resetPosition) nextTick(() => resetWindowPosition())
 
@@ -231,7 +236,7 @@ watch(
 </script>
 
 <template>
-  <div class="mask" v-if="props.destroyOnClose ? isVisible : true" v-show="props.destroyOnClose ? true : isVisible" @click="onMaskClick">
+  <div class="mask" v-if="props.destroyOnClose ? isVisible : true" v-show="props.destroyOnClose ? true : isVisible" @click="onMaskClick" :style="{ zIndex: currentZIndex }">
     <div class="window" ref="windowRef" @click.stop :style="windowStyle">
       <header ref="headerRef" @mousedown.prevent="onDragStartMouse" @touchstart.passive.prevent="onDragStartTouch">
         <h3>{{ props.title }}</h3>
@@ -259,7 +264,7 @@ watch(
   align-items: center;
   cursor: pointer;
   background-color: #0005;
-  z-index: 999;
+  /* z-index 通过内联样式动态设置 */
 }
 
 .tips {

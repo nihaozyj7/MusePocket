@@ -221,6 +221,8 @@ export interface BaseSettings {
   autoCompleteDelay: number
   /** 自动完成确认插入按键 */
   autoCompleteConfirmKey: 'tab' | 'enter' | 'both'
+  /** 自动完成是否默认选中第一个 */
+  autoCompleteDefaultSelect: boolean
 }
 
 /** 配置预设项（用于保存和应用基础设置） */

@@ -114,6 +114,7 @@ export function getDefaultBaseSettings(): BaseSettings {
     enableBackgroundImage: false,
     backgroundImageId: '',
     autoCompleteDelay: 0,
-    autoCompleteConfirmKey: 'both'
+    autoCompleteConfirmKey: 'both',
+    autoCompleteDefaultSelect: true
   }
 }

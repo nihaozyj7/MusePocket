@@ -75,7 +75,8 @@ export const useSettingStore = defineStore('setting', {
       enableBackgroundImage: false,
       backgroundImageId: '',
       autoCompleteDelay: 0,
-      autoCompleteConfirmKey: 'both' as const
+      autoCompleteConfirmKey: 'both' as const,
+      autoCompleteDefaultSelect: true
     } as BaseSettings,
     /** AI工具配置 */
     aiToolsSettings: {
@@ -100,6 +101,10 @@ export const useSettingStore = defineStore('setting', {
       // 兼容性处理：如果旧配置没有 autoCompleteConfirmKey 字段，设置默认值
       if (!this.baseSettings.autoCompleteConfirmKey) {
         this.baseSettings.autoCompleteConfirmKey = 'both'
+      }
+      // 兼容性处理：如果旧配置没有 autoCompleteDefaultSelect 字段，设置默认值
+      if (this.baseSettings.autoCompleteDefaultSelect === undefined) {
+        this.baseSettings.autoCompleteDefaultSelect = true
       }
 
       this.setDark()

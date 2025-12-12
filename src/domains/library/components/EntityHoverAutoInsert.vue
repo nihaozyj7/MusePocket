@@ -92,7 +92,8 @@ function show(x?: number, y?: number) {
 
   document.addEventListener('keydown', onKeydown)
   document.addEventListener('click', () => hide())
-  selectedIndex.value = 0
+  // 根据配置决定是否默认选中第一个
+  selectedIndex.value = settingStore.baseSettings.autoCompleteDefaultSelect ? 0 : -1
 }
 
 function move(x: number, y: number) {
@@ -276,7 +277,8 @@ function update(textBeforeCursor: string) {
 
   // 重置选中索引
   if (results.length > 0) {
-    selectedIndex.value = 0
+    // 根据配置决定是否默认选中第一个
+    selectedIndex.value = settingStore.baseSettings.autoCompleteDefaultSelect ? 0 : -1
   }
 }
 

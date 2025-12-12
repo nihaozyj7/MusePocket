@@ -181,6 +181,14 @@ const resetSettings = async () => {
         </label>
       </div>
 
+      <!-- 自动完成默认选中第一个 -->
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" :checked="settings.autoCompleteDefaultSelect" @change="e => settings.autoCompleteDefaultSelect = (e.target as HTMLInputElement).checked">
+          <span>自动完成建议默认选中第一个（关闭后需要使用上下方向键手动选择）</span>
+        </label>
+      </div>
+
       <!-- 字体行高 -->
       <div class="setting-item">
         <label>

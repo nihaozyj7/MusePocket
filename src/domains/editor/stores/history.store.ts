@@ -1,15 +1,31 @@
 import { defineStore } from 'pinia'
-import { historydb } from '@shared/db'
+// historydb 已删除，功能已移除
+// import { historydb } from '@shared/db'
 import { uid } from '@shared/utils'
-import type { DBHistoryRecord } from '@shared/types'
-import { computeDiff } from '@domains/editor/services/history.service'
+// DBHistoryRecord 类型已删除
+// import type { DBHistoryRecord } from '@shared/types'
+// computeDiff 功能已删除
+// import { computeDiff } from '@domains/editor/services/history.service'
+
+// 为 UI 组件提供的 mock 类型
+interface MockHistoryRecord {
+  id: string
+  articleId: string
+  sequence: number
+  diffsJson: string
+  fullContent?: string
+  isSnapshot: boolean
+  createdTime: number
+  modifiedTime: number
+  deletedTime: number
+}
 
 interface ArticleHistoryState {
-  /** 当前快照内容（用于下次对比） */
-  lastSnapshot: string
-  /** 当前索引位置（指向当前正在编辑的版本） */
+  /** 当前栈顶快照（用于下次对比和撤销操作的基准） */
+  topSnapshot: string
+  /** 当前索引位置（指向当前正在编辑的版本，-1表示在最新版本） */
   currentIndex: number
-  /** 总历史记录数（用于判断是否可以重做） */
+  /** 总历史记录数 */
   totalCount: number
 }
 
@@ -20,8 +36,8 @@ interface HistoryState {
   currentArticleId: string | null
   /** 每个文章的序号计数器 */
   sequenceCounters: Map<string, number>
-  /** 当前文章的历史记录列表（用于界面展示） */
-  currentHistories: DBHistoryRecord[]
+  /** 当前文章的历史记录列表（用于UI展示，mock数据） */
+  currentHistories: MockHistoryRecord[]
 }
 
 export const useHistoryStore = defineStore('history', {
@@ -46,7 +62,9 @@ export const useHistoryStore = defineStore('history', {
      */
     canUndo(state): boolean {
       const articleState = this.currentState
-      return articleState ? articleState.currentIndex > 0 : false
+      if (!articleState) return false
+      // 如果在最新版本（-1）且有历史记录，或者不在第一条记录，都可以撤销
+      return articleState.currentIndex === -1 ? articleState.totalCount > 0 : articleState.currentIndex > 0
     },
 
     /**
@@ -54,7 +72,9 @@ export const useHistoryStore = defineStore('history', {
      */
     canRedo(state): boolean {
       const articleState = this.currentState
-      return articleState ? articleState.currentIndex < articleState.totalCount - 1 : false
+      if (!articleState) return false
+      // 只有在历史版本（currentIndex != -1）才能重做
+      return articleState.currentIndex !== -1 && articleState.currentIndex < articleState.totalCount - 1
     },
 
     /**
@@ -63,9 +83,20 @@ export const useHistoryStore = defineStore('history', {
     stats(state): { undoCount: number; redoCount: number; canUndo: boolean; canRedo: boolean } | null {
       const articleState = this.currentState
       if (!articleState) return null
+
+      // 计算可撤销的步数
+      const undoCount = articleState.currentIndex === -1
+        ? articleState.totalCount
+        : articleState.currentIndex + 1
+
+      // 计算可重做的步数
+      const redoCount = articleState.currentIndex === -1
+        ? 0
+        : articleState.totalCount - articleState.currentIndex - 1
+
       return {
-        undoCount: articleState.currentIndex,
-        redoCount: articleState.totalCount - articleState.currentIndex - 1,
+        undoCount,
+        redoCount,
         canUndo: this.canUndo,
         canRedo: this.canRedo
       }
@@ -77,390 +108,111 @@ export const useHistoryStore = defineStore('history', {
      * 初始化或切换到指定文章
      */
     async initArticle(articleId: string, initialText: string = '') {
-      this.currentArticleId = articleId
-
-      if (!this.articleStates.has(articleId)) {
-        // 创建新的状态
-        this.articleStates.set(articleId, {
-          lastSnapshot: initialText,
-          currentIndex: 0,
-          totalCount: 1
-        })
-
-        // 从数据库加载历史记录
-        await this.loadHistoriesFromDB(articleId, initialText)
-      } else {
-        // 如果状态已存在，更新快照
-        const articleState = this.articleStates.get(articleId)!
-        articleState.lastSnapshot = initialText
-      }
-
-      // 加载历史记录列表
-      await this.refreshHistories()
-
-      const state = this.articleStates.get(articleId)
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 从数据库加载历史记录
      */
     async loadHistoriesFromDB(articleId: string, initialText: string) {
-      try {
-        const records = await historydb.getArticleHistories(articleId)
-
-        if (records.length === 0) return
-
-        // 更新序号计数器
-        const maxSequence = Math.max(...records.map(r => r.sequence))
-        this.sequenceCounters.set(articleId, maxSequence)
-
-        // 更新文章状态
-        const articleState = this.articleStates.get(articleId)
-        if (articleState) {
-          articleState.totalCount = records.length
-          articleState.currentIndex = records.length - 1 // 指向最新的记录
-          // 如果最后一条记录是快照，使用它；否则使用 initialText
-          const lastRecord = records[records.length - 1]
-          if (lastRecord.fullContent) {
-            articleState.lastSnapshot = lastRecord.fullContent
-          } else {
-            articleState.lastSnapshot = initialText
-          }
-        }
-      } catch (err) {
-        console.error('加载历史记录失败:', err)
-      }
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 获取下一个序号
      */
     getNextSequence(articleId: string): number {
-      const current = this.sequenceCounters.get(articleId) || 0
-      const next = current + 1
-      this.sequenceCounters.set(articleId, next)
-      return next
+      // 功能已移除，仅保留空实现
+      return 0
     },
 
     /**
      * 刷新当前文章的历史记录列表
      */
     async refreshHistories() {
-      if (!this.currentArticleId) {
-        this.currentHistories = []
-        return
-      }
-
-      try {
-        this.currentHistories = await historydb.getArticleHistories(this.currentArticleId)
-      } catch (err) {
-        console.error('加载历史记录列表失败:', err)
-        this.currentHistories = []
-      }
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 记录文本变更
      * @param newText 新文本
+     * @param oldText 旧文本（栈顶快照）
      */
-    async recordChange(newText: string) {
-      const articleState = this.currentState
-      if (!articleState || !this.currentArticleId) {
-        return
-      }
-
-      const oldText = articleState.lastSnapshot
-
-      if (newText === oldText) {
-        return
-      }
-
-      // 如果不在最新位置（说明用户回退后编辑），需要丢弃后面的历史
-      if (articleState.currentIndex < articleState.totalCount - 1) {
-        // 删除索引位置之后的所有历史记录
-        await this.deleteHistoriesAfterIndex(this.currentArticleId, articleState.currentIndex)
-        // 重置 totalCount
-        articleState.totalCount = articleState.currentIndex + 1
-      }
-
-      // 保存到数据库
-      await this.saveChangeToDB(this.currentArticleId, oldText, newText)
-
-      // 更新快照和索引
-      articleState.lastSnapshot = newText
-      articleState.currentIndex++
-      articleState.totalCount++
-
-      // 刷新历史记录列表
-      await this.refreshHistories()
+    async recordChange(newText: string, oldText: string) {
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 删除指定索引之后的所有历史记录
      */
     async deleteHistoriesAfterIndex(articleId: string, index: number) {
-      try {
-        const histories = await historydb.getArticleHistories(articleId)
-        const toDelete = histories.slice(index + 1)
-        for (const record of toDelete) {
-          await historydb.deleteHistory(record.id)
-        }
-      } catch (err) {
-        console.error('删除历史记录失败:', err)
-      }
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 保存变更到数据库
+     * 逻辑：
+     * 1. 移除旧栈顶的快照（如果存在）
+     * 2. 保存新记录到栈顶：快照(newText) + diff(oldText->newText)
      */
     async saveChangeToDB(articleId: string, oldText: string, newText: string) {
-      try {
-        const diffs = computeDiff(oldText, newText)
-        if (diffs.length === 0) return
-
-        const now = Date.now()
-        const sequence = this.getNextSequence(articleId)
-
-        // 新记录：只保存diff，不保存快照（快照在下一步更新）
-        const record: DBHistoryRecord = {
-          id: uid(),
-          articleId,
-          diffsJson: JSON.stringify(diffs),
-          fullContent: undefined,  // 不保存快照
-          isSnapshot: false,
-          sequence,
-          createdTime: now,
-          modifiedTime: now,
-          deletedTime: 0
-        }
-
-        await historydb.createHistory(record)
-
-        // 更新栈顶记录的快照（最新的记录）
-        await this.updateTopSnapshot(articleId, newText)
-
-        // 清理旧记录，只保留最新的50条
-        await historydb.cleanOldHistories(articleId, 50)
-      } catch (err) {
-        console.error('保存历史记录失败:', err)
-      }
+      // 功能已移除，仅保留空实现
     },
 
     /**
-     * 更新栈顶记录的快照
-     * 简化实现：直接删除上一个记录的快照，给当前记录添加快照
-     */
-    async updateTopSnapshot(articleId: string, snapshotContent: string) {
-      try {
-        const histories = await historydb.getArticleHistories(articleId)
-        if (histories.length === 0) return
-
-        const topRecord = histories[histories.length - 1]
-
-        // 如果栈顶已经有快照，更新它
-        if (topRecord.isSnapshot && topRecord.fullContent) {
-          // 已经是最新的了，不需要操作
-          return
-        }
-
-        // 否则需要为栈顶设置快照
-        // 这里简化处理：直接在内存中保留 lastSnapshot
-        // 不修改数据库中的记录
-      } catch (err) {
-        console.error('更新栈顶快照失败:', err)
-      }
-    },
-
-    /**
-     * 撤销：索引向后移动
+     * 撤销：向历史方向移动
      */
     async undo(): Promise<string | null> {
-      const articleState = this.currentState
-      if (!articleState || !this.currentArticleId || !this.canUndo) {
-        return null
-      }
-
-      const targetIndex = articleState.currentIndex - 1
-
-
-      // 先查看数据库中的历史记录
-      const histories = await historydb.getArticleHistories(this.currentArticleId)
-
-      // 先重建文本，成功后再更新索引
-      const text = await this.reconstructTextAtIndex(this.currentArticleId, targetIndex)
-      if (text !== null) {
-        articleState.currentIndex = targetIndex
-        articleState.lastSnapshot = text
-        return text
-      }
-
-      console.error('撤销失败，重建文本失败')
+      // 功能已移除，仅保留空实现
       return null
     },
 
     /**
-     * 重做：索引向前移动
+     * 重做：向当前方向移动
      */
     async redo(): Promise<string | null> {
-      const articleState = this.currentState
-      if (!articleState || !this.currentArticleId || !this.canRedo) {
-        return null
-      }
-
-      const targetIndex = articleState.currentIndex + 1
-
-      // 先重建文本，成功后再更新索引
-      const text = await this.reconstructTextAtIndex(this.currentArticleId, targetIndex)
-      if (text !== null) {
-        articleState.currentIndex = targetIndex
-        articleState.lastSnapshot = text
-        return text
-      }
-
-      console.error('重做失败，重建文本失败')
+      // 功能已移除，仅保留空实现
       return null
     },
 
     /**
      * 重建指定索引位置的文本
-     * 逻辑：从内存快照(lastSnapshot)反向应用diff
+     * 逻辑：
+     * 1. 从栈顶快照开始
+     * 2. 从栈顶向目标索引方向反向应用diff
      */
     async reconstructTextAtIndex(articleId: string, index: number): Promise<string | null> {
-      try {
-        const histories = await historydb.getArticleHistories(articleId)
-
-        if (index < 0 || index >= histories.length) {
-          return null
-        }
-
-        const articleState = this.articleStates.get(articleId)
-        if (!articleState) {
-          console.error('[reconstructTextAtIndex] 未找到文章状态:', articleId)
-          return null
-        }
-
-        // 如果目标就是当前位置，直接返回快照
-        if (index === articleState.currentIndex) {
-          return articleState.lastSnapshot || ''
-        }
-
-        // 否则需要重建
-        let text = articleState.lastSnapshot || ''
-        const currentIdx = articleState.currentIndex
-
-        if (index < currentIdx) {
-          // 向后移动：从当前位置反向应用diff
-          for (let i = currentIdx; i > index; i--) {
-            const record = histories[i]
-            if (!record) {
-              continue
-            }
-            if (!record.diffsJson) {
-              continue
-            }
-            const diffs = JSON.parse(record.diffsJson)
-            // 需要反向diff
-            const { reverseDiff, applyDiff } = await import('@domains/editor/services/history.service')
-            const reversedDiffs = reverseDiff(diffs)
-            const oldLen = text.length
-            text = applyDiff(text, reversedDiffs)
-            const newLen = text.length
-          }
-        } else {
-          // 向前移动：从当前位置正向应用diff
-          for (let i = currentIdx + 1; i <= index; i++) {
-            const record = histories[i]
-            if (!record) {
-              console.error('[reconstructTextAtIndex] 记录不存在:', i)
-              continue
-            }
-            if (!record.diffsJson) {
-              console.error('[reconstructTextAtIndex] 记录没有diff，记录ID:', record.id)
-              continue
-            }
-            const diffs = JSON.parse(record.diffsJson)
-            const { applyDiff } = await import('@domains/editor/services/history.service')
-            const oldLen = text.length
-            text = applyDiff(text, diffs)
-            const newLen = text.length
-          }
-        }
-
-        // 确保返回的是字符串
-        if (typeof text !== 'string') {
-          return ''
-        }
-
-        return text
-      } catch (err) {
-        return null
-      }
+      // 功能已移除，仅保留空实现
+      return null
     },
 
     /**
      * 回退到指定的历史版本
      */
     async restoreToHistory(historyId: string): Promise<string | null> {
-      if (!this.currentArticleId) {
-        console.error('回退失败：没有当前文章')
-        return null
-      }
-
-      const histories = await historydb.getArticleHistories(this.currentArticleId)
-      const targetIndex = histories.findIndex(h => h.id === historyId)
-
-      if (targetIndex === -1) {
-        console.error('未找到目标历史记录')
-        return null
-      }
-
-      const articleState = this.currentState
-      if (!articleState) {
-        console.error('未找到文章状态')
-        return null
-      }
-
-      // 先重建文本，成功后再更新索引
-      const text = await this.reconstructTextAtIndex(this.currentArticleId, targetIndex)
-      if (text !== null && typeof text === 'string') {
-        articleState.currentIndex = targetIndex
-        articleState.lastSnapshot = text
-        return text
-      } else {
-        console.error('重建文本失败')
-        return null
-      }
+      // 功能已移除，仅保留空实现
+      return null
     },
 
     /**
      * 清除指定文章的历史记录
      */
     clearArticleHistory(articleId: string) {
-      this.articleStates.delete(articleId)
-      if (this.currentArticleId === articleId) {
-        this.currentHistories = []
-      }
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 清除所有历史记录
      */
     clearAll() {
-      this.articleStates.clear()
-      this.currentArticleId = null
-      this.currentHistories = []
+      // 功能已移除，仅保留空实现
     },
 
     /**
      * 重置当前文章的历史记录
      */
     resetCurrent(text: string = '') {
-      const articleState = this.currentState
-      if (articleState) {
-        articleState.lastSnapshot = text
-        articleState.currentIndex = 0
-        articleState.totalCount = 1
-      }
+      // 功能已移除，仅保留空实现
     }
   }
 })

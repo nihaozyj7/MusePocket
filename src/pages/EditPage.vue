@@ -218,10 +218,7 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
   selectedArticleStore.v.wordCount = countNonWhitespace(text)
   selectedBookStore.v.modifiedTime = Date.now()
 
-  // 先记录历史（使用清洗后的内容）
-  if (!skipHistory && selectedArticleStore.v?.id) {
-    await historyStore.recordChange(cleanedContent)
-  }
+  // 历史记录功能已移除
 
   // 保存到数据库
   Promise.all([
@@ -292,8 +289,7 @@ function openArticle(article: Article) {
     waitFor(() => editorRef.value, () => {
       if (editorRef.value) {
         editorRef.value.resetBody(res.content)
-        // 初始化历史记录（会自动加载历史列表）
-        historyStore.initArticle(article.id, res.content || '')
+        // 历史记录功能已移除
         // 更新历史侧栏的当前文本
         if (historySidebarRef.value) {
           historySidebarRef.value.setCurrentText(res.content || '')
@@ -323,16 +319,12 @@ function handleInsertSnippet(content: string) {
 
 /** 撤销 */
 function handleUndo() {
-  if (editorRef.value && historyStore.canUndo) {
-    editorRef.value.undo()
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 重做 */
 function handleRedo() {
-  if (editorRef.value && historyStore.canRedo) {
-    editorRef.value.redo()
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 显示历史记录弹窗 */
@@ -342,35 +334,7 @@ function showHistoryPopup() {
 
 /** 从历史版本恢复 */
 async function handleRestoreFromHistory(text: string) {
-
-  if (!text || typeof text !== 'string') {
-    console.error('无效的文本内容')
-    return
-  }
-
-  if (editorRef.value && selectedArticleStore.v) {
-
-    // 保存光标位置
-    const cursorPos = saveCursorPosition()
-
-    // 直接重置编辑器内容
-    editorRef.value.resetBody(text)
-
-    // 恢复光标位置
-    setTimeout(() => {
-      restoreCursorPosition(cursorPos)
-    }, 0)
-
-    // 保存到数据库，但不创建新的历史记录
-    await saveArticle(text, undefined, true)
-
-    // 更新历史侧栏的当前文本
-    if (historySidebarRef.value) {
-      historySidebarRef.value.setCurrentText(text)
-    }
-  } else {
-    console.error('编辑器未载入或器没有选中文章')
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 处理校对修复 */

@@ -4,7 +4,7 @@ import router from '@app/router'
 import { useSelectedBookStore } from '@domains/library/stores/selected-book.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import type { Book } from '@shared/types'
-import { getImageBase64ByID } from '@shared/utils'
+import { getImageByID } from '@shared/utils'
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue'
 import { $tips } from '@app/plugins'
 import { articledb, entitydb } from '@shared/db'
@@ -259,7 +259,7 @@ async function loadBooks() {
 /** 加载书籍封面 */
 async function loadBookCovers() {
   for (const book of books.value) {
-    const url = await getImageBase64ByID(book.coverId)
+    const url = await getImageByID(book.coverId)
     bookCoverUrls.value.set(book.id, url)
   }
 }

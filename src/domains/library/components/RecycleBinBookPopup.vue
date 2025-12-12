@@ -4,7 +4,7 @@ import { Popup } from '@shared/components'
 import type { Book } from '@shared/types'
 import { bookdb } from '@shared/db'
 import { $tips } from '@app/plugins'
-import { getImageBase64ByID } from '@shared/utils'
+import { getImageByID } from '@shared/utils'
 import { $confirm } from '@app/plugins'
 
 /** 弹出层引用 */
@@ -55,7 +55,7 @@ async function loadDeletedBooks() {
 async function loadBookCovers() {
   bookCoverUrls.value.clear()
   for (const book of deletedBooks.value) {
-    const url = await getImageBase64ByID(book.coverId)
+    const url = await getImageByID(book.coverId)
     bookCoverUrls.value.set(book.id, url)
   }
 }

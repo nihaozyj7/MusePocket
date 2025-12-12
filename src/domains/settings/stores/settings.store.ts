@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ShortcutKeys, BaseSettings } from '@shared/types'
-import { StyleManager, getImageBase64ByID } from '@shared/utils'
+import { StyleManager, getImageByID } from '@shared/utils'
 import { getDefaultBaseSettings } from '@shared/constants/defaults'
 
 /** AI工具配置 */
@@ -263,7 +263,7 @@ export const useSettingStore = defineStore('setting', {
       if (this.baseSettings.enableBackgroundImage && this.baseSettings.backgroundImageId) {
         // 启用背景图片时，从数据库读取图片
         try {
-          const imageUrl = await getImageBase64ByID(this.baseSettings.backgroundImageId)
+          const imageUrl = await getImageByID(this.baseSettings.backgroundImageId)
           if (imageUrl && imageUrl !== '/cover/default.png') {
             body.style.backgroundImage = `url(${imageUrl})`
             body.style.backgroundSize = 'cover'

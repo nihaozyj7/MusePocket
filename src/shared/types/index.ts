@@ -132,15 +132,15 @@ export interface AppDB extends DBSchema {
     key: string
     value: ImageBase64
   }
-  /** 历史记录表 */
-  histories: {
-    key: string
-    value: DBHistoryRecord
-    indexes: {
-      'by-article': string
-      'by-sequence': number
-    }
-  }
+  /** 历史记录表（已废弃，功能已移除） */
+  // histories: {
+  //   key: string
+  //   value: DBHistoryRecord
+  //   indexes: {
+  //     'by-article': string
+  //     'by-sequence': number
+  //   }
+  // }
   /** 草稿表 */
   drafts: {
     key: string
@@ -236,50 +236,7 @@ export interface TextSnippet {
   content: string
 }
 
-/** Diff 操作类型 */
-export type DiffOperationType = 'insert' | 'delete' | 'equal'
-
-/** Diff 操作 */
-export interface DiffOperation {
-  /** 操作类型 */
-  type: DiffOperationType
-  /** 操作的文本内容 */
-  text: string
-  /** 操作位置 */
-  position: number
-}
-
-/** 历史记录项 */
-export interface HistoryRecord {
-  /** 记录ID */
-  id: string
-  /** 文章ID */
-  articleId: string
-  /** 时间戳 */
-  timestamp: number
-  /** 相对于前一版本的差异 */
-  diffs: DiffOperation[]
-  /** 完整内容（首个版本或定期快照） */
-  fullContent?: string
-  /** 是否为快照版本 */
-  isSnapshot: boolean
-}
-
-/** 数据库中的历史记录项(序列化存储) */
-export interface DBHistoryRecord extends Time {
-  /** 记录ID */
-  id: string
-  /** 文章ID */
-  articleId: string
-  /** 相对于前一版本的差异(JSON字符串) */
-  diffsJson: string
-  /** 完整内容(首个版本或定期快照) */
-  fullContent?: string
-  /** 是否为快照版本 */
-  isSnapshot: boolean
-  /** 序号(用于排序) */
-  sequence: number
-}
+// 历史记录相关类型已完全移除（DiffOperation, HistoryRecord, DBHistoryRecord）
 
 /** 草稿 */
 export interface Draft extends Time {

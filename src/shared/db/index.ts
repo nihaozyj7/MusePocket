@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, DBHistoryRecord, Draft, BookExportData, ArticleExportData, FullDatabaseExportData, ConfigExportData } from '@shared/types'
+import type { AppDB, Book, Article, ArticleBody, Entity, Status, ImageBase64, Draft, BookExportData, ArticleExportData, FullDatabaseExportData, ConfigExportData } from '@shared/types'
 import { uid } from '@shared/utils'
 
 const DATABASE_NAME = 'musepocket_db'
@@ -30,14 +30,14 @@ async function openAppDB(): Promise<IDBPDatabase<AppDB>> {
         }
       }
 
-      // Version 2: 添加历史记录表
-      if (oldVersion < 2) {
-        if (!db.objectStoreNames.contains('histories')) {
-          const store = db.createObjectStore('histories', { keyPath: 'id' })
-          store.createIndex('by-article', 'articleId')
-          store.createIndex('by-sequence', 'sequence')
-        }
-      }
+      // Version 2: 添加历史记录表（已废弃，功能已移除）
+      // if (oldVersion < 2) {
+      //   if (!db.objectStoreNames.contains('histories')) {
+      //     const store = db.createObjectStore('histories', { keyPath: 'id' })
+      //     store.createIndex('by-article', 'articleId')
+      //     store.createIndex('by-sequence', 'sequence')
+      //   }
+      // }
 
       // Version 3: 添加草稿表
       if (oldVersion < 3) {
@@ -82,12 +82,11 @@ export const bookdb = new class {
   /** 删除书籍 */
   async deleteBook(bookId: string): Promise<Status> {
     try {
-      const tx = db.transaction(['books', 'articles', 'entities', 'articleBodies', 'histories'], 'readwrite')
+      const tx = db.transaction(['books', 'articles', 'entities', 'articleBodies'], 'readwrite')
       const bookStore = tx.objectStore('books')
       const artStore = tx.objectStore('articles')
       const entStore = tx.objectStore('entities')
       const bodyStore = tx.objectStore('articleBodies')
-      const historyStore = tx.objectStore('histories')
 
       const book = await bookStore.get(bookId)
       if (!book) { tx.abort(); return { success: false, message: `未找到书籍 ${bookId}` } }
@@ -98,12 +97,6 @@ export const bookdb = new class {
       for (const a of articles) {
         await artStore.delete(a.id)
         await bodyStore.delete(a.id) // 删除文章内容
-
-        // 删除文章的历史记录
-        const histories = await historyStore.index('by-article').getAll(a.id)
-        for (const h of histories) {
-          await historyStore.delete(h.id)
-        }
       }
 
       const entities = await entStore.index('by-book').getAll(bookId)
@@ -293,19 +286,12 @@ export const articledb = new class {
     }
   }
 
-  /** 删除文章 + 正文 + 历史记录 */
+  /** 删除文章 + 正文 */
   async deleteArticle(id: string): Promise<Status> {
     try {
-      const tx = db.transaction(['articles', 'articleBodies', 'histories'], 'readwrite')
+      const tx = db.transaction(['articles', 'articleBodies'], 'readwrite')
       await tx.objectStore('articles').delete(id)
       await tx.objectStore('articleBodies').delete(id)
-
-      // 删除所有历史记录
-      const historyStore = tx.objectStore('histories')
-      const histories = await historyStore.index('by-article').getAll(id)
-      for (const h of histories) {
-        await historyStore.delete(h.id)
-      }
 
       await tx.done
       return { success: true }
@@ -587,144 +573,7 @@ export const imagedb = new class {
   }
 }()
 
-/** 历史记录操作类 */
-export const historydb = new class {
-  /**
-   * 创建历史记录
-   */
-  async createHistory(record: DBHistoryRecord): Promise<Status> {
-    try {
-      const tx = db.transaction(['histories'], 'readwrite')
-      await tx.objectStore('histories').add({ ...record })
-      await tx.done
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message }
-    }
-  }
-
-  /**
-   * 批量创建历史记录
-   */
-  async createHistories(records: DBHistoryRecord[]): Promise<Status> {
-    try {
-      const tx = db.transaction(['histories'], 'readwrite')
-      const store = tx.objectStore('histories')
-      for (const record of records) {
-        await store.add({ ...record })
-      }
-      await tx.done
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message }
-    }
-  }
-
-  /**
-   * 获取文章的所有历史记录（按序号倒序排序，最新的在前）
-   */
-  async getArticleHistories(articleId: string): Promise<DBHistoryRecord[]> {
-    try {
-      const store = db.transaction(['histories'], 'readonly').objectStore('histories')
-      const records = await store.index('by-article').getAll(articleId)
-      // 按序号倒序排序，最新的在前
-      return records.sort((a, b) => b.sequence - a.sequence)
-    } catch (err: any) {
-      console.error('获取历史记录失败:', err)
-      return []
-    }
-  }
-
-  /**
-   * 获取文章的最新N条历史记录
-   */
-  async getLatestHistories(articleId: string, limit: number): Promise<DBHistoryRecord[]> {
-    try {
-      const records = await this.getArticleHistories(articleId)
-      return records.slice(-limit)
-    } catch (err: any) {
-      console.error('获取最新历史记录失败:', err)
-      return []
-    }
-  }
-
-  /**
-   * 删除文章的所有历史记录
-   */
-  async deleteArticleHistories(articleId: string): Promise<Status> {
-    try {
-      const tx = db.transaction(['histories'], 'readwrite')
-      const store = tx.objectStore('histories')
-      const records = await store.index('by-article').getAll(articleId)
-      for (const record of records) {
-        await store.delete(record.id)
-      }
-      await tx.done
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message }
-    }
-  }
-
-  /**
-   * 删除单条历史记录
-   */
-  async deleteHistory(id: string): Promise<Status> {
-    try {
-      const tx = db.transaction(['histories'], 'readwrite')
-      await tx.objectStore('histories').delete(id)
-      await tx.done
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message }
-    }
-  }
-
-  /**
-   * 清理文章的旧历史记录，只保留最新的N条
-   */
-  async cleanOldHistories(articleId: string, keepCount: number): Promise<Status> {
-    try {
-      const records = await this.getArticleHistories(articleId)
-      if (records.length <= keepCount) {
-        return { success: true }
-      }
-
-      const tx = db.transaction(['histories'], 'readwrite')
-      const store = tx.objectStore('histories')
-      const toDelete = records.slice(0, records.length - keepCount)
-
-      for (const record of toDelete) {
-        await store.delete(record.id)
-      }
-
-      await tx.done
-      return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message }
-    }
-  }
-
-  /**
-   * 获取历史记录统计信息
-   */
-  async getHistoryStats(articleId: string): Promise<{ count: number; oldestTime: number; newestTime: number }> {
-    try {
-      const records = await this.getArticleHistories(articleId)
-      if (records.length === 0) {
-        return { count: 0, oldestTime: 0, newestTime: 0 }
-      }
-      return {
-        count: records.length,
-        oldestTime: records[0].createdTime,
-        newestTime: records[records.length - 1].createdTime
-      }
-    } catch (err: any) {
-      console.error('获取历史记录统计失败:', err)
-      return { count: 0, oldestTime: 0, newestTime: 0 }
-    }
-  }
-}()
+// 历史记录功能已完全移除
 
 /** 草稿操作类 */
 export const draftdb = new class {

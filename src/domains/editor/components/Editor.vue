@@ -581,32 +581,12 @@ function entityHoverAutoInsertClose(entity: Entity, coverLength?: number) {
 
 /** 撤销操作 */
 async function handleUndo() {
-  const newText = await historyStore.undo()
-  if (newText !== null && typeof newText === 'string') {
-    const cursorPos = saveCursorPosition()
-    resetBody(newText)
-    setTimeout(() => {
-      restoreCursorPosition(cursorPos)
-    }, 0)
-    // 触发保存到数据库，不创建新的历史记录
-    emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
-  } else {
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 重做操作 */
 async function handleRedo() {
-  const newText = await historyStore.redo()
-  if (newText !== null && typeof newText === 'string') {
-    const cursorPos = saveCursorPosition()
-    resetBody(newText)
-    setTimeout(() => {
-      restoreCursorPosition(cursorPos)
-    }, 0)
-    // 触发保存到数据库，不创建新的历史记录
-    emit('update:articleBody', newText, bodyRef.value.innerText, true) // 第三个参数表示跳过历史记录
-  } else {
-  }
+  // 功能已移除，仅保留空实现
 }
 
 function resetBody(text: string = "") {

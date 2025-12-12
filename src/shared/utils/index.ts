@@ -1,9 +1,9 @@
-import { customAlphabet } from "nanoid"
+import { nanoid } from "nanoid"
 import { useSettingStore } from "@domains/settings/stores/settings.store"
 import { imagedb } from "@shared/db"
 
-/** 生成一个唯一的 UUID v4 */
-export const uid = customAlphabet('023456789ABCDEFGHIKLMNOPQRSTUVWXYZ', 10)
+/** 生成一个唯一的 UUID  */
+export const uid = (len = 8) => nanoid(len)
 
 // 导出 z-index 管理器
 export { zIndexManager } from './z-index-manager'
@@ -11,9 +11,9 @@ export { zIndexManager } from './z-index-manager'
 /** 图片缓存 */
 const imageCache = new Map<string, string>()
 
-/** 根据图片ID获取图标Base64 URL */
-export async function getImageBase64ByID(id: string): Promise<string> {
-  if (!id) return '/cover/default.png'
+/** 根据图片ID获取 URL */
+export async function getImageByID(id: string): Promise<string> {
+  if (!id) return ''
 
   // 检查缓存
   if (imageCache.has(id)) {
@@ -33,7 +33,7 @@ export async function getImageBase64ByID(id: string): Promise<string> {
     console.error('获取图片失败:', err)
   }
 
-  return '/cover/default.png'
+  return ''
 }
 
 /** 清除图片缓存（删除图片后调用） */

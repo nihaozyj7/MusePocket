@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getDefaultBook } from '@shared/constants/defaults'
 import type { Book } from '@shared/types'
-import { getImageBase64ByID } from '@shared/utils'
+import { getImageByID } from '@shared/utils'
 import { ref, defineAsyncComponent, computed } from 'vue'
 import { Popup } from '@shared/components'
 
@@ -40,12 +40,12 @@ function openCoverSelector() {
 async function handleCoverSelected(coverId: string) {
   book.value.coverId = coverId
   // 更新封面预览
-  coverUrl.value = await getImageBase64ByID(coverId)
+  coverUrl.value = await getImageByID(coverId)
 }
 
 /** 加载封面图片 */
 async function loadCoverImage() {
-  coverUrl.value = await getImageBase64ByID(book.value.coverId)
+  coverUrl.value = await getImageByID(book.value.coverId)
 }
 
 defineExpose({

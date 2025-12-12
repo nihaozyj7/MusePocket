@@ -26,16 +26,12 @@ function hide() {
 
 /** 执行撤销 */
 function handleUndo() {
-  if (historyStore.canUndo) {
-    emit('undo')
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 执行重做 */
 function handleRedo() {
-  if (historyStore.canRedo) {
-    emit('redo')
-  }
+  // 功能已移除，仅保留空实现
 }
 
 defineExpose({

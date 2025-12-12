@@ -1,27 +1,52 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
-import { useHistoryStore } from '@domains/editor/stores/history.store'
-import type { DBHistoryRecord } from '@shared/types'
 import { computeVisualDiff, type VisualDiff } from '@domains/editor/services/history.service'
 import { Popup } from '@shared/components'
+import { uid } from '@/shared/utils'
+
+// 为 UI 提供的 mock 类型
+interface MockHistoryRecord {
+  id: string
+  articleId: string
+  difference: [],
+  fullContent?: string
+  createdTime: number
+}
 
 const selectedArticleStore = useSelectedArticleStore()
-const historyStore = useHistoryStore()
 
 const emit = defineEmits<{
   restore: [text: string]
   getCurrentText: []
 }>()
+const mockHistories = ref<MockHistoryRecord[]>([
+  {
+    id: uid(),
+    articleId: '',
+    difference: [],
+    fullContent: '得到',
+    createdTime: Date.now() - 3600000,
+  },
+  {
+    id: uid(),
+    articleId: '',
+    difference: [],
+    createdTime: Date.now() - 4600000,
+  },
+  {
+    id: uid(),
+    articleId: '',
+    difference: [],
+    createdTime: Date.now() - 5600000,
+  }
+])
 
-/** 历史记录列表（从 Pinia Store 读取） */
-const histories = computed(() => historyStore.currentHistories)
+const histories = computed(() => mockHistories.value)
 /** 选中的历史记录 */
-const selectedHistory = ref<DBHistoryRecord | null>(null)
+const selectedHistory = ref<MockHistoryRecord | null>(null)
 /** 当前文章的文本 */
 const currentText = ref('')
-/** 对比的文本（选中历史记录的文本） */
-const comparedText = ref('')
 /** 可视化 diff 结果 */
 const visualDiffs = ref<VisualDiff[]>([])
 /** diff 弹出层引用 */
@@ -29,124 +54,57 @@ const diffPopupRef = ref<InstanceType<typeof Popup> | null>(null)
 /** 获取当前编辑器文本的回调函数 */
 const getCurrentTextCallback = ref<(() => string) | null>(null)
 
-/** 格式化时间 */
+/**
+ * 格式化时间
+ *
+ * @param timestamp 要格式化的时间戳（毫秒）
+ * @returns 格式化后的时间字符串
+ */
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp)
   const now = new Date()
-  const diff = now.getTime() - date.getTime()
 
-  // 小于1分钟
-  if (diff < 60000) {
-    return '刚刚'
-  }
-  // 小于1小时
-  if (diff < 3600000) {
-    return `${Math.floor(diff / 60000)}分钟前`
-  }
-  // 小于1天
-  if (diff < 86400000) {
-    return `${Math.floor(diff / 3600000)}小时前`
-  }
-  // 同一年
-  if (date.getFullYear() === now.getFullYear()) {
-    return `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-  }
-  // 不同年
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
-}
+  // 获取各部分并格式化为两位数（小时/分钟/秒）
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const hh = pad(date.getHours())
+  const mm = pad(date.getMinutes())
+  const ss = pad(date.getSeconds())
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const year = date.getFullYear()
 
-/** 重建指定历史版本的文本 */
-async function reconstructHistoryText(targetHistory: DBHistoryRecord): Promise<string> {
-  // 使用 HistoryStore 的统一重建逻辑
-  const targetIndex = histories.value.findIndex(h => h.id === targetHistory.id)
-  if (targetIndex === -1) return ''
+  // 判断是否为同一天
+  const isSameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
 
-  // 调用 HistoryStore 的 reconstructTextAtIndex 方法，确保与回退逻辑一致
-  const text = await historyStore.reconstructTextAtIndex(
-    selectedArticleStore.v?.id || '',
-    targetIndex
-  )
+  // 同一天：返回 时:分:秒
+  if (isSameDay) {
+    return `${hh}:${mm}:${ss}`
+  }
 
-  return text || ''
+  // 判断是否为同一年（但不需要保证不同天，这一分支在同一天分支后）
+  const isSameYear = date.getFullYear() === now.getFullYear()
+
+  if (isSameYear) {
+    return `${month}月${day}日 ${hh}:${mm}:${ss}`
+  }
+
+  // 不同年：返回 年月日 时:分:秒
+  return `${year}年${month}月${day}日 ${hh}:${mm}:${ss}`
 }
 
 /** 点击历史记录 */
-async function handleHistoryClick(history: DBHistoryRecord) {
+async function handleHistoryClick(history: MockHistoryRecord) {
+  // 功能已移除，仅保留空实现
   selectedHistory.value = history
-
-  try {
-    // 重建历史版本的文本
-    comparedText.value = await reconstructHistoryText(history)
-
-    // 获取当前编辑器的实时文本（而不是缓存的 currentText）
-    const realCurrentText = getCurrentTextCallback.value ? getCurrentTextCallback.value() : currentText.value
-
-    // 计算回退后的变化：从当前版本回退到历史版本会发生什么变化
-    // 第一个参数：当前版本（旧），第二个参数：历史版本（新）
-    // 这样显示：当前有但历史没有的是删除（-），当前没有但历史有的是新增（+）
-    let diffs = computeVisualDiff(realCurrentText, comparedText.value)
-
-    // 重新排序：删除的行放在前面，添加的行放在后面
-    diffs = sortDiffByType(diffs)
-    visualDiffs.value = diffs
-
-    // 显示弹出层
-    diffPopupRef.value?.show()
-  } catch (err) {
-    console.error('生成 diff 失败:', err)
-  }
-}
-
-/** 对 diff 进行排序，使相同行号的删除行在前，添加行在后 */
-function sortDiffByType(diffs: VisualDiff[]): VisualDiff[] {
-  // 按行号分组
-  const grouped = new Map<number, VisualDiff[]>()
-
-  for (const diff of diffs) {
-    const lineNum = diff.lineNumber || 0
-    if (!grouped.has(lineNum)) {
-      grouped.set(lineNum, [])
-    }
-    grouped.get(lineNum)!.push(diff)
-  }
-
-  // 对每组内排序：removed -> added -> unchanged
-  const result: VisualDiff[] = []
-  const sortedLineNums = Array.from(grouped.keys()).sort((a, b) => a - b)
-
-  for (const lineNum of sortedLineNums) {
-    const group = grouped.get(lineNum)!
-    // 每组内按类型排序
-    const removed = group.filter(d => d.type === 'removed')
-    const added = group.filter(d => d.type === 'added')
-    const unchanged = group.filter(d => d.type === 'unchanged')
-    result.push(...removed, ...added, ...unchanged)
-  }
-
-  return result
+  diffPopupRef.value.show()
 }
 
 /** 回退到选中的历史版本 */
 async function handleRestore() {
-  if (!selectedHistory.value) {
-    console.error('没有选中的历史')
-    return
-  }
-
-  try {
-    // 使用 historyStore 的 restoreToHistory 方法
-    const text = await historyStore.restoreToHistory(selectedHistory.value.id)
-
-    if (text !== null && typeof text === 'string') {
-      emit('restore', text)
-      diffPopupRef.value?.close()
-      selectedHistory.value = null
-    } else {
-      console.error('回退失败：未能获取有效文本')
-    }
-  } catch (err) {
-    console.error('回退失败:', err)
-  }
+  // 功能已移除，仅保留空实现
 }
 
 /** 关闭 diff 弹出层 */
@@ -166,7 +124,7 @@ function setGetCurrentTextCallback(callback: () => string) {
 
 /** 刷新历史记录 */
 async function refresh() {
-  await historyStore.refreshHistories()
+  // 功能已移除，仅保留空实现
 }
 
 // 监听文章切换，关闭弹窗
@@ -200,25 +158,21 @@ defineExpose({
 
         <div v-for="history in histories" :key="history.id" class="history-item" :class="{
           'selected': selectedHistory?.id === history.id,
-          'snapshot': history.isSnapshot
+          'snapshot': history.fullContent
         }" @click="handleHistoryClick(history)">
-          <div class="item-header">
-            <span class="sequence">#{{ history.sequence }}</span>
-            <span v-if="history.isSnapshot" class="badge">快照</span>
-          </div>
-          <div class="item-time">{{ formatTime(history.createdTime) }}</div>
+          <div class="item-time">{{ `${formatTime(history.createdTime)}` }} <span v-if="history.fullContent" class="badge">快照</span></div>
         </div>
       </div>
     </div>
 
     <!-- Diff 对比弹出层 -->
     <Popup title="📊 版本对比" ref="diffPopupRef" :mask-closable="true" @close="closeDiffPopup">
-      <div class="diff-dialog">
+      <div class="diff-dialog" v-if="selectedHistory" :key="selectedHistory.id">
         <div class="diff-info">
           <div class="info-left">
             <div class="info-item">
-              <span class="label">选中版本：</span>
-              <span class="value">#{{ selectedHistory?.sequence }}</span>
+              <span class="label">ID：</span>
+              <span class="value">{{ selectedHistory.id }}</span>
             </div>
             <div class="info-item">
               <span class="label">时间：</span>
@@ -366,6 +320,9 @@ defineExpose({
 .item-time {
   font-size: 0.75rem;
   color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* Diff 弹出层样式 */

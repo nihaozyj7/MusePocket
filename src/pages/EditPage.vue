@@ -1287,10 +1287,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   flex: 1;
 }
 
-.import-export-container .btn-primary:hover {
-  background-color: var(--primary-hover);
-}
-
 .import-export-container .divider {
   height: 1px;
   background-color: var(--border-color);

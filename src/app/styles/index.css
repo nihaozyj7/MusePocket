@@ -70,9 +70,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  opacity: .6;
 }
 
 button:disabled {

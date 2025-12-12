@@ -183,8 +183,8 @@ defineExpose({
 
 .type-tag {
   padding: 0.2rem 0.5rem;
-  background-color: var(--success);
-  color: var(--text-primary);
+  background-color: var(--background-tertiary);
+  color: var(--danger);
   border-radius: 0.25rem;
   font-size: 0.8rem;
   white-space: nowrap;
@@ -267,23 +267,13 @@ defineExpose({
 }
 
 .btn-convert {
-  background-color: var(--warning);
+  background-color: var(--background-tertiary);
   color: white;
-}
-
-.btn-convert:hover {
-  background-color: var(--warning-dark, #d97706);
-  transform: translateY(-1px);
 }
 
 .btn-convert-all {
-  background-color: var(--danger);
+  background-color: var(--background-tertiary);
   color: white;
-}
-
-.btn-convert-all:hover {
-  background-color: var(--danger-dark, #dc2626);
-  transform: translateY(-1px);
 }
 
 .btn-convert:active,

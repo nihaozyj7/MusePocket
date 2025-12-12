@@ -89,19 +89,9 @@ function handleClose() {
   color: var(--text-primary);
 }
 
-.btn-cancel:hover {
-  background-color: var(--background-tertiary);
-  border-color: var(--text-secondary);
-}
-
 .btn-confirm {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary);
-}
-
-.btn-confirm:hover {
-  background-color: var(--primary-dark);
-  border-color: var(--primary-dark);
 }
 </style>

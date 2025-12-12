@@ -223,16 +223,6 @@ async function applyPreset(preset: SettingsPreset) {
   font-size: 0.8rem;
 }
 
-.apply-btn:hover {
-  background-color: var(--success) !important;
-  border-color: var(--success) !important;
-}
-
-.delete-btn:hover {
-  background-color: var(--danger) !important;
-  border-color: var(--danger) !important;
-}
-
 .preset-details {
   display: flex;
   flex-wrap: wrap;

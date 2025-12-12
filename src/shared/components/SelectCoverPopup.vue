@@ -263,8 +263,4 @@ async function handleUpload() {
   color: white;
   border-color: var(--primary);
 }
-
-.btn-confirm:hover {
-  opacity: 0.9;
-}
 </style>

@@ -1224,10 +1224,6 @@ main {
   flex: 1;
 }
 
-.import-export-container .btn-primary:hover {
-  background-color: var(--primary-hover);
-}
-
 .import-export-container .divider {
   height: 1px;
   background-color: var(--border-color);

@@ -133,11 +133,6 @@ header>h4,
   top: 0;
 }
 
-.rebuild-btn:hover:not(:disabled) {
-  background-color: var(--primary);
-  transform: translateY(-1px);
-}
-
 .rebuild-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

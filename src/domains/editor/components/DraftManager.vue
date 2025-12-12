@@ -185,10 +185,6 @@ function closeEditor() {
   transition: all 0.2s;
 }
 
-.btn-create:hover {
-  background-color: var(--primary-dark);
-}
-
 .draft-list {
   flex: 1;
   overflow-y: auto;
@@ -241,10 +237,6 @@ function closeEditor() {
   cursor: pointer;
   font-size: 1rem;
   opacity: 0.6;
-}
-
-.btn-delete:hover {
-  opacity: 1;
 }
 
 .editor-container {

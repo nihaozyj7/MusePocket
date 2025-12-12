@@ -239,19 +239,9 @@ function formatDate(timestamp: number): string {
   color: white;
 }
 
-.button-primary:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
 .button-danger {
   background-color: #ef4444;
   color: white;
-}
-
-.button-danger:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
 }
 
 .button-primary:disabled,

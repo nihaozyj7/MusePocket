@@ -338,17 +338,9 @@ defineExpose({
   border-color: var(--primary);
 }
 
-.btn-primary:hover {
-  background: var(--primary-dark);
-}
-
 .btn-secondary {
   background: var(--background-tertiary);
   color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: var(--background-secondary);
 }
 
 .preview-section {

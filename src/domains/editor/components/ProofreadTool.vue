@@ -868,10 +868,6 @@ defineExpose({
   transition: background-color 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1075,17 +1071,9 @@ defineExpose({
   border-color: var(--primary);
 }
 
-.btn-apply:hover {
-  background-color: var(--primary-dark);
-}
-
 .btn-ignore {
   background-color: var(--background-tertiary);
   color: var(--text-secondary);
-}
-
-.btn-ignore:hover {
-  background-color: var(--background-primary);
 }
 
 .preview-section {

@@ -381,9 +381,4 @@ const resetSettings = async () => {
   display: flex;
   gap: 1rem;
 }
-
-.reset-btn:hover {
-  background-color: var(--danger) !important;
-  border-color: var(--danger) !important;
-}
 </style>

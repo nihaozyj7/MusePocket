@@ -277,14 +277,4 @@ function copy(text: string) {
 .model-actions button {
   padding: 0.25rem 0.5rem;
 }
-
-.test-btn:hover {
-  background-color: var(--success) !important;
-  border-color: var(--success) !important;
-}
-
-.delete-btn:hover {
-  background-color: var(--danger) !important;
-  border-color: var(--danger) !important;
-}
 </style>

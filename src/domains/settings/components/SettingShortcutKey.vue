@@ -156,11 +156,6 @@ const resetToDefault = async () => {
   gap: 1rem;
 }
 
-.reset-btn:hover {
-  background-color: var(--danger) !important;
-  border-color: var(--danger) !important;
-}
-
 .hint {
   margin-top: 1.5rem;
   padding: 1rem;

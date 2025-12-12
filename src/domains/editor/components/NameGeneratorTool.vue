@@ -468,12 +468,6 @@ function clearResults() {
   transition: all 0.2s;
 }
 
-.generate-btn:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
 .generate-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -522,12 +516,6 @@ function clearResults() {
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background-color: var(--background-primary);
-  border-color: var(--primary);
-  color: var(--primary);
 }
 
 .names-grid {

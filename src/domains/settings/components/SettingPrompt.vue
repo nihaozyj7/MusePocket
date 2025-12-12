@@ -199,9 +199,4 @@ function remove(prompt: Prompt) {
 .delete-btn {
   padding: 0.25rem 0.5rem;
 }
-
-.delete-btn:hover {
-  background-color: var(--danger) !important;
-  border-color: var(--danger) !important;
-}
 </style>

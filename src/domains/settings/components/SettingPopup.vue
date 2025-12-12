@@ -208,12 +208,6 @@ button {
   white-space: nowrap;
 }
 
-button:hover:not(:disabled) {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;

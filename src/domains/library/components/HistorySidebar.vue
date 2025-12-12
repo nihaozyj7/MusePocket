@@ -298,11 +298,6 @@ defineExpose({
   transition: all 0.2s;
 }
 
-.refresh-btn:hover:not(:disabled) {
-  background-color: var(--primary);
-  color: white;
-}
-
 .refresh-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -563,17 +558,8 @@ defineExpose({
   color: white;
 }
 
-.btn-restore:hover {
-  background-color: var(--primary-dark);
-}
-
 .btn-cancel {
   background-color: var(--background-secondary);
   color: var(--text-primary);
-}
-
-.btn-cancel:hover {
-  background-color: var(--background-tertiary);
-  border-color: var(--text-secondary);
 }
 </style>

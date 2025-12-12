@@ -837,10 +837,6 @@ function copySuggestion(suggestion: any) {
   transition: background-color 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -889,10 +885,6 @@ function copySuggestion(suggestion: any) {
   border-radius: 0.25rem;
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.btn-small:hover:not(:disabled) {
-  background-color: var(--background-primary);
 }
 
 .btn-small:disabled {
@@ -977,10 +969,6 @@ function copySuggestion(suggestion: any) {
   font-size: 1rem;
   opacity: 0.6;
   transition: opacity 0.2s;
-}
-
-.btn-copy-suggestion:hover {
-  opacity: 1;
 }
 
 .suggestion-description {

@@ -236,11 +236,6 @@ function copyImageId(id: string) {
   background-color: var(--background-tertiary);
 }
 
-.btn-delete:hover {
-  background-color: #ef4444;
-  color: white;
-  border-color: #ef4444;
-}
 
 .image-id {
   padding: 0.5rem;

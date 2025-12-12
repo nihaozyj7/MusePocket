@@ -1036,10 +1036,6 @@ function cancelMerge() {
   font-size: 0.8rem;
 }
 
-.btn-small:hover {
-  background-color: var(--background-secondary);
-}
-
 .btn-extract {
   width: 100%;
   padding: 0.5rem;
@@ -1051,10 +1047,6 @@ function cancelMerge() {
   font-size: 0.9rem;
   font-weight: bold;
   transition: background-color 0.2s;
-}
-
-.btn-extract:hover:not(:disabled) {
-  background-color: var(--primary-dark);
 }
 
 .btn-extract:disabled {
@@ -1133,10 +1125,6 @@ function cancelMerge() {
   font-size: 0.9rem;
   font-weight: bold;
   transition: background-color 0.2s;
-}
-
-.btn-merge:hover:not(:disabled) {
-  background-color: #059669;
 }
 
 .btn-merge:disabled {
@@ -1274,10 +1262,6 @@ function cancelMerge() {
   transition: background-color 0.2s;
 }
 
-.btn-execute:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-}
-
 .btn-execute:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1291,9 +1275,5 @@ function cancelMerge() {
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: 0.85rem;
-}
-
-.btn-cancel:hover {
-  background-color: var(--background-secondary);
 }
 </style>

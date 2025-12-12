@@ -124,11 +124,6 @@ defineExpose({
   transition: all 0.2s;
 }
 
-.action-btn:hover:not(:disabled) {
-  background-color: var(--primary);
-  color: white;
-}
-
 .action-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
@@ -137,11 +132,6 @@ defineExpose({
 .action-btn.clear {
   background-color: rgba(255, 59, 48, 0.1);
   color: #ff3b30;
-}
-
-.action-btn.clear:hover:not(:disabled) {
-  background-color: #ff3b30;
-  color: white;
 }
 
 .info {

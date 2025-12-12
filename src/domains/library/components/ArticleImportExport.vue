@@ -161,10 +161,6 @@ function handleFileChange(event: Event) {
   transition: background-color 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-}
-
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;

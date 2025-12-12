@@ -119,10 +119,10 @@ ul {
 
 .base span {
   padding: .1rem .25rem;
-  background-color: var(--success);
+  background-color: var(--background-tertiary);
   border-radius: .25rem;
   margin-right: .5rem;
-  color: var(--text-primary);
+  color: var(--danger);
   font-size: .8rem;
 }
 

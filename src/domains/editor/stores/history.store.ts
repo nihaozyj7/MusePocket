@@ -42,8 +42,10 @@ export const useHistoryStore = defineStore('history', {
     canUndo(state): boolean {
       const articleState = this.currentState
       if (!articleState) return false
-      // 如果在最新版本（-1）且有历史记录，或者不在第一条记录，都可以撤销
-      return articleState.currentIndex === -1 ? articleState.totalCount > 0 : articleState.currentIndex > 0
+      // 如果在最新版本（-1）且有历史记录，或者不在最老的记录，都可以撤销
+      return articleState.currentIndex === -1
+        ? articleState.totalCount > 0
+        : articleState.currentIndex < articleState.totalCount - 1
     },
 
     /**
@@ -52,8 +54,8 @@ export const useHistoryStore = defineStore('history', {
     canRedo(state): boolean {
       const articleState = this.currentState
       if (!articleState) return false
-      // 只有在历史版本（currentIndex != -1）才能重做
-      return articleState.currentIndex !== -1 && articleState.currentIndex < articleState.totalCount - 1
+      // 只要在历史版本（currentIndex != -1）就能重做（往更新的方向移动）
+      return articleState.currentIndex !== -1
     },
 
     /**
@@ -63,15 +65,15 @@ export const useHistoryStore = defineStore('history', {
       const articleState = this.currentState
       if (!articleState) return null
 
-      // 计算可撤销的步数
+      // 计算可撤销的步数：从当前位置到最老的记录
       const undoCount = articleState.currentIndex === -1
-        ? articleState.totalCount
-        : articleState.currentIndex + 1
+        ? articleState.totalCount  // 从-1到最老，有totalCount步
+        : articleState.totalCount - articleState.currentIndex - 1  // 从当前索引到最老
 
-      // 计算可重做的步数
+      // 计算可重做的步数：从当前位置到-1（最新编辑状态）
       const redoCount = articleState.currentIndex === -1
-        ? 0
-        : articleState.totalCount - articleState.currentIndex - 1
+        ? 0  // 已经在最新，不能重做
+        : articleState.currentIndex + 1  // 从当前索引到-1，需要currentIndex+1步
 
       return {
         undoCount,
@@ -152,6 +154,13 @@ export const useHistoryStore = defineStore('history', {
 
       // 计算目标索引
       const targetIndex = state.currentIndex === -1 ? 0 : state.currentIndex + 1
+      console.log(`[撤销] 当前索引: ${state.currentIndex}, 目标索引: ${targetIndex}, 总记录数: ${state.totalCount}`)
+
+      // 检查边界
+      if (targetIndex >= state.totalCount) {
+        console.error(`[撤销] 目标索引 ${targetIndex} 超出范围 (总数: ${state.totalCount})`)
+        return null
+      }
 
       // 重建内容
       const content = await reconstructContentAtIndex(this.currentArticleId, targetIndex)
@@ -159,6 +168,7 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
+      console.log(`[撤销] 已更新索引为: ${targetIndex}`)
 
       // 持久化当前版本
       await this.saveCurrentVersion()
@@ -177,13 +187,18 @@ export const useHistoryStore = defineStore('history', {
 
       // 计算目标索引
       const targetIndex = state.currentIndex - 1
+      console.log(`[重做] 当前索引: ${state.currentIndex}, 目标索引: ${targetIndex}, 总记录数: ${state.totalCount}`)
 
       // 如果目标是 -1，直接返回栈顶快照
       if (targetIndex === -1) {
         const topHistory = await historydb.getTopHistory(this.currentArticleId)
-        if (!topHistory || !topHistory.fullContent) return null
+        if (!topHistory || topHistory.fullContent === null) {
+          console.error(`[重做] 栈顶快照丢失`)
+          return null
+        }
 
         state.currentIndex = -1
+        console.log(`[重做] 已更新索引为: -1 (最新版本)`)
         // 持久化当前版本
         await this.saveCurrentVersion()
         return topHistory.fullContent
@@ -195,6 +210,7 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
+      console.log(`[重做] 已更新索引为: ${targetIndex}`)
 
       // 持久化当前版本
       await this.saveCurrentVersion()

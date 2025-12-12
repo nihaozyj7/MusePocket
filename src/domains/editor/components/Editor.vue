@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useHistoryStore } from '@domains/editor/stores/history.store'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
-import { EntityHover, EntityHoverAutoInsert } from '@domains/library'
+import { EntityHover, EntityHoverAutoInsert, EntityClickPopup } from '@domains/library'
 import { useEntityStore } from '@domains/library/stores/entities.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import type { Entity } from '@shared/types'
@@ -28,8 +28,12 @@ const bodyBackgroundRef = ref<HTMLCanvasElement>()
 const entityHoverRef = ref<InstanceType<typeof EntityHover>>()
 /** 自动完成悬浮层 */
 const entityHoverAutoInsertRef = ref<InstanceType<typeof EntityHoverAutoInsert>>()
+/** 实体点击弹窗 */
+const entityClickPopupRef = ref<InstanceType<typeof EntityClickPopup>>()
 /** 实体列表 */
 const entityStore = useEntityStore()
+/** 当前点击的实体元素 */
+let lastClickedEntityElement: HTMLElement | null = null
 
 /** 配置项 */
 const settingStore = useSettingStore()
@@ -439,6 +443,18 @@ function handleBodyClick(e: MouseEvent) {
   entityHoverAutoInsertRef.value.hide()
 
   const target = e.target as HTMLElement
+
+  // 如果点击的是实体，显示实体详情弹窗
+  if (target.dataset.entityId) {
+    const entity = entityStore.v.find(e => e.id === target.dataset.entityId)
+    if (entity) {
+      // 保存点击的元素引用
+      lastClickedEntityElement = target
+      // 传递点击的元素，用于只转换这一个
+      entityClickPopupRef.value?.show(entity, target)
+    }
+  }
+
   if (target.dataset.key) {
     console.log(target.dataset.key)
   }
@@ -665,6 +681,35 @@ function updateEntityTitle(entityId: string, newTitle: string) {
   }
 }
 
+/** 将实体转换为普通文本 */
+function handleConvertEntityToText(entityId: string, title: string, convertAll: boolean) {
+  if (!bodyRef.value) return
+
+  if (convertAll) {
+    // 转换所有相同的实体
+    const entitySpans = bodyRef.value.querySelectorAll(`span[data-entity-id="${entityId}"]`)
+
+    // 将每个span替换为普通文本节点
+    entitySpans.forEach(span => {
+      const textNode = document.createTextNode(title)
+      span.parentNode?.replaceChild(textNode, span)
+    })
+
+    // 如果转换了内容，触发保存
+    if (entitySpans.length > 0) {
+      _forceSave()
+    }
+  } else {
+    // 只转换当前点击的这一个
+    if (lastClickedEntityElement && lastClickedEntityElement.dataset.entityId === entityId) {
+      const textNode = document.createTextNode(title)
+      lastClickedEntityElement.parentNode?.replaceChild(textNode, lastClickedEntityElement)
+      lastClickedEntityElement = null
+      _forceSave()
+    }
+  }
+}
+
 defineExpose({
   /** 重置编辑区内容 */
   resetBody,
@@ -721,6 +766,8 @@ defineExpose({
     <EntityHover ref="entityHoverRef" />
     <!-- 自动完成悬浮层 -->
     <EntityHoverAutoInsert ref="entityHoverAutoInsertRef" @close="entityHoverAutoInsertClose" />
+    <!-- 实体点击弹窗 -->
+    <EntityClickPopup ref="entityClickPopupRef" @convertToText="handleConvertEntityToText" />
   </main>
 
 </template>

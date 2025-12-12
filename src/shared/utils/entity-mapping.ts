@@ -167,4 +167,55 @@ export class EntityMappingService {
       throw err
     }
   }
+
+  /**
+   * 同步文章内容中的实体标题
+   * 根据实体ID从数据库中获取最新的实体标题并更新到文章内容中
+   * @param content 文章HTML内容
+   * @param bookId 书籍ID
+   * @returns 更新后的内容
+   */
+  static async syncEntityTitlesInContent(
+    content: string,
+    bookId: string
+  ): Promise<string> {
+    try {
+      if (!content) return content
+
+      // 创建临时DOM来解析HTML
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = content
+
+      // 查找所有实体span
+      const entitySpans = tempDiv.querySelectorAll('span[data-entity-id]')
+      if (entitySpans.length === 0) return content
+
+      // 获取该书籍下的所有实体
+      const entities = await entitydb.getBookEntities(bookId)
+
+      // 创建实体ID到标题的映射
+      const entityMap = new Map<string, string>()
+      entities.forEach(entity => {
+        entityMap.set(entity.id, entity.title)
+      })
+
+      // 更新每个实体span的文本
+      entitySpans.forEach(span => {
+        const entityId = span.getAttribute('data-entity-id')
+        if (entityId && entityMap.has(entityId)) {
+          const latestTitle = entityMap.get(entityId)!
+          // 只有当标题不同时才更新
+          if (span.textContent !== latestTitle) {
+            span.textContent = latestTitle
+          }
+        }
+      })
+
+      return tempDiv.innerHTML
+    } catch (err) {
+      console.error('同步实体标题失败:', err)
+      // 发生错误时返回原内容，不影响文章加载
+      return content
+    }
+  }
 }

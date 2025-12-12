@@ -303,9 +303,21 @@ function goHome() {
 }
 
 function openArticle(article: Article) {
-  articledb.getArticleBody(article.id).then(res => {
+  articledb.getArticleBody(article.id).then(async res => {
     selectedArticleStore.v = article
     articleBody.value = res
+
+    // 同步实体标题：从数据库加载最新的实体信息并更新到文章内容中
+    const syncedContent = await EntityMappingService.syncEntityTitlesInContent(
+      res.content,
+      selectedBookStore.v.id
+    )
+
+    // 如果内容被更新，同步到数据库
+    if (syncedContent !== res.content) {
+      articleBody.value.content = syncedContent
+      await articledb.updateArticle(selectedArticleStore.v, articleBody.value)
+    }
 
     // 初始化历史记录
     historyStore.initArticle(article.id)
@@ -313,10 +325,10 @@ function openArticle(article: Article) {
     // 等待编辑器成功加载后再设置内容
     waitFor(() => editorRef.value, () => {
       if (editorRef.value) {
-        editorRef.value.resetBody(res.content)
+        editorRef.value.resetBody(syncedContent)
         // 更新历史侧栏的当前文本
         if (historySidebarRef.value) {
-          historySidebarRef.value.setCurrentText(res.content || '')
+          historySidebarRef.value.setCurrentText(syncedContent || '')
           // 设置获取当前编辑器文本的回调（返回清洗后的内容）
           historySidebarRef.value.setGetCurrentTextCallback(() => {
             if (!editorRef.value) return ''

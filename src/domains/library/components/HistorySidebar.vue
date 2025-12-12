@@ -15,6 +15,8 @@ const emit = defineEmits<{
 
 
 const histories = computed(() => historyStore.currentHistories)
+/** 当前索引 (-1 表示在最新版本，0 表示在第一个历史版本) */
+const currentIndex = computed(() => historyStore.getCurrentIndex())
 /** 选中的历史记录 */
 const selectedHistory = ref<ArticleHistoryRecord | null>(null)
 /** 当前文章的文本 */
@@ -30,6 +32,16 @@ const visualDiffs = ref<VisualDiff[]>([])
 const diffPopupRef = ref<InstanceType<typeof Popup> | null>(null)
 /** 获取当前编辑器文本的回调函数 */
 const getCurrentTextCallback = ref<(() => string) | null>(null)
+
+/**
+ * 判断某个历史记录是否为当前版本
+ */
+function isCurrentVersion(index: number): boolean {
+  // currentIndex = -1 表示在最新版本（没有任何历史记录是当前的）
+  // currentIndex = 0 表示在第一个历史版本（索引0）
+  // currentIndex = 1 表示在第二个历史版本（索引1）
+  return currentIndex.value === index
+}
 
 /**
  * 格式化时间
@@ -190,11 +202,17 @@ defineExpose({
           <p>暂无历史记录</p>
         </div>
 
-        <div v-for="history in histories" :key="history.id" class="history-item" :class="{
+        <div v-for="(history, index) in histories" :key="history.id" class="history-item" :class="{
           'selected': selectedHistory?.id === history.id,
-          'snapshot': history.fullContent
+          'snapshot': isCurrentVersion(index),
         }" @click="handleHistoryClick(history)">
-          <div class="item-time">{{ `${formatTime(history.createdTime)}` }} <span v-if="history.fullContent" class="badge">快照</span></div>
+          <div class="item-time">
+            {{ `${formatTime(history.createdTime)}` }}
+            <span class="badges">
+              <span v-if="history.fullContent" class="badge snapshot-badge">快照</span>
+              <span v-if="isCurrentVersion(index)" class="badge current-badge">当前</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -306,6 +324,37 @@ defineExpose({
   font-size: 0.85rem;
 }
 
+.current-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
+  border: 2px solid #34c759;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #34c759;
+}
+
+.indicator-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: #34c759;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.indicator-text {
+  flex: 1;
+}
+
 .history-item {
   padding: .5rem;
   margin-bottom: 0.5rem;
@@ -330,6 +379,11 @@ defineExpose({
   border-left: 3px solid var(--primary);
 }
 
+.history-item.current:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+}
+
 .item-header {
   display: flex;
   align-items: center;
@@ -343,12 +397,26 @@ defineExpose({
   color: var(--text-primary);
 }
 
+.badges {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
 .badge {
   font-size: 0.65rem;
   padding: 0.1rem 0.4rem;
-  background-color: var(--primary);
   color: white;
   border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.snapshot-badge {
+  background-color: var(--primary);
+}
+
+.current-badge {
+  background-color: #34c759;
 }
 
 .item-time {

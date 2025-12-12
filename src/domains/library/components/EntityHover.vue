@@ -48,7 +48,7 @@ defineExpose({
         <span>{{ entity.type }}</span>
         <h5 class="title" @click="copy" title="点击复制">{{ entity.title }}</h5>
       </div>
-      <div class="intro">
+      <div class="intro" v-if="entity.description">
         <p @click="copy" title="点击复制">{{ entity.description }}</p>
       </div>
       <ul v-if="entity.attrs && entity.attrs.length > 0">
@@ -133,15 +133,12 @@ ul {
   border-bottom: 1px solid var(--border-color);
 }
 
-.info>* {
-  max-width: 12rem;
-}
-
 .info {
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 0;
+  min-width: 12rem;
+  max-width: 20rem;
 }
 
 .entity-box {

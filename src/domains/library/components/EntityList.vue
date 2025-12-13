@@ -360,11 +360,10 @@ function handleItemClick(entity: Entity) {
   display: flex;
   flex-direction: column;
   background-color: var(--background-secondary);
+  border: 5px solid var(--border-color);
   margin: 0.5rem;
   border-radius: 0.25rem;
   z-index: 2;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
 }
 
 .search {
@@ -377,6 +376,7 @@ function handleItemClick(entity: Entity) {
 .search input {
   flex: 1;
   width: 0;
+  border: none;
 }
 
 .search button {

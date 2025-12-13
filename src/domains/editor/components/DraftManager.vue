@@ -116,6 +116,12 @@ function closeEditor() {
   <div class="draft-manager">
     <div class="header">
       <h3>📝 草稿箱</h3>
+      <div class="editor-actions" v-show="showEditor">
+        <button @click="saveDraft" :disabled="isSaving" class="btn-save">
+          {{ isSaving ? '保存中...' : '💾 保存' }}
+        </button>
+        <button @click="closeEditor" class="btn-close">✖️ 关闭</button>
+      </div>
       <button @click="createDraft" class="btn-create">+ 新建草稿</button>
     </div>
 
@@ -135,12 +141,6 @@ function closeEditor() {
     <div v-else class="editor-container">
       <div class="editor-header">
         <input v-model="currentDraft!.title" class="draft-title-input" placeholder="草稿标题" />
-        <div class="editor-actions">
-          <button @click="saveDraft" :disabled="isSaving" class="btn-save">
-            {{ isSaving ? '保存中...' : '💾 保存' }}
-          </button>
-          <button @click="closeEditor" class="btn-close">✖️ 关闭</button>
-        </div>
       </div>
 
       <div class="markdown-editor">

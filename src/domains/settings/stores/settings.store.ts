@@ -78,6 +78,11 @@ export const useSettingStore = defineStore('setting', {
       autoCompleteConfirmKey: 'both' as const,
       autoCompleteDefaultSelect: true
     } as BaseSettings,
+    /** 纠错配置 */
+    proofreadingSettings: {
+      apiUrl: '', // 纠错接口地址
+      autoProofread: false // 是否启用自动纠错
+    },
     /** AI工具配置 */
     aiToolsSettings: {
       aiSuggestion: {},
@@ -376,6 +381,16 @@ export const useSettingStore = defineStore('setting', {
     /** 清空AI工具配置 */
     clearAiToolConfig(toolName: keyof AiToolsSettings) {
       this.aiToolsSettings[toolName] = {}
+    },
+
+    /** 更新纠错接口地址 */
+    updateProofreadingApiUrl(url: string) {
+      this.proofreadingSettings.apiUrl = url
+    },
+
+    /** 切换自动纠错 */
+    toggleAutoProofread(enabled: boolean) {
+      this.proofreadingSettings.autoProofread = enabled
     }
   }
 })

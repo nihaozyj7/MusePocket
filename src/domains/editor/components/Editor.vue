@@ -6,8 +6,9 @@ import { useEntityStore } from '@domains/library/stores/entities.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import type { Entity } from '@shared/types'
 import { ChineseInputManager, countNonWhitespace, fixEditorDomLight, getActualLineHeight, getCleanedEditorContent, getQueue, insertText, insertVariableSpan, isCaretInViewport, isCursorInValidNode, moveCaretToEndAndScrollToBottom, newlineToP, restoreCursorPosition, saveCursorPosition, restoreCursorTextPosition, saveCursorTextPosition, scrollCaretDownIntoView, scrollCaretIntoView, StyleManager, trimAndReduceNewlines } from '@shared/utils'
-import { throttle } from 'lodash-es'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { throttle, debounce } from 'lodash-es'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { proofreadingService, type ProofreadError } from '@domains/editor/services/proofreading.service'
 
 interface Props {
   /** update 事件触发的节流时间（毫秒） */
@@ -527,6 +528,8 @@ function deleteTextBeforeCursor(length: number) {
 let chars = ''
 /** 自动完成延迟定时器 */
 let autoCompleteTimer: number | null = null
+/** 纠错延迟定时器 */
+let proofreadTimer: number | null = null
 
 /** 中文输入提交时 */
 const handleChineseInputMethodSubmission = (data: string) => {
@@ -863,5 +866,22 @@ main .statusbar .right {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.proofread-status {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+}
+
+.proofread-status.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.proofread-status.clickable:hover {
+  background-color: var(--background-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 </style>

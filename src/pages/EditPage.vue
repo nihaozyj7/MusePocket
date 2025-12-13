@@ -438,14 +438,22 @@ async function handleRestoreFromHistory(historyId: string) {
 }
 
 /** 处理校对修复 */
-function handleProofreadFix(issue: any) {
+function handleProofreadFix(issueOrOriginal: any, corrected?: string) {
   if (!editorRef.value) return
 
   // 获取纯文本内容
   const bodyText = editorRef.value.getBodyText()
 
-  // 替换文本
-  const newText = bodyText.replace(issue.original, issue.suggestion)
+  let newText: string
+  // 支持两种调用方式
+  if (typeof issueOrOriginal === 'string' && corrected) {
+    // 本地纠错方式：直接传入original和corrected
+    newText = bodyText.replace(issueOrOriginal, corrected)
+  } else {
+    // AI校对方式：传入issue对象
+    const issue = issueOrOriginal
+    newText = bodyText.replace(issue.original, issue.suggestion)
+  }
 
   // 保存光标位置
   const cursorPos = saveCursorPosition()
@@ -908,7 +916,13 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
-          <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" @apply-fix="handleProofreadFix" />
+          <ProofreadTool
+            v-show="settingStore.rutilsTitle === rutilsTitles[1]"
+            ref="proofreadToolRef"
+            :getEditorBody="() => editorRef?.getBodyText()"
+            :applyTextFix="handleProofreadFix"
+            @apply-fix="handleProofreadFix"
+          />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
           <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
           <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />

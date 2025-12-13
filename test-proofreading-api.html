@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纠错API测试</title>
+    <style>
+      body {
+        font-family: 'Microsoft YaHei', sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .result {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .error {
+        color: red;
+      }
+
+      .success {
+        color: green;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+
+      .status.ready {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>纠错API测试工具</h1>
+
+    <div class="test-section">
+      <h2>1. 健康检查</h2>
+      <button onclick="checkHealth()">检查服务状态</button>
+      <div id="healthResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>2. 单文本纠错</h2>
+      <input type="text" id="testText" placeholder="输入要检查的文本(例如: 我今天去图书官看书)" value="我今天去图书官看书">
+      <br>
+      <button onclick="testCorrect()">开始纠错</button>
+      <div id="correctResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>3. 批量纠错</h2>
+      <button onclick="testBatch()">批量测试</button>
+      <div id="batchResult" class="result"></div>
+    </div>
+
+    <script>
+      const API_BASE = 'http://localhost:3006'
+
+      async function checkHealth() {
+        const resultDiv = document.getElementById('healthResult')
+        resultDiv.innerHTML = '检查中...'
+
+        try {
+          const response = await fetch(`${API_BASE}/health`)
+          const data = await response.json()
+
+          if (data.healthy) {
+            resultDiv.innerHTML = `<div class="status ready">✅ 服务正常运行<br>状态: ${data.status}</div>`
+          } else {
+            resultDiv.innerHTML = `<div class="status error">❌ 服务未就绪<br>状态: ${data.status}</div>`
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<div class="status error">❌ 连接失败: ${error.message}<br>请确保服务已启动在 ${API_BASE}</div>`
+        }
+      }
+
+      async function testCorrect() {
+        const text = document.getElementById('testText').value
+        const resultDiv = document.getElementById('correctResult')
+
+        if (!text) {
+          resultDiv.innerHTML = '<span class="error">请输入要检查的文本</span>'
+          return
+        }
+
+        resultDiv.innerHTML = '检查中...'
+
+        try {
+          const response = await fetch(`${API_BASE}/correct`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ text })
+          })
+
+          const data = await response.json()
+
+          let html = '<strong>原文:</strong> ' + data.original + '<br>'
+          html += '<strong>纠正后:</strong> ' + data.corrected + '<br>'
+          html += '<strong>是否有错误:</strong> ' + (data.has_error ? '是' : '否') + '<br><br>'
+
+          if (data.has_error && data.errors.length > 0) {
+            html += '<strong>错误列表:</strong><br>'
+            data.errors.forEach((error, index) => {
+              html += `${index + 1}. 位置 ${error.position}: "${error.original}" → "${error.corrected}"<br>`
+            })
+            resultDiv.innerHTML = `<div class="status error">${html}</div>`
+          } else {
+            resultDiv.innerHTML = `<div class="status ready">${html}✅ 未发现错误</div>`
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`
+        }
+      }
+
+      async function testBatch() {
+        const resultDiv = document.getElementById('batchResult')
+        resultDiv.innerHTML = '批量检查中...'
+
+        const testTexts = [
+          "我今天去图书官看书",
+          "这个软件真的很好用",
+          "他在那里工作"
+        ]
+
+        try {
+          const response = await fetch(`${API_BASE}/correct/batch`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ texts: testTexts })
+          })
+
+          const data = await response.json()
+
+          let html = `<strong>总数:</strong> ${data.total}<br><br>`
+
+          data.results.forEach((result, index) => {
+            html += `<strong>文本 ${index + 1}:</strong><br>`
+            html += `原文: ${result.original}<br>`
+            html += `纠正: ${result.corrected}<br>`
+
+            if (result.has_error) {
+              html += `错误数: ${result.errors.length}<br>`
+              result.errors.forEach(error => {
+                html += `  - "${error.original}" → "${error.corrected}" (位置: ${error.position})<br>`
+              })
+            } else {
+              html += '✅ 无错误<br>'
+            }
+            html += '<br>'
+          })
+
+          resultDiv.innerHTML = html
+        } catch (error) {
+          resultDiv.innerHTML = `<span class="error">错误: ${error.message}</span>`
+        }
+      }
+
+      // 页面加载时自动检查健康状态
+      window.onload = () => {
+        checkHealth()
+      };
+    </script>
+  </body>
+
+</html>

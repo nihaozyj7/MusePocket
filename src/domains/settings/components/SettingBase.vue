@@ -4,6 +4,8 @@ import { useSettingStore } from '@domains/settings/stores/settings.store'
 import type { GridLineStyle } from '@shared/types'
 import { $confirm } from '@app/plugins'
 import { SelectCoverPopup } from '@shared/components'
+import { proofreadingService } from '@domains/editor/services/proofreading.service'
+import { $tips } from '@app/plugins/notyf'
 
 const props = defineProps<{ title: string }>()
 const settingStore = useSettingStore()
@@ -19,6 +21,10 @@ const tempBaseFontSize = ref(settings.baseFontSize)
 const tempEditorFontSize = ref(settings.editorFontSize)
 const tempLineHeight = ref(settings.lineHeight)
 
+// 纠错相关状态
+const tempProofreadApiUrl = ref(settingStore.proofreadingSettings.apiUrl)
+const isTesting = ref(false)
+
 // 监听store的变化，同步临时变量（如重置设置时）
 watch(() => settings.baseFontSize, (newVal) => {
   tempBaseFontSize.value = newVal
@@ -28,6 +34,9 @@ watch(() => settings.editorFontSize, (newVal) => {
 })
 watch(() => settings.lineHeight, (newVal) => {
   tempLineHeight.value = newVal
+})
+watch(() => settingStore.proofreadingSettings.apiUrl, (newVal) => {
+  tempProofreadApiUrl.value = newVal
 })
 
 // 颜色转换：将 8 位格式 (#rrggbbaa) 转换为 6 位格式 (#rrggbb)
@@ -117,6 +126,38 @@ const handleSelectBackground = (imageId: string) => {
 const resetSettings = async () => {
   if (await $confirm('确定要重置所有基础设置为默认值吗？')) {
     settingStore.resetBaseSettings()
+  }
+}
+
+// 纠错API地址失焦处理
+const handleProofreadApiUrlBlur = () => {
+  const url = tempProofreadApiUrl.value.trim()
+  settingStore.updateProofreadingApiUrl(url)
+  if (url) {
+    proofreadingService.setBaseUrl(url)
+  }
+}
+
+// 测试纠错接口
+const testProofreadApi = async () => {
+  const url = tempProofreadApiUrl.value.trim()
+  if (!url) {
+    $tips.error('请先输入纠错接口地址')
+    return
+  }
+
+  isTesting.value = true
+  try {
+    const result = await proofreadingService.testConnection(url)
+    if (result.success) {
+      $tips.success(result.message)
+    } else {
+      $tips.error(`${result.message}${result.error ? ': ' + result.error : ''}`)
+    }
+  } catch (error) {
+    $tips.error('测试失败')
+  } finally {
+    isTesting.value = false
   }
 }
 </script>
@@ -283,6 +324,31 @@ const resetSettings = async () => {
         </div>
       </div>
 
+      <!-- 纠错设置 -->
+      <div class="setting-group">
+        <div class="group-title">✅ 纠错设置</div>
+        <div class="setting-item">
+          <label>
+            <span class="label-text">纠错接口地址</span>
+            <span class="label-desc">本地纠错服务的API地址</span>
+            <div class="input-group">
+              <input type="text" v-model="tempProofreadApiUrl" @blur="handleProofreadApiUrlBlur" placeholder="例如: http://localhost:3006" style="min-width: 250px;">
+              <button @click="testProofreadApi" :disabled="isTesting || !tempProofreadApiUrl.trim()" class="test-btn">
+                {{ isTesting ? '测试中...' : '🔍 测试接口' }}
+              </button>
+            </div>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label class="checkbox-label">
+            <input type="checkbox" :checked="settingStore.proofreadingSettings.autoProofread" @change="e => settingStore.toggleAutoProofread((e.target as HTMLInputElement).checked)">
+            <span>启用自动纠错</span>
+            <span class="label-desc">开启后编辑器将自动检测文本错误（需要接口地址配置且服务可用）</span>
+          </label>
+        </div>
+      </div>
+
       <!-- 重置按钮 -->
       <div class="button-group">
         <button class="reset-btn" @click="resetSettings">重置为默认</button>
@@ -411,5 +477,26 @@ const resetSettings = async () => {
   border-top: 1px solid var(--border-color);
   display: flex;
   gap: 1rem;
+}
+
+.test-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.test-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

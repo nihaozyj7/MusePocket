@@ -244,6 +244,7 @@ import { $tips } from '@app/plugins'
 import { uid } from '@shared/utils'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
 import { articledb } from '@shared/db'
+import LocalProofreadTool from './LocalProofreadTool.vue'
 
 interface ProofreadIssue {
   id: string
@@ -260,6 +261,19 @@ const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
 const settingStore = useSettingStore()
 const selectedArticleStore = useSelectedArticleStore()
+
+const props = defineProps<{
+  getEditorBody?: () => string | undefined
+  applyTextFix?: (original: string, corrected: string) => void
+}>()
+
+/** 主标签页：AI校对 or 本地纠错 */
+const mainTab = ref<'ai' | 'local'>('ai')
+
+/** 是否显示本地纠错tab */
+const showLocalProofread = computed(() => {
+  return settingStore.proofreadingSettings.apiUrl && settingStore.proofreadingSettings.apiUrl.trim() !== ''
+})
 
 /** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
@@ -607,6 +621,22 @@ function getIssueColorClass(type: string) {
   }
 }
 
+/** 处理本地纠错的单个修正 */
+function handleLocalProofreadFix(issue: any) {
+  if (props.applyTextFix) {
+    props.applyTextFix(issue.error.original, issue.error.corrected)
+  }
+}
+
+/** 处理本地纠错的批量修正 */
+function handleLocalProofreadAll(issues: any[]) {
+  if (props.applyTextFix) {
+    issues.forEach(issue => {
+      props.applyTextFix!(issue.error.original, issue.error.corrected)
+    })
+  }
+}
+
 const emit = defineEmits<{
   'apply-fix': [issue: ProofreadIssue]
 }>()
@@ -622,141 +652,159 @@ defineExpose({
       <h3>✅ 文本校对</h3>
     </div>
 
+    <!-- 主标签页 -->
+    <div class="main-tabs" v-if="showLocalProofread">
+      <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
+        🤖 AI校对
+      </button>
+      <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
+        🔍 纠错
+      </button>
+    </div>
+
     <div class="tool-body">
-      <!-- 配置区域 -->
-      <div class="config-section">
-        <div class="form-item">
-          <label>AI 模型</label>
-          <select v-model="selectedModel">
-            <option :value="null" disabled>请选择模型</option>
-            <option v-for="model in modelOptions" :key="model.model" :value="model">
-              {{ model.note || model.model }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-item">
-          <label>校对场景</label>
-          <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
-            <option value="">选择校对场景（可选）</option>
-            <optgroup label="内置场景">
-              <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
-                {{ preset.title }}
-              </option>
-            </optgroup>
-            <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
-              <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
-                {{ preset.title }}
-              </option>
-            </optgroup>
-          </select>
-          <p v-if="selectedPreset" class="preset-description">
-            {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
-          </p>
-        </div>
-
-        <div class="form-item">
-          <label>校对提示词</label>
-          <div class="prompt-selector-wrapper">
-            <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
-              <option value="">从提示词库快速选择（可选）</option>
-              <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
-                {{ prompt.title }}
+      <!-- AI校对内容 -->
+      <div v-if="mainTab === 'ai'" class="tab-content">
+        <!-- 配置区域 -->
+        <div class="config-section">
+          <div class="form-item">
+            <label>AI 模型</label>
+            <select v-model="selectedModel">
+              <option :value="null" disabled>请选择模型</option>
+              <option v-for="model in modelOptions" :key="model.model" :value="model">
+                {{ model.note || model.model }}
               </option>
             </select>
           </div>
-          <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
+
+          <div class="form-item">
+            <label>校对场景</label>
+            <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
+              <option value="">选择校对场景（可选）</option>
+              <optgroup label="内置场景">
+                <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
+                  {{ preset.title }}
+                </option>
+              </optgroup>
+              <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
+                <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
+                  {{ preset.title }}
+                </option>
+              </optgroup>
+            </select>
+            <p v-if="selectedPreset" class="preset-description">
+              {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
+            </p>
+          </div>
+
+          <div class="form-item">
+            <label>校对提示词</label>
+            <div class="prompt-selector-wrapper">
+              <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+                <option value="">从提示词库快速选择（可选）</option>
+                <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+                  {{ prompt.title }}
+                </option>
+              </select>
+            </div>
+            <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
+          </div>
+
+          <div class="actions">
+            <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
+              {{ isProofreading ? '校对中...' : '开始校对' }}
+            </button>
+          </div>
+
+          <div class="progress" v-if="progress">
+            {{ progress }}
+          </div>
         </div>
 
-        <div class="actions">
-          <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
-            {{ isProofreading ? '校对中...' : '开始校对' }}
+        <!-- 标签页 -->
+        <div class="tabs" v-if="issues.length > 0">
+          <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
+            纠错 ({{ issues.length }})
+          </button>
+          <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
+            预览
           </button>
         </div>
 
-        <div class="progress" v-if="progress">
-          {{ progress }}
-        </div>
-      </div>
-
-      <!-- 标签页 -->
-      <div class="tabs" v-if="issues.length > 0">
-        <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
-          纠错 ({{ issues.length }})
-        </button>
-        <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
-          预览
-        </button>
-      </div>
-
-      <!-- 问题列表 -->
-      <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
-        <div class="issues-header">
-          <div class="stats">
-            <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
-            <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
-            <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
-          </div>
-          <div class="batch-actions">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="isAllSelected" />
-              全选
-            </label>
-            <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
-              全部修改
-            </button>
-          </div>
-        </div>
-
-        <div class="issues-list">
-          <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
-            <div class="issue-header">
+        <!-- 问题列表 -->
+        <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
+          <div class="issues-header">
+            <div class="stats">
+              <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
+              <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
+              <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
+            </div>
+            <div class="batch-actions">
               <label class="checkbox-label">
-                <input type="checkbox" v-model="issue.selected" />
+                <input type="checkbox" v-model="isAllSelected" />
+                全选
               </label>
-              <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
-              <span class="issue-category">{{ issue.category }}</span>
-            </div>
-
-            <div class="issue-content">
-              <div class="issue-row">
-                <span class="label">发现：</span>
-                <span class="original-text">{{ issue.original }}</span>
-              </div>
-              <div class="issue-row" v-if="issue.suggestion">
-                <span class="label">建议：</span>
-                <span class="suggestion-text">{{ issue.suggestion }}</span>
-              </div>
-              <div class="issue-row" v-if="issue.reason">
-                <span class="label">原因：</span>
-                <span class="reason-text">{{ issue.reason }}</span>
-              </div>
-            </div>
-
-            <div class="issue-actions">
-              <button class="btn-action btn-apply" @click="applyIssue(issue)">
-                修改
-              </button>
-              <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
-                忽略
+              <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
+                全部修改
               </button>
             </div>
           </div>
+
+          <div class="issues-list">
+            <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
+              <div class="issue-header">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="issue.selected" />
+                </label>
+                <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
+                <span class="issue-category">{{ issue.category }}</span>
+              </div>
+
+              <div class="issue-content">
+                <div class="issue-row">
+                  <span class="label">发现：</span>
+                  <span class="original-text">{{ issue.original }}</span>
+                </div>
+                <div class="issue-row" v-if="issue.suggestion">
+                  <span class="label">建议：</span>
+                  <span class="suggestion-text">{{ issue.suggestion }}</span>
+                </div>
+                <div class="issue-row" v-if="issue.reason">
+                  <span class="label">原因：</span>
+                  <span class="reason-text">{{ issue.reason }}</span>
+                </div>
+              </div>
+
+              <div class="issue-actions">
+                <button class="btn-action btn-apply" @click="applyIssue(issue)">
+                  修改
+                </button>
+                <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
+                  忽略
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 预览 -->
+        <div class="preview-section" v-if="activeTab === 'preview'">
+          <div class="preview-header">
+            <h4>AI 返回内容</h4>
+          </div>
+          <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
+        </div>
+
+        <!-- 空状态 -->
+        <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
+          <div class="empty-icon">✅</div>
+          <p>选择AI模型和提示词，点击“开始校对”进行文本校对</p>
         </div>
       </div>
 
-      <!-- 预览 -->
-      <div class="preview-section" v-if="activeTab === 'preview'">
-        <div class="preview-header">
-          <h4>AI 返回内容</h4>
-        </div>
-        <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
-      </div>
-
-      <!-- 空状态 -->
-      <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
-        <div class="empty-icon">✅</div>
-        <p>选择AI模型和提示词，点击"开始校对"进行文本校对</p>
+      <!-- 本地纠错内容 -->
+      <div v-if="mainTab === 'local'" class="tab-content">
+        <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
       </div>
     </div>
   </div>
@@ -784,10 +832,51 @@ defineExpose({
   color: var(--text-primary);
 }
 
+.main-tabs {
+  display: flex;
+  gap: 0;
+  background-color: var(--background-secondary);
+  border-bottom: 2px solid var(--border-color);
+  padding: 0 1rem;
+}
+
+.main-tabs button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+
+.main-tabs button:hover {
+  color: var(--text-primary);
+  background-color: var(--background-tertiary);
+}
+
+.main-tabs button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background-color: var(--background-primary);
+}
+
 .tool-body {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .config-section {

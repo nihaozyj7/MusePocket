@@ -63,6 +63,125 @@ async function checkServiceAvailability() {
   }
 }
 
+/**
+ * 将文本按句子分割并智能合并，每次发送不超过30字
+ * 优先按标点符号分割，遇到换行必须截断
+ * 短句可以合并发送，但总长度不超过30字
+ */
+function splitAndMergeText(text: string, maxLength: number = 30): string[] {
+  const result: string[] = []
+
+  // 先按换行符分割（换行必须截断）
+  const lines = text.split('\n')
+
+  lines.forEach(line => {
+    const trimmed = line.trim()
+    if (!trimmed) return
+
+    // 按标点符号分割句子
+    const sentences = trimmed.split(/(?<=[。！？；!?;，,、])/)
+
+    let buffer = ''
+
+    sentences.forEach(sentence => {
+      const trimmedSentence = sentence.trim()
+      if (!trimmedSentence) return
+
+      // 如果单个句子超过30字，需要截断
+      if (trimmedSentence.length > maxLength) {
+        // 先处理buffer中的内容
+        if (buffer) {
+          result.push(buffer.trim())
+          buffer = ''
+        }
+
+        // 截断长句
+        for (let i = 0; i < trimmedSentence.length; i += maxLength) {
+          const chunk = trimmedSentence.substring(i, i + maxLength)
+          if (chunk.trim()) {
+            result.push(chunk.trim())
+          }
+        }
+      } else {
+        // 尝试合并到buffer
+        const potentialBuffer = buffer + trimmedSentence
+
+        if (potentialBuffer.length <= maxLength) {
+          // 可以合并
+          buffer = potentialBuffer
+        } else {
+          // 不能合并，先输出buffer
+          if (buffer) {
+            result.push(buffer.trim())
+          }
+          buffer = trimmedSentence
+        }
+      }
+    })
+
+    // 处理剩余的buffer
+    if (buffer) {
+      result.push(buffer.trim())
+      buffer = ''
+    }
+  })
+
+  return result
+}
+
+/**
+ * 根据行号合并同一句子的所有错误
+ * 如果同一行有多个错误，说明整个句子都有问题，应该合并成一个句子级错误
+ */
+function mergeSameSentenceErrors(issues: LocalProofreadIssue[]): LocalProofreadIssue[] {
+  // 按行号分组
+  const grouped = new Map<number, LocalProofreadIssue[]>()
+
+  issues.forEach(issue => {
+    const lineNumber = issue.lineNumber
+    if (!grouped.has(lineNumber)) {
+      grouped.set(lineNumber, [])
+    }
+    grouped.get(lineNumber)!.push(issue)
+  })
+
+  const mergedIssues: LocalProofreadIssue[] = []
+
+  // 处理每一行
+  grouped.forEach((lineIssues, lineNumber) => {
+    if (lineIssues.length === 1) {
+      // 只有一个错误，直接保留
+      mergedIssues.push(lineIssues[0])
+    } else {
+      // 多个错误，合并为句子级错误
+      const sentence = lineIssues[0].error.lineText || ''
+      let correctedSentence = sentence
+
+      // 按位置排序，从后往前替换以避免位置偏移
+      const sortedIssues = [...lineIssues].sort((a, b) => b.error.position - a.error.position)
+
+      sortedIssues.forEach(issue => {
+        correctedSentence = correctedSentence.replace(issue.error.original, issue.error.corrected)
+      })
+
+      // 创建合并后的错误
+      mergedIssues.push({
+        id: `merged-${lineNumber}`,
+        lineNumber: lineNumber,
+        error: {
+          original: sentence,
+          corrected: correctedSentence,
+          position: 0,
+          lineText: sentence
+        },
+        selected: false
+      })
+    }
+  })
+
+  return mergedIssues
+}
+
 /** 开始纠错 */
 async function startProofread() {
   if (!isServiceEnabled.value) {
@@ -81,15 +200,22 @@ async function startProofread() {
   proofreadState.value = '⏳ 检查中...'
   issues.value = []
 
-  const lines = text.split('\n')
   const allIssues: LocalProofreadIssue[] = []
+  let processedCount = 0
 
   try {
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
+    // 将整个文本按句子分割并智能合并，每次发送不超过30字
+    const chunks = splitAndMergeText(text, 30)
+    const totalChunks = chunks.length
 
-      const result = await proofreadingService.correctText(line)
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
+
+      // 更新进度
+      processedCount++
+      proofreadState.value = `⏳ 检查中... (${processedCount}/${totalChunks})`
+
+      const result = await proofreadingService.correctText(chunk)
 
       if (result && result.has_error && result.errors.length > 0) {
         result.errors.forEach(error => {
@@ -98,7 +224,7 @@ async function startProofread() {
             lineNumber: i + 1,
             error: {
               ...error,
-              lineText: line
+              lineText: chunk
             },
             selected: false
           })
@@ -106,7 +232,8 @@ async function startProofread() {
       }
     }
 
-    issues.value = allIssues
+    // 合并同一句子的所有错误
+    issues.value = mergeSameSentenceErrors(allIssues)
 
     if (allIssues.length > 0) {
       proofreadState.value = `⚠️ 发现 ${allIssues.length} 个错误`

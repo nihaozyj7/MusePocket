@@ -268,7 +268,7 @@ const props = defineProps<{
 }>()
 
 /** 主标签页：AI校对 or 本地纠错 */
-const mainTab = ref<'ai' | 'local'>('ai')
+const mainTab = ref<'ai' | 'local'>('local')
 
 /** 是否显示本地纠错tab */
 const showLocalProofread = computed(() => {
@@ -654,17 +654,17 @@ defineExpose({
 
     <!-- 主标签页 -->
     <div class="main-tabs" v-if="showLocalProofread">
-      <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
-        🤖 AI校对
-      </button>
       <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
         🔍 纠错
+      </button>
+      <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
+        🤖 AI校对
       </button>
     </div>
 
     <div class="tool-body">
       <!-- AI校对内容 -->
-      <div v-if="mainTab === 'ai'" class="tab-content">
+      <div v-show="mainTab === 'ai'" class="tab-content">
         <!-- 配置区域 -->
         <div class="config-section">
           <div class="form-item">
@@ -803,7 +803,7 @@ defineExpose({
       </div>
 
       <!-- 本地纠错内容 -->
-      <div v-if="mainTab === 'local'" class="tab-content">
+      <div v-show="mainTab === 'local'" class="tab-content">
         <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
       </div>
     </div>
@@ -888,6 +888,7 @@ defineExpose({
 
 .config-section {
   margin-bottom: 1rem;
+  padding: .5rem;
 }
 
 .form-item {

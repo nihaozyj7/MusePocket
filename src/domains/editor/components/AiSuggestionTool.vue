@@ -714,25 +714,37 @@ function copySuggestion(suggestion: any) {
 
 .tabs {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  justify-content: space-between;
+  background-color: var(--background-tertiary);
+  height: 2.2rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin: 0.5rem 1rem;
   border-bottom: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
 }
 
 .tabs button {
-  padding: 0.5rem 1rem;
+  flex: 1;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0;
   background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border-top: none;
+  border-left: none;
+  border-bottom: none;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
+.tabs button:last-child {
+  border-right: none;
+}
+
 .tabs button.active {
   color: var(--primary);
-  border-bottom-color: var(--primary);
+  border-bottom: 1px solid var(--primary);
 }
 
 .tool-body {
@@ -827,7 +839,7 @@ function copySuggestion(suggestion: any) {
 
 .btn-primary {
   flex: 1;
-  padding: 0.625rem 1rem;
+  padding: .5rem;
   background-color: var(--primary);
   color: white;
   border: none;

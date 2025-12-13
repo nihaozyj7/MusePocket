@@ -5,7 +5,7 @@ import type { ProofreadError } from '@domains/editor/services/proofreading.servi
 
 interface ProofreadIssue {
   lineNumber: number
-  error: ProofreadError
+  error: ProofreadError & { lineText?: string }
 }
 
 const popupRef = ref<InstanceType<typeof Popup>>()
@@ -48,6 +48,25 @@ defineExpose({
   show,
   close
 })
+
+/** 高亮错误部分 */
+function highlightError(fullText: string, errorText: string): Array<{ text: string, isError: boolean }> {
+  const index = fullText.indexOf(errorText)
+  if (index === -1) {
+    return [{ text: fullText, isError: false }]
+  }
+
+  const parts = []
+  if (index > 0) {
+    parts.push({ text: fullText.substring(0, index), isError: false })
+  }
+  parts.push({ text: errorText, isError: true })
+  if (index + errorText.length < fullText.length) {
+    parts.push({ text: fullText.substring(index + errorText.length), isError: false })
+  }
+
+  return parts
+}
 </script>
 
 <template>
@@ -76,6 +95,18 @@ defineExpose({
             </div>
 
             <div class="issue-content">
+              <!-- 完整句子展示 -->
+              <div class="sentence-display" v-if="issue.error.lineText">
+                <span class="label">原句:</span>
+                <div class="sentence-text">
+                  <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
+                    <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
+                    <span v-else>{{ part.text }}</span>
+                  </template>
+                </div>
+              </div>
+
+              <!-- 错误与建议 -->
               <div class="error-text">
                 <span class="label">错误:</span>
                 <span class="text original">{{ issue.error.original }}</span>
@@ -160,7 +191,7 @@ defineExpose({
 }
 
 .issue-item {
-  padding: 1rem;
+  padding: .5rem;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--danger);
@@ -195,8 +226,33 @@ defineExpose({
 .issue-content {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+.sentence-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sentence-text {
+  padding: 0.5rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
+  border-left: 3px solid var(--primary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.error-highlight {
+  color: #dc3545;
+  font-weight: 600;
+  background-color: rgba(220, 53, 69, 0.15);
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.2rem;
+  text-decoration: underline wavy #dc3545;
+  text-underline-offset: 2px;
 }
 
 .error-text,

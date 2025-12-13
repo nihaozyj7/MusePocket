@@ -834,41 +834,48 @@ defineExpose({
 
 .main-tabs {
   display: flex;
-  gap: 0;
-  background-color: var(--background-secondary);
-  border-bottom: 2px solid var(--border-color);
-  padding: 0 1rem;
+  justify-content: space-between;
+  background-color: var(--background-tertiary);
+  height: 2.2rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .main-tabs button {
   flex: 1;
-  padding: 0.75rem 1rem;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0;
   background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border-top: none;
+  border-left: none;
+  border-bottom: none;
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: -2px;
+}
+
+.main-tabs button:last-child {
+  border-right: none;
 }
 
 .main-tabs button:hover {
   color: var(--text-primary);
-  background-color: var(--background-tertiary);
 }
 
 .main-tabs button.active {
   color: var(--primary);
-  border-bottom-color: var(--primary);
-  background-color: var(--background-primary);
+  border-bottom: 1px solid var(--primary);
 }
 
 .tool-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
   display: flex;
   flex-direction: column;
 }
@@ -974,24 +981,36 @@ defineExpose({
 
 .tabs {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  background-color: var(--background-tertiary);
+  height: 2.2rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .tabs button {
-  padding: 0.5rem 1rem;
+  flex: 1;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0;
   background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border-top: none;
+  border-left: none;
+  border-bottom: none;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
+.tabs button:last-child {
+  border-right: none;
+}
+
 .tabs button.active {
   color: var(--primary);
-  border-bottom-color: var(--primary);
+  border-bottom: 1px solid var(--primary);
 }
 
 .issues-section {
@@ -1068,7 +1087,7 @@ defineExpose({
 }
 
 .issue-item {
-  padding: 1rem;
+  padding: .5rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
   border-left: 3px solid var(--border-color);

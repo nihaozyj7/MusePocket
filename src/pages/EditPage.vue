@@ -441,37 +441,58 @@ async function handleRestoreFromHistory(historyId: string) {
 function handleProofreadFix(issueOrOriginal: any, corrected?: string) {
   if (!editorRef.value) return
 
-  // 获取纯文本内容
-  const bodyText = editorRef.value.getBodyText()
+  const bodyElement = editorRef.value.getBody()
+  if (!bodyElement) return
 
-  let newText: string
+  let originalText: string
+  let correctedText: string
+
   // 支持两种调用方式
   if (typeof issueOrOriginal === 'string' && corrected) {
     // 本地纠错方式：直接传入original和corrected
-    newText = bodyText.replace(issueOrOriginal, corrected)
+    originalText = issueOrOriginal
+    correctedText = corrected
   } else {
     // AI校对方式：传入issue对象
     const issue = issueOrOriginal
-    newText = bodyText.replace(issue.original, issue.suggestion)
+    originalText = issue.original
+    correctedText = issue.suggestion
   }
 
   // 保存光标位置
-  const cursorPos = saveCursorPosition()
+  const cursorPos = saveCursorTextPosition(bodyElement)
 
-  // 将换行符转换为 HTML 段落
-  const htmlContent = newText.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('')
+  // 直接在DOM中查找并替换文本
+  const walker = document.createTreeWalker(
+    bodyElement,
+    NodeFilter.SHOW_TEXT,
+    null
+  )
 
-  // 重置编辑器内容
-  editorRef.value.resetBody(htmlContent)
+  let node: Text | null
+  let replaced = false
 
-  // 恢复光标位置
-  setTimeout(() => {
-    restoreCursorPosition(cursorPos)
-    // 触发保存
-    if (editorRef.value) {
-      editorRef.value.handleInput()
+  while (node = walker.nextNode() as Text) {
+    const content = node.textContent || ''
+    if (content.includes(originalText)) {
+      node.textContent = content.replace(originalText, correctedText)
+      replaced = true
+      break // 只替换第一个匹配项
     }
-  }, 100)
+  }
+
+  if (replaced) {
+    // 恢复光标位置
+    setTimeout(() => {
+      restoreCursorTextPosition(bodyElement, cursorPos)
+      // 触发保存
+      if (editorRef.value) {
+        editorRef.value.handleInput()
+      }
+    }, 50)
+  } else {
+    $tips.error('未找到要替换的文本')
+  }
 }
 
 
@@ -916,13 +937,7 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
         <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
           <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
           <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
-          <ProofreadTool
-            v-show="settingStore.rutilsTitle === rutilsTitles[1]"
-            ref="proofreadToolRef"
-            :getEditorBody="() => editorRef?.getBodyText()"
-            :applyTextFix="handleProofreadFix"
-            @apply-fix="handleProofreadFix"
-          />
+          <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" :getEditorBody="() => editorRef?.getBodyText()" :applyTextFix="handleProofreadFix" @apply-fix="handleProofreadFix" />
           <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
           <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
           <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />

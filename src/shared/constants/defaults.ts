@@ -8,7 +8,7 @@ export function getDefaultBook(): Book {
     id: uid(),
     title: '新书',
     description: '这是一本新书，开始你的写作之旅！',
-    coverId: '/default.png',
+    coverId: '',
     createdTime: Date.now(),
     modifiedTime: Date.now(),
     deletedTime: 0

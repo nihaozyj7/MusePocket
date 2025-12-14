@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { bookdb, importExportdb } from '@shared/db'
+import { $confirm, $tips } from '@app/plugins'
 import router from '@app/router'
 import { useSelectedBookStore } from '@domains/library/stores/selected-book.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
+import { articledb, bookdb, entitydb, importExportdb } from '@shared/db'
 import type { Book } from '@shared/types'
 import { getImageByID } from '@shared/utils'
-import { onMounted, ref, defineAsyncComponent, computed } from 'vue'
-import { $tips } from '@app/plugins'
-import { articledb, entitydb } from '@shared/db'
-import { $confirm } from '@app/plugins'
 import { event_emit } from '@shared/utils/event-bus'
+import { defineAsyncComponent, onMounted, ref } from 'vue'
 
 // 懒加载组件
 const ContextMenu = defineAsyncComponent(() => import('@shared/components/ContextMenu.vue'))

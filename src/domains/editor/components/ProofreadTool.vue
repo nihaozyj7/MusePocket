@@ -1,244 +1,9 @@
-<script setup lang="ts">
+<<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useModelsStore } from '@/domains/settings/stores/models.store'
 import { usePromptsStore } from '@/domains/settings/stores/prompts.store'
-
-/** 内置校对预设 */
-const BUILTIN_PROOFREAD_PRESETS = [
-  {
-    id: 'typo-check',
-    title: '📝 错别字检查',
-    description: '专注检查错别字和拼写错误',
-    prompt: `你是一个专业的文字校对专家，专注于查找错别字和拼写错误。
-
-请仔细检查以下文本，找出所有的错别字、同音字错误、形近字错误等拼写问题。
-
-检查重点：
-1. 错别字（如"的地得"混用）
-2. 同音字错误（如"做"与"作"、"辩"与"辨"）
-3. 形近字错误（如"未"与"末"、"己"与"已"）
-4. 多音字误用
-5. 简繁体混用
-
-请以JSON数组格式返回，每个问题包含：
-- type: "error"
-- category: "错别字"
-- original: 错误的文字
-- suggestion: 正确的文字
-- reason: 错误原因说明
-
-只返回确定的错误，不要过度猜测。`
-  },
-  {
-    id: 'punctuation-check',
-    title: '🔣 标点符号检查',
-    description: '检查标点符号使用规范',
-    prompt: `你是一个标点符号使用规范专家。
-
-请检查以下文本的标点符号使用，找出不规范的地方。
-
-检查重点：
-1. 中英文标点混用（如中文中使用英文逗号、句号）
-2. 标点符号位置错误
-3. 引号、书名号使用不当
-4. 省略号、破折号使用错误
-5. 顿号、逗号、分号使用混乱
-6. 问号、感叹号滥用
-
-请以JSON数组格式返回，每个问题包含：
-- type: "warning"
-- category: "标点符号"
-- original: 包含错误标点的片段
-- suggestion: 修正后的内容
-- reason: 修改原因说明
-
-遵循《标点符号用法》国家标准。`
-  },
-  {
-    id: 'grammar-check',
-    title: '📖 语法检查',
-    description: '检查语法结构和句式问题',
-    prompt: `你是一个语法专家，擅长发现各类语法错误。
-
-请检查以下文本的语法问题。
-
-检查重点：
-1. 主谓不一致
-2. 成分残缺（缺少主语、谓语等）
-3. 成分赘余（重复啰嗦）
-4. 搭配不当（动宾、主谓搭配错误）
-5. 语序混乱
-6. 句式杂糅
-7. 关联词使用错误
-
-请以JSON数组格式返回，每个问题包含：
-- type: "error"
-- category: "语法错误"
-- original: 语法错误的句子
-- suggestion: 修正后的句子
-- reason: 语法问题说明
-
-只指出明确的语法错误。`
-  },
-  {
-    id: 'wording-check',
-    title: '💬 用词检查',
-    description: '检查用词准确性和得体性',
-    prompt: `你是一个用词专家，关注词语使用的准确性和得体性。
-
-请检查以下文本的用词问题。
-
-检查重点：
-1. 词语搭配不当
-2. 词义理解错误
-3. 词性误用
-4. 语体色彩不当（书面语、口语混用）
-5. 感情色彩不当（褒贬失当）
-6. 外来词、网络词使用不当
-7. 专业术语使用错误
-
-请以JSON数组格式返回，每个问题包含：
-- type: "suggestion"
-- category: "用词不当"
-- original: 用词不当的片段
-- suggestion: 更恰当的表达
-- reason: 为什么这样改更好
-
-保持原文风格，只建议明确的改进。`
-  },
-  {
-    id: 'clarity-check',
-    title: '💡 表达清晰度检查',
-    description: '检查表达是否清晰明确',
-    prompt: `你是一个表达清晰度专家，帮助改善模糊不清的表达。
-
-请检查以下文本，找出表达不清晰的地方。
-
-检查重点：
-1. 指代不明（代词指代模糊）
-2. 歧义句（可能有多种理解）
-3. 表述啰嗦（可简化的冗余表达）
-4. 概念模糊（缺少具体说明）
-5. 信息缺失（关键信息不完整）
-6. 逻辑跳跃（前后缺少衔接）
-
-请以JSON数组格式返回，每个问题包含：
-- type: "suggestion"
-- category: "表达不清"
-- original: 表达不清的句子
-- suggestion: 更清晰的表达
-- reason: 为什么原表达不够清晰
-
-建议应该让表达更简洁明确。`
-  },
-  {
-    id: 'logic-check',
-    title: '🔗 逻辑检查',
-    description: '检查句子和段落的逻辑性',
-    prompt: `你是一个逻辑分析专家，擅长发现文本中的逻辑问题。
-
-请检查以下文本的逻辑问题。
-
-检查重点：
-1. 前后矛盾
-2. 因果关系不当
-3. 论证不足或过度
-4. 转折不合理
-5. 条件关系错误
-6. 并列关系混乱
-7. 推理跳跃
-
-请以JSON数组格式返回，每个问题包含：
-- type: "warning"
-- category: "逻辑不通"
-- original: 逻辑有问题的句子
-- suggestion: 逻辑更合理的表达
-- reason: 逻辑问题说明
-
-只指出明显的逻辑问题。`
-  },
-  {
-    id: 'style-check',
-    title: '🎨 风格一致性检查',
-    description: '检查语言风格是否统一',
-    prompt: `你是一个语言风格专家，关注文本风格的一致性。
-
-请检查以下文本的风格一致性问题。
-
-检查重点：
-1. 人称使用不一致（第一、第二、第三人称混用）
-2. 时态不一致（过去、现在、未来时态混乱）
-3. 语气不一致（正式与非正式混用）
-4. 叙述视角不统一
-5. 书面语与口语混用
-6. 专业术语与通俗表达混杂
-
-请以JSON数组格式返回，每个问题包含：
-- type: "suggestion"
-- category: "风格不一致"
-- original: 风格不一致的部分
-- suggestion: 统一风格后的表达
-- reason: 为了保持何种风格一致性
-
-建议应该让整体风格更统一。`
-  },
-  {
-    id: 'comprehensive-check',
-    title: '✅ 全面检查',
-    description: '综合检查所有常见问题',
-    prompt: `你是一个专业的文本校对专家。请全面检查以下文本，找出所有问题并给出修改建议。
-
-检查内容包括：
-1. 错别字和拼写错误
-2. 标点符号使用错误
-3. 语法错误
-4. 用词不当
-5. 表达不清晰的地方
-6. 逻辑不通顺的句子
-7. 语言风格不一致
-8. 重复啰嗦的表达
-
-请以JSON数组格式返回，每个问题包含：
-- type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
-- category: 问题类别（如"拼写错误"、"标点符号"、"语法错误"、"用词不当"、"表达不清"、"逻辑不通"、"风格不一致"等）
-- original: 需要修改的原文片段（尽量精确到词组或句子）
-- suggestion: 建议修改后的内容
-- reason: 简明的修改原因说明
-
-注意事项：
-1. 只指出真正的问题，不要过度挑剔
-2. original 字段应该是文本中实际存在的内容，以便精确替换
-3. 保持原文的语言风格和意图
-4. 对于文学作品，允许合理的修辞和艺术表达
-5. 按问题严重程度排序，type="error" 的问题优先
-
-示例格式：
-[
-  {
-    "type": "error",
-    "category": "拼写错误",
-    "original": "旅游",
-    "suggestion": "旅游",
-    "reason": "正确写法应为"旅游""
-  },
-  {
-    "type": "warning",
-    "category": "标点符号",
-    "original": "你好,世界",
-    "suggestion": "你好，世界",
-    "reason": "中文应使用全角逗号"
-  },
-  {
-    "type": "suggestion",
-    "category": "表达优化",
-    "original": "他的速度非常地快",
-    "suggestion": "他的速度非常快",
-    "reason": "去掉冗余的"地"字，表达更简洁"
-  }
-]`
-  }
-] as const
 import { useSettingStore } from '@domains/settings/stores/settings.store'
+import { PROOFREAD_PRESETS } from '../constants/ai-prompts'
 import { openaiFetch, type OpenAiParams } from '@core/api'
 import { $tips } from '@app/plugins'
 import { uid } from '@shared/utils'
@@ -354,9 +119,9 @@ onMounted(() => {
       selectedPrompt.value = preset.prompt
     } else {
       // 如果保存的预设不存在，使用第一个内置预设
-      if (BUILTIN_PROOFREAD_PRESETS.length > 0) {
-        selectedPreset.value = BUILTIN_PROOFREAD_PRESETS[0].id
-        selectedPrompt.value = BUILTIN_PROOFREAD_PRESETS[0].prompt
+      if (PROOFREAD_PRESETS.length > 0) {
+        selectedPreset.value = PROOFREAD_PRESETS[0].id
+        selectedPrompt.value = PROOFREAD_PRESETS[0].prompt
       }
     }
   } else if (savedConfig.systemPrompt) {
@@ -364,9 +129,9 @@ onMounted(() => {
     selectedPrompt.value = savedConfig.systemPrompt
   } else {
     // 默认使用第一个内置预设
-    if (BUILTIN_PROOFREAD_PRESETS.length > 0) {
-      selectedPreset.value = BUILTIN_PROOFREAD_PRESETS[0].id
-      selectedPrompt.value = BUILTIN_PROOFREAD_PRESETS[0].prompt
+    if (PROOFREAD_PRESETS.length > 0) {
+      selectedPreset.value = PROOFREAD_PRESETS[0].id
+      selectedPrompt.value = PROOFREAD_PRESETS[0].prompt
     }
   }
 })
@@ -395,7 +160,7 @@ watch([selectedModel, selectedPreset, selectedPrompt], () => {
 /** 合并后的预设选项（内置 + 自定义） */
 const allPresetOptions = computed(() => {
   return [
-    ...BUILTIN_PROOFREAD_PRESETS.map(p => ({ ...p, isBuiltin: true })),
+    ...PROOFREAD_PRESETS.map(p => ({ ...p, isBuiltin: true })),
     ...promptOptions.value.map(p => ({
       id: p.id,
       title: p.title,
@@ -410,46 +175,46 @@ const allPresetOptions = computed(() => {
 function getDefaultProofreadPrompt(): string {
   return `你是一个专业的文本校对专家。请仔细检查以下文本，找出所有的问题并给出修改建议。
 
-检查内容包括但不限于：
-1. 错别字和拼写错误
-2. 标点符号使用错误
-3. 语法错误
-4. 用词不当
-5. 表达不清晰的地方
-6. 逻辑不通顺的句子
-7. 语言风格不一致
-8. 重复的表达
+                检查内容包括但不限于：
+                1. 错别字和拼写错误
+                2. 标点符号使用错误
+                3. 语法错误
+                4. 用词不当
+                5. 表达不清晰的地方
+                6. 逻辑不通顺的句子
+                7. 语言风格不一致
+                8. 重复的表达
 
-请以JSON数组格式返回，每个问题包含：
-- type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
-- category: 问题类别（如“拼写错误”、“标点符号”、“语法错误”、“用词不当”等）
-- original: 需要修改的原文片段（尽量精确到词组或句子）
-- suggestion: 建议修改后的内容
-- reason: 简明的修改原因说明
+                请以JSON数组格式返回，每个问题包含：
+                - type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
+                - category: 问题类别（如“拼写错误”、“标点符号”、“语法错误”、“用词不当”等）
+                - original: 需要修改的原文片段（尽量精确到词组或句子）
+                - suggestion: 建议修改后的内容
+                - reason: 简明的修改原因说明
 
-注意事项：
-1. 只指出真正的问题，不要过度挑剔
-2. original 字段应该是文本中实际存在的内容，以便精确替换
-3. 保持原文的语言风格和意图
-4. 对于文学作品，允许合理的修辞和艺术表达
+                注意事项：
+                1. 只指出真正的问题，不要过度挑剔
+                2. original 字段应该是文本中实际存在的内容，以便精确替换
+                3. 保持原文的语言风格和意图
+                4. 对于文学作品，允许合理的修辞和艺术表达
 
-示例格式：
-[
-  {
-    "type": "error",
-    "category": "拼写错误",
-    "original": "旅游",
-    "suggestion": "旅游",
-    "reason": "正确写法应为“旅游”"
-  },
-  {
-    "type": "warning",
-    "category": "标点符号",
-    "original": "你好,世界",
-    "suggestion": "你好，世界",
-    "reason": "中文应使用全角逗号"
-  }
-]`
+                示例格式：
+                [
+                {
+                "type": "error",
+                "category": "拼写错误",
+                "original": "旅游",
+                "suggestion": "旅游",
+                "reason": "正确写法应为“旅游”"
+                },
+                {
+                "type": "warning",
+                "category": "标点符号",
+                "original": "你好,世界",
+                "suggestion": "你好，世界",
+                "reason": "中文应使用全角逗号"
+                }
+                ]`
 }
 
 /** 选择校对提示词 */
@@ -530,705 +295,703 @@ async function startProofread() {
     try {
       parsedIssues = JSON.parse(aiContent)
     } catch {
-      // 尝试提取JSON代码块
-      const jsonMatch = aiContent.match(/```(?:json)?\s*([\s\S]*?)```/)
-      if (jsonMatch) {
-        parsedIssues = JSON.parse(jsonMatch[1].trim())
-      } else {
-        throw new Error('无法解析AI返回的数据')
-      }
-    }
-
-    if (!Array.isArray(parsedIssues)) {
-      throw new Error('AI返回的数据不是数组格式')
-    }
-
-    // 转换为内部格式
-    issues.value = parsedIssues.map(issue => ({
-      id: uid(),
-      type: issue.type || 'suggestion',
-      category: issue.category || '未分类',
-      original: issue.original || '',
-      suggestion: issue.suggestion || '',
-      reason: issue.reason || '',
-      position: issue.position,
-      selected: false
-    }))
-
-    progress.value = `校对完成，发现 ${issues.value.length} 个问题`
-    $tips.success(`校对完成，发现 ${issues.value.length} 个问题`)
-
-    // 切换到错误列表标签
-    activeTab.value = 'errors'
-
-  } catch (err: any) {
-    console.error('校对失败:', err)
-    progress.value = '校对失败'
-    $tips.error(`校对失败: ${err.message}`)
-  } finally {
-    isProofreading.value = false
-  }
-}
-
-/** 应用单个修改 */
-function applyIssue(issue: ProofreadIssue) {
-  // 触发应用修改的事件
-  emit('apply-fix', issue)
-  // 从列表中移除
-  issues.value = issues.value.filter(i => i.id !== issue.id)
-  $tips.success('已应用修改')
-}
-
-/** 忽略问题 */
-function ignoreIssue(issue: ProofreadIssue) {
-  issues.value = issues.value.filter(i => i.id !== issue.id)
-  $tips.success('已忽略')
-}
-
-/** 批量应用修改 */
-function applyAllSelected() {
-  const selectedIssues = issues.value.filter(i => i.selected)
-  if (selectedIssues.length === 0) {
-    $tips.error('请先选择要修改的问题')
-    return
-  }
-
-  selectedIssues.forEach(issue => {
-    emit('apply-fix', issue)
-  })
-
-  issues.value = issues.value.filter(i => !i.selected)
-  $tips.success(`已应用 ${selectedIssues.length} 处修改`)
-}
-
-/** 获取问题类型的图标 */
-function getIssueIcon(type: string) {
-  switch (type) {
-    case 'error': return '❌'
-    case 'warning': return '⚠️'
-    case 'suggestion': return '💡'
-    default: return '📝'
-  }
-}
-
-/** 获取问题类型的颜色类名 */
-function getIssueColorClass(type: string) {
-  switch (type) {
-    case 'error': return 'issue-error'
-    case 'warning': return 'issue-warning'
-    case 'suggestion': return 'issue-suggestion'
-    default: return ''
-  }
-}
-
-/** 处理本地纠错的单个修正 */
-function handleLocalProofreadFix(issue: any) {
-  if (props.applyTextFix) {
-    props.applyTextFix(issue.error.original, issue.error.corrected)
-  }
-}
-
-/** 处理本地纠错的批量修正 */
-function handleLocalProofreadAll(issues: any[]) {
-  if (props.applyTextFix) {
-    issues.forEach(issue => {
-      props.applyTextFix!(issue.error.original, issue.error.corrected)
-    })
-  }
-}
-
-const emit = defineEmits<{
-  'apply-fix': [issue: ProofreadIssue]
-}>()
-
-defineExpose({
-  startProofread
-})
-</script>
-
-<template>
-  <div class="proofread-tool">
-    <div class="tool-header">
-      <h3>✅ 文本校对</h3>
-    </div>
-
-    <!-- 主标签页 -->
-    <div class="main-tabs" v-if="showLocalProofread">
-      <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
-        🔍 纠错
-      </button>
-      <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
-        🤖 AI校对
-      </button>
-    </div>
-
-    <div class="tool-body">
-      <!-- AI校对内容 -->
-      <div v-show="mainTab === 'ai'" class="tab-content">
-        <!-- 配置区域 -->
-        <div class="config-section">
-          <div class="form-item">
-            <label>AI 模型</label>
-            <select v-model="selectedModel">
-              <option :value="null" disabled>请选择模型</option>
-              <option v-for="model in modelOptions" :key="model.model" :value="model">
-                {{ model.note || model.model }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-item">
-            <label>校对场景</label>
-            <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
-              <option value="">选择校对场景（可选）</option>
-              <optgroup label="内置场景">
-                <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
-                  {{ preset.title }}
-                </option>
-              </optgroup>
-              <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
-                <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
-                  {{ preset.title }}
-                </option>
-              </optgroup>
-            </select>
-            <p v-if="selectedPreset" class="preset-description">
-              {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
-            </p>
-          </div>
-
-          <div class="form-item">
-            <label>校对提示词</label>
-            <div class="prompt-selector-wrapper">
-              <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
-                <option value="">从提示词库快速选择（可选）</option>
-                <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
-                  {{ prompt.title }}
-                </option>
-              </select>
-            </div>
-            <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
-          </div>
-
-          <div class="actions">
-            <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
-              {{ isProofreading ? '校对中...' : '开始校对' }}
-            </button>
-          </div>
-
-          <div class="progress" v-if="progress">
-            {{ progress }}
-          </div>
-        </div>
-
-        <!-- 标签页 -->
-        <div class="tabs" v-if="issues.length > 0">
-          <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
-            纠错 ({{ issues.length }})
-          </button>
-          <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
-            预览
-          </button>
-        </div>
-
-        <!-- 问题列表 -->
-        <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
-          <div class="issues-header">
-            <div class="stats">
-              <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
-              <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
-              <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
-            </div>
-            <div class="batch-actions">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="isAllSelected" />
-                全选
-              </label>
-              <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
-                全部修改
-              </button>
-            </div>
-          </div>
-
-          <div class="issues-list">
-            <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
-              <div class="issue-header">
-                <label class="checkbox-label">
-                  <input type="checkbox" v-model="issue.selected" />
-                </label>
-                <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
-                <span class="issue-category">{{ issue.category }}</span>
-              </div>
-
-              <div class="issue-content">
-                <div class="issue-row">
-                  <span class="label">发现：</span>
-                  <span class="original-text">{{ issue.original }}</span>
-                </div>
-                <div class="issue-row" v-if="issue.suggestion">
-                  <span class="label">建议：</span>
-                  <span class="suggestion-text">{{ issue.suggestion }}</span>
-                </div>
-                <div class="issue-row" v-if="issue.reason">
-                  <span class="label">原因：</span>
-                  <span class="reason-text">{{ issue.reason }}</span>
-                </div>
-              </div>
-
-              <div class="issue-actions">
-                <button class="btn-action btn-apply" @click="applyIssue(issue)">
-                  修改
-                </button>
-                <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
-                  忽略
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 预览 -->
-        <div class="preview-section" v-if="activeTab === 'preview'">
-          <div class="preview-header">
-            <h4>AI 返回内容</h4>
-          </div>
-          <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
-        </div>
-
-        <!-- 空状态 -->
-        <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
-          <div class="empty-icon">✅</div>
-          <p>选择AI模型和提示词，点击“开始校对”进行文本校对</p>
-        </div>
-      </div>
-
-      <!-- 本地纠错内容 -->
-      <div v-show="mainTab === 'local'" class="tab-content">
-        <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
-      </div>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-.proofread-tool {
-  flex: 1;
-  width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--background-secondary);
-}
-
-.tool-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
-}
-
-.tool-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--text-primary);
-}
-
-.main-tabs {
-  display: flex;
-  justify-content: space-between;
-  background-color: var(--background-tertiary);
-  height: 2.2rem;
-  border-radius: 0.25rem;
-  overflow: hidden;
-  margin: 0.5rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.main-tabs button {
-  flex: 1;
-  margin: 0;
-  padding: 0.25rem 0.5rem;
-  border-right: 1px solid var(--border-color);
-  border-radius: 0;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-bottom: none;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.main-tabs button:last-child {
-  border-right: none;
-}
-
-.main-tabs button:hover {
-  color: var(--text-primary);
-}
-
-.main-tabs button.active {
-  color: var(--primary);
-  border-bottom: 1px solid var(--primary);
-}
-
-.tool-body {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.tab-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.config-section {
-  margin-bottom: 1rem;
-  padding: .5rem;
-}
-
-.form-item {
-  margin-bottom: 1rem;
-}
-
-.form-item label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.form-item select,
-.form-item textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.form-item textarea {
-  resize: vertical;
-  min-height: 80px;
-  font-family: monospace;
-}
-
-.prompt-selector-wrapper {
-  margin-bottom: 0.5rem;
-}
-
-.prompt-quick-select {
-  width: 100%;
-  padding: 0.375rem 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  background-color: var(--background-tertiary);
-  color: var(--text-tertiary);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.prompt-quick-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  color: var(--text-primary);
-}
-
-.preset-description {
-  margin-top: 0.4rem;
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-  line-height: 1.4;
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-primary {
-  flex: 1;
-  padding: 0.625rem 1rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.progress {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.tabs {
-  display: flex;
-  justify-content: space-between;
-  background-color: var(--background-tertiary);
-  height: 2.2rem;
-  border-radius: 0.25rem;
-  overflow: hidden;
-  margin-bottom: 1rem;
-}
-
-.tabs button {
-  flex: 1;
-  margin: 0;
-  padding: 0.25rem 0.5rem;
-  border-right: 1px solid var(--border-color);
-  border-radius: 0;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-bottom: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tabs button:last-child {
-  border-right: none;
-}
-
-.tabs button.active {
-  color: var(--primary);
-  border-bottom: 1px solid var(--primary);
-}
-
-.issues-section {
-  flex: 1;
-}
-
-.issues-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.25rem;
-}
-
-.stats {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.stat-item.error {
-  color: var(--danger);
-}
-
-.stat-item.warning {
-  color: var(--warning);
-}
-
-.stat-item.suggestion {
-  color: var(--info);
-}
-
-.batch-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.btn-small {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.btn-small:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.issues-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.issue-item {
-  padding: .5rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.25rem;
-  border-left: 3px solid var(--border-color);
-  transition: all 0.2s;
-}
-
-.issue-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.issue-item.issue-error {
-  border-left-color: var(--danger);
-}
-
-.issue-item.issue-warning {
-  border-left-color: var(--warning);
-}
-
-.issue-item.issue-suggestion {
-  border-left-color: var(--info);
-}
-
-.issue-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.issue-icon {
-  font-size: 1rem;
-}
-
-.issue-category {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.issue-content {
-  margin-bottom: 0.75rem;
-}
-
-.issue-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.issue-row .label {
-  color: var(--text-secondary);
-  font-weight: 500;
-  min-width: 3rem;
-}
-
-.original-text {
-  color: var(--danger);
-  text-decoration: line-through;
-}
-
-.suggestion-text {
-  color: var(--success);
-  font-weight: 500;
-}
-
-.reason-text {
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.issue-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-action {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-apply {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.btn-ignore {
-  background-color: var(--background-tertiary);
-  color: var(--text-secondary);
-}
-
-.preview-section {
-  flex: 1;
-}
-
-.preview-header {
-  margin-bottom: 1rem;
-}
-
-.preview-header h4 {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.preview-content {
-  padding: 1rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.25rem;
-  border: 1px solid var(--border-color);
-  font-size: 0.875rem;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--text-tertiary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.empty-state p {
-  font-size: 0.875rem;
-  margin: 0;
-}
-</style>
+                  // 尝试提取JSON代码块
+                  const jsonMatch = aiContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+                  if (jsonMatch) {
+                  parsedIssues = JSON.parse(jsonMatch[1].trim())
+                  } else {
+                  throw new Error('无法解析AI返回的数据')
+                  }
+                  }
+
+                  if (!Array.isArray(parsedIssues)) {
+                  throw new Error('AI返回的数据不是数组格式')
+                  }
+
+                  // 转换为内部格式
+                  issues.value = parsedIssues.map(issue => ({
+                  id: uid(),
+                  type: issue.type || 'suggestion',
+                  category: issue.category || '未分类',
+                  original: issue.original || '',
+                  suggestion: issue.suggestion || '',
+                  reason: issue.reason || '',
+                  position: issue.position,
+                  selected: false
+                  }))
+
+                  progress.value = `校对完成，发现 ${issues.value.length} 个问题`
+                  $tips.success(`校对完成，发现 ${issues.value.length} 个问题`)
+
+                  // 切换到错误列表标签
+                  activeTab.value = 'errors'
+
+                  } catch (err: any) {
+                  console.error('校对失败:', err)
+                  progress.value = '校对失败'
+                  $tips.error(`校对失败: ${err.message}`)
+                  } finally {
+                  isProofreading.value = false
+                  }
+                  }
+
+                  /** 应用单个修改 */
+                  function applyIssue(issue: ProofreadIssue) {
+                  // 触发应用修改的事件
+                  emit('apply-fix', issue)
+                  // 从列表中移除
+                  issues.value = issues.value.filter(i => i.id !== issue.id)
+                  $tips.success('已应用修改')
+                  }
+
+                  /** 忽略问题 */
+                  function ignoreIssue(issue: ProofreadIssue) {
+                  issues.value = issues.value.filter(i => i.id !== issue.id)
+                  $tips.success('已忽略')
+                  }
+
+                  /** 批量应用修改 */
+                  function applyAllSelected() {
+                  const selectedIssues = issues.value.filter(i => i.selected)
+                  if (selectedIssues.length === 0) {
+                  $tips.error('请先选择要修改的问题')
+                  return
+                  }
+
+                  selectedIssues.forEach(issue => {
+                  emit('apply-fix', issue)
+                  })
+
+                  issues.value = issues.value.filter(i => !i.selected)
+                  $tips.success(`已应用 ${selectedIssues.length} 处修改`)
+                  }
+
+                  /** 获取问题类型的图标 */
+                  function getIssueIcon(type: string) {
+                  switch (type) {
+                  case 'error': return '❌'
+                  case 'warning': return '⚠️'
+                  case 'suggestion': return '💡'
+                  default: return '📝'
+                  }
+                  }
+
+                  /** 获取问题类型的颜色类名 */
+                  function getIssueColorClass(type: string) {
+                  switch (type) {
+                  case 'error': return 'issue-error'
+                  case 'warning': return 'issue-warning'
+                  case 'suggestion': return 'issue-suggestion'
+                  default: return ''
+                  }
+                  }
+
+                  /** 处理本地纠错的单个修正 */
+                  function handleLocalProofreadFix(issue: any) {
+                  if (props.applyTextFix) {
+                  props.applyTextFix(issue.error.original, issue.error.corrected)
+                  }
+                  }
+
+                  /** 处理本地纠错的批量修正 */
+                  function handleLocalProofreadAll(issues: any[]) {
+                  if (props.applyTextFix) {
+                  issues.forEach(issue => {
+                  props.applyTextFix!(issue.error.original, issue.error.corrected)
+                  })
+                  }
+                  }
+
+                  const emit = defineEmits<{ 'apply-fix' : [issue: ProofreadIssue] }>()
+
+                    defineExpose({
+                    startProofread
+                    })
+                    </script>
+
+                    <template>
+                      <div class="proofread-tool">
+                        <div class="tool-header">
+                          <h3>✅ 文本校对</h3>
+                        </div>
+
+                        <!-- 主标签页 -->
+                        <div class="main-tabs" v-if="showLocalProofread">
+                          <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
+                            🔍 纠错
+                          </button>
+                          <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
+                            🤖 AI校对
+                          </button>
+                        </div>
+
+                        <div class="tool-body">
+                          <!-- AI校对内容 -->
+                          <div v-show="mainTab === 'ai'" class="tab-content">
+                            <!-- 配置区域 -->
+                            <div class="config-section">
+                              <div class="form-item">
+                                <label>AI 模型</label>
+                                <select v-model="selectedModel">
+                                  <option :value="null" disabled>请选择模型</option>
+                                  <option v-for="model in modelOptions" :key="model.model" :value="model">
+                                    {{ model.note || model.model }}
+                                  </option>
+                                </select>
+                              </div>
+
+                              <div class="form-item">
+                                <label>校对场景</label>
+                                <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
+                                  <option value="">选择校对场景（可选）</option>
+                                  <optgroup label="内置场景">
+                                    <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
+                                      {{ preset.title }}
+                                    </option>
+                                  </optgroup>
+                                  <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
+                                    <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
+                                      {{ preset.title }}
+                                    </option>
+                                  </optgroup>
+                                </select>
+                                <p v-if="selectedPreset" class="preset-description">
+                                  {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
+                                </p>
+                              </div>
+
+                              <div class="form-item">
+                                <label>校对提示词</label>
+                                <div class="prompt-selector-wrapper">
+                                  <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+                                    <option value="">从提示词库快速选择（可选）</option>
+                                    <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+                                      {{ prompt.title }}
+                                    </option>
+                                  </select>
+                                </div>
+                                <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
+                              </div>
+
+                              <div class="actions">
+                                <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
+                                  {{ isProofreading ? '校对中...' : '开始校对' }}
+                                </button>
+                              </div>
+
+                              <div class="progress" v-if="progress">
+                                {{ progress }}
+                              </div>
+                            </div>
+
+                            <!-- 标签页 -->
+                            <div class="tabs" v-if="issues.length > 0">
+                              <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
+                                纠错 ({{ issues.length }})
+                              </button>
+                              <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
+                                预览
+                              </button>
+                            </div>
+
+                            <!-- 问题列表 -->
+                            <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
+                              <div class="issues-header">
+                                <div class="stats">
+                                  <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
+                                  <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
+                                  <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
+                                </div>
+                                <div class="batch-actions">
+                                  <label class="checkbox-label">
+                                    <input type="checkbox" v-model="isAllSelected" />
+                                    全选
+                                  </label>
+                                  <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
+                                    全部修改
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div class="issues-list">
+                                <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
+                                  <div class="issue-header">
+                                    <label class="checkbox-label">
+                                      <input type="checkbox" v-model="issue.selected" />
+                                    </label>
+                                    <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
+                                    <span class="issue-category">{{ issue.category }}</span>
+                                  </div>
+
+                                  <div class="issue-content">
+                                    <div class="issue-row">
+                                      <span class="label">发现：</span>
+                                      <span class="original-text">{{ issue.original }}</span>
+                                    </div>
+                                    <div class="issue-row" v-if="issue.suggestion">
+                                      <span class="label">建议：</span>
+                                      <span class="suggestion-text">{{ issue.suggestion }}</span>
+                                    </div>
+                                    <div class="issue-row" v-if="issue.reason">
+                                      <span class="label">原因：</span>
+                                      <span class="reason-text">{{ issue.reason }}</span>
+                                    </div>
+                                  </div>
+
+                                  <div class="issue-actions">
+                                    <button class="btn-action btn-apply" @click="applyIssue(issue)">
+                                      修改
+                                    </button>
+                                    <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
+                                      忽略
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- 预览 -->
+                            <div class="preview-section" v-if="activeTab === 'preview'">
+                              <div class="preview-header">
+                                <h4>AI 返回内容</h4>
+                              </div>
+                              <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
+                            </div>
+
+                            <!-- 空状态 -->
+                            <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
+                              <div class="empty-icon">✅</div>
+                              <p>选择AI模型和提示词，点击“开始校对”进行文本校对</p>
+                            </div>
+                          </div>
+
+                          <!-- 本地纠错内容 -->
+                          <div v-show="mainTab === 'local'" class="tab-content">
+                            <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <style scoped>
+                    .proofread-tool {
+                      flex: 1;
+                      width: 0;
+                      height: 100%;
+                      display: flex;
+                      flex-direction: column;
+                      background-color: var(--background-secondary);
+                    }
+
+                    .tool-header {
+                      padding: 1rem;
+                      border-bottom: 1px solid var(--border-color);
+                      background-color: var(--background-secondary);
+                    }
+
+                    .tool-header h3 {
+                      margin: 0;
+                      font-size: 1rem;
+                      color: var(--text-primary);
+                    }
+
+                    .main-tabs {
+                      display: flex;
+                      justify-content: space-between;
+                      background-color: var(--background-tertiary);
+                      height: 2.2rem;
+                      border-radius: 0.25rem;
+                      overflow: hidden;
+                      margin: 0.5rem 1rem;
+                      border-bottom: 1px solid var(--border-color);
+                    }
+
+                    .main-tabs button {
+                      flex: 1;
+                      margin: 0;
+                      padding: 0.25rem 0.5rem;
+                      border-right: 1px solid var(--border-color);
+                      border-radius: 0;
+                      background: none;
+                      border-top: none;
+                      border-left: none;
+                      border-bottom: none;
+                      color: var(--text-secondary);
+                      font-size: 0.9rem;
+                      font-weight: 500;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    }
+
+                    .main-tabs button:last-child {
+                      border-right: none;
+                    }
+
+                    .main-tabs button:hover {
+                      color: var(--text-primary);
+                    }
+
+                    .main-tabs button.active {
+                      color: var(--primary);
+                      border-bottom: 1px solid var(--primary);
+                    }
+
+                    .tool-body {
+                      flex: 1;
+                      overflow-y: auto;
+                      display: flex;
+                      flex-direction: column;
+                    }
+
+                    .tab-content {
+                      flex: 1;
+                      display: flex;
+                      flex-direction: column;
+                    }
+
+                    .config-section {
+                      margin-bottom: 1rem;
+                      padding: .5rem;
+                    }
+
+                    .form-item {
+                      margin-bottom: 1rem;
+                    }
+
+                    .form-item label {
+                      display: block;
+                      margin-bottom: 0.5rem;
+                      font-size: 0.875rem;
+                      color: var(--text-secondary);
+                      font-weight: 500;
+                    }
+
+                    .form-item select,
+                    .form-item textarea {
+                      width: 100%;
+                      padding: 0.5rem;
+                      border: 1px solid var(--border-color);
+                      border-radius: 0.25rem;
+                      background-color: var(--background-secondary);
+                      color: var(--text-primary);
+                      font-size: 0.875rem;
+                    }
+
+                    .form-item textarea {
+                      resize: vertical;
+                      min-height: 80px;
+                      font-family: monospace;
+                    }
+
+                    .prompt-selector-wrapper {
+                      margin-bottom: 0.5rem;
+                    }
+
+                    .prompt-quick-select {
+                      width: 100%;
+                      padding: 0.375rem 0.5rem;
+                      border: 1px solid var(--border-color);
+                      border-radius: 0.25rem;
+                      background-color: var(--background-tertiary);
+                      color: var(--text-tertiary);
+                      font-size: 0.8rem;
+                      cursor: pointer;
+                    }
+
+                    .prompt-quick-select:focus {
+                      outline: none;
+                      border-color: var(--primary);
+                      color: var(--text-primary);
+                    }
+
+                    .preset-description {
+                      margin-top: 0.4rem;
+                      font-size: 0.8rem;
+                      color: var(--text-tertiary);
+                      line-height: 1.4;
+                    }
+
+                    .actions {
+                      display: flex;
+                      gap: 0.5rem;
+                    }
+
+                    .btn-primary {
+                      flex: 1;
+                      padding: 0.625rem 1rem;
+                      background-color: var(--primary);
+                      color: white;
+                      border: none;
+                      border-radius: 0.25rem;
+                      font-weight: 500;
+                      cursor: pointer;
+                      transition: background-color 0.2s;
+                    }
+
+                    .btn-primary:disabled {
+                      opacity: 0.5;
+                      cursor: not-allowed;
+                    }
+
+                    .progress {
+                      margin-top: 0.5rem;
+                      padding: 0.5rem;
+                      background-color: var(--background-secondary);
+                      border-radius: 0.25rem;
+                      font-size: 0.875rem;
+                      color: var(--text-secondary);
+                      text-align: center;
+                    }
+
+                    .tabs {
+                      display: flex;
+                      justify-content: space-between;
+                      background-color: var(--background-tertiary);
+                      height: 2.2rem;
+                      border-radius: 0.25rem;
+                      overflow: hidden;
+                      margin-bottom: 1rem;
+                    }
+
+                    .tabs button {
+                      flex: 1;
+                      margin: 0;
+                      padding: 0.25rem 0.5rem;
+                      border-right: 1px solid var(--border-color);
+                      border-radius: 0;
+                      background: none;
+                      border-top: none;
+                      border-left: none;
+                      border-bottom: none;
+                      color: var(--text-secondary);
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    }
+
+                    .tabs button:last-child {
+                      border-right: none;
+                    }
+
+                    .tabs button.active {
+                      color: var(--primary);
+                      border-bottom: 1px solid var(--primary);
+                    }
+
+                    .issues-section {
+                      flex: 1;
+                    }
+
+                    .issues-header {
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 1rem;
+                      padding: 0.75rem;
+                      background-color: var(--background-secondary);
+                      border-radius: 0.25rem;
+                    }
+
+                    .stats {
+                      display: flex;
+                      gap: 1rem;
+                      font-size: 0.875rem;
+                    }
+
+                    .stat-item {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.25rem;
+                    }
+
+                    .stat-item.error {
+                      color: var(--danger);
+                    }
+
+                    .stat-item.warning {
+                      color: var(--warning);
+                    }
+
+                    .stat-item.suggestion {
+                      color: var(--info);
+                    }
+
+                    .batch-actions {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                    }
+
+                    .checkbox-label {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.25rem;
+                      font-size: 0.875rem;
+                      cursor: pointer;
+                    }
+
+                    .btn-small {
+                      padding: 0.25rem 0.75rem;
+                      font-size: 0.875rem;
+                      background-color: var(--primary);
+                      color: white;
+                      border: none;
+                      border-radius: 0.25rem;
+                      cursor: pointer;
+                    }
+
+                    .btn-small:disabled {
+                      opacity: 0.5;
+                      cursor: not-allowed;
+                    }
+
+                    .issues-list {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0.75rem;
+                    }
+
+                    .issue-item {
+                      padding: .5rem;
+                      background-color: var(--background-secondary);
+                      border-radius: 0.25rem;
+                      border-left: 3px solid var(--border-color);
+                      transition: all 0.2s;
+                    }
+
+                    .issue-item:hover {
+                      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .issue-item.issue-error {
+                      border-left-color: var(--danger);
+                    }
+
+                    .issue-item.issue-warning {
+                      border-left-color: var(--warning);
+                    }
+
+                    .issue-item.issue-suggestion {
+                      border-left-color: var(--info);
+                    }
+
+                    .issue-header {
+                      display: flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                      margin-bottom: 0.75rem;
+                    }
+
+                    .issue-icon {
+                      font-size: 1rem;
+                    }
+
+                    .issue-category {
+                      font-weight: 600;
+                      color: var(--text-primary);
+                      font-size: 0.875rem;
+                    }
+
+                    .issue-content {
+                      margin-bottom: 0.75rem;
+                    }
+
+                    .issue-row {
+                      display: flex;
+                      gap: 0.5rem;
+                      margin-bottom: 0.5rem;
+                      font-size: 0.875rem;
+                    }
+
+                    .issue-row .label {
+                      color: var(--text-secondary);
+                      font-weight: 500;
+                      min-width: 3rem;
+                    }
+
+                    .original-text {
+                      color: var(--danger);
+                      text-decoration: line-through;
+                    }
+
+                    .suggestion-text {
+                      color: var(--success);
+                      font-weight: 500;
+                    }
+
+                    .reason-text {
+                      color: var(--text-secondary);
+                      font-style: italic;
+                    }
+
+                    .issue-actions {
+                      display: flex;
+                      gap: 0.5rem;
+                    }
+
+                    .btn-action {
+                      padding: 0.375rem 0.75rem;
+                      font-size: 0.875rem;
+                      border: 1px solid var(--border-color);
+                      border-radius: 0.25rem;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                    }
+
+                    .btn-apply {
+                      background-color: var(--primary);
+                      color: white;
+                      border-color: var(--primary);
+                    }
+
+                    .btn-ignore {
+                      background-color: var(--background-tertiary);
+                      color: var(--text-secondary);
+                    }
+
+                    .preview-section {
+                      flex: 1;
+                    }
+
+                    .preview-header {
+                      margin-bottom: 1rem;
+                    }
+
+                    .preview-header h4 {
+                      margin: 0;
+                      font-size: 0.875rem;
+                      color: var(--text-secondary);
+                    }
+
+                    .preview-content {
+                      padding: 1rem;
+                      background-color: var(--background-secondary);
+                      border-radius: 0.25rem;
+                      border: 1px solid var(--border-color);
+                      font-size: 0.875rem;
+                      color: var(--text-primary);
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      max-height: 500px;
+                      overflow-y: auto;
+                    }
+
+                    .empty-state {
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      padding: 3rem 1rem;
+                      text-align: center;
+                      color: var(--text-tertiary);
+                    }
+
+                    .empty-icon {
+                      font-size: 3rem;
+                      margin-bottom: 1rem;
+                    }
+
+                    .empty-state p {
+                      font-size: 0.875rem;
+                      margin: 0;
+                    }
+                  </style>

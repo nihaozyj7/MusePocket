@@ -8,180 +8,13 @@ import { $tips } from '@app/plugins'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
 import { useSelectedBookStore } from '@domains/library/stores/selected-book.store'
 import { articledb } from '@shared/db'
+import { AI_SUGGESTION_PRESETS } from '../constants/ai-prompts'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
 const settingStore = useSettingStore()
 const selectedArticleStore = useSelectedArticleStore()
 const selectedBookStore = useSelectedBookStore()
-
-/** 内置预设场景（不可删除，不可编辑） */
-const BUILTIN_PRESETS = [
-  {
-    id: 'continue-writing',
-    title: '📝 续写建议',
-    description: '基于当前内容提供续写方向',
-    systemPrompt: `你是一个专业的写作助手，擅长为作者提供创作灵感和续写建议。
-
-你必须严格按照以下JSON格式返回结果，不要包含任何其他内容：
-{
-  "title": "续写方向建议",
-  "suggestions": [
-    {
-      "title": "方向标题",
-      "description": "详细描述该方向的情节发展（200字左右）",
-      "keyPoints": ["关键要点1", "关键要点2", "关键要点3"]
-    }
-  ],
-  "summary": "总体建议"
-}
-
-注意：
-1. 必须返回有效的JSON格式
-2. 提供3-5个不同的续写方向
-3. 每个方向要具有创意且符合前文逻辑
-4. 关键要点应简洁明了`,
-    userPrompt: `请基于以下内容，为我提供3-5个可能的续写方向。
-
-要求：
-1. 每个方向包含标题和200字左右的详细描述
-2. 为每个方向提炼2-4个关键要点
-3. 确保建议具有创意且符合前文逻辑
-4. 严格按照JSON格式返回结果`
-  },
-  {
-    id: 'plot-optimization',
-    title: '🎯 情节优化',
-    description: '分析当前情节并提供优化建议',
-    systemPrompt: `你是一个专业的文学编辑，擅长分析故事情节并提供优化建议。
-
-你必须严格按照以下JSON格式返回结果：
-{
-  "title": "情节优化建议",
-  "suggestions": [
-    {
-      "title": "优化点标题",
-      "description": "详细说明该优化点的具体建议和理由",
-      "keyPoints": ["具体改进措施1", "具体改进措施2"]
-    }
-  ],
-  "summary": "整体优化总结"
-}
-
-分析维度：
-1. 情节逻辑性和连贯性
-2. 人物行为的合理性
-3. 冲突设置的有效性
-4. 节奏把控
-5. 伏笔与呼应`,
-    userPrompt: `请分析以下内容的情节，从逻辑性、人物塑造、冲突设置、节奏把控等角度提供3-5个优化建议。
-
-要求：
-1. 指出可优化的具体问题
-2. 提供切实可行的改进方案
-3. 严格按照JSON格式返回结果`
-  },
-  {
-    id: 'character-development',
-    title: '👥 人物发展',
-    description: '为人物角色提供深化发展建议',
-    systemPrompt: `你是一个专业的角色设计顾问，擅长人物塑造和角色发展。
-
-你必须严格按照以下JSON格式返回结果：
-{
-  "title": "人物发展建议",
-  "suggestions": [
-    {
-      "title": "发展方向",
-      "description": "详细说明该角色的发展路径和可能的情节设计",
-      "keyPoints": ["性格特征变化", "关键事件触发", "关系网络影响"]
-    }
-  ],
-  "summary": "人物发展总体建议"
-}
-
-关注点：
-1. 人物性格的立体性
-2. 成长弧线的设计
-3. 人物关系的推进
-4. 内心冲突的刻画`,
-    userPrompt: `请基于以下内容，分析主要人物角色，提供3-5个人物深化发展的建议。
-
-要求：
-1. 分析人物当前状态
-2. 提供具体的发展方向
-3. 设计可能的关键转折点
-4. 严格按照JSON格式返回结果`
-  },
-  {
-    id: 'worldbuilding',
-    title: '🌍 世界观扩展',
-    description: '扩展和丰富作品的世界观设定',
-    systemPrompt: `你是一个专业的世界观设计师，擅长构建丰富完整的虚拟世界。
-
-你必须严格按照以下JSON格式返回结果：
-{
-  "title": "世界观扩展建议",
-  "suggestions": [
-    {
-      "title": "扩展方向",
-      "description": "详细说明该方向的设定内容和如何融入故事",
-      "keyPoints": ["核心设定要素", "与主线的关联", "展现方式"]
-    }
-  ],
-  "summary": "世界观建设总结"
-}
-
-关注维度：
-1. 世界的历史背景
-2. 社会结构和规则
-3. 文化和风俗
-4. 地理环境
-5. 独特的体系设定`,
-    userPrompt: `请基于以下内容，提供3-5个世界观扩展和丰富的建议。
-
-要求：
-1. 分析现有世界观框架
-2. 提供具体的扩展方向
-3. 说明如何自然地融入故事
-4. 严格按照JSON格式返回结果`
-  },
-  {
-    id: 'conflict-design',
-    title: '⚔️ 冲突设计',
-    description: '设计和强化故事冲突点',
-    systemPrompt: `你是一个专业的故事架构师，擅长设计引人入胜的冲突和张力。
-
-你必须严格按照以下JSON格式返回结果：
-{
-  "title": "冲突设计建议",
-  "suggestions": [
-    {
-      "title": "冲突类型",
-      "description": "详细说明冲突的设置、发展和解决思路",
-      "keyPoints": ["冲突源头", "升级路径", "潜在影响"]
-    }
-  ],
-  "summary": "冲突设计总体思路"
-}
-
-冲突类型：
-1. 人物间冲突
-2. 内心冲突
-3. 人与环境的冲突
-4. 价值观冲突
-5. 目标与阻碍的冲突`,
-    userPrompt: `请基于以下内容，设计3-5个可以增强故事张力的冲突点。
-
-要求：
-1. 分析现有冲突状态
-2. 提供新的冲突设计方案
-3. 说明冲突的发展和影响
-4. 严格按照JSON格式返回结果`
-  }
-] as const
-
-/** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
 /** 当前选择的预设场景ID */
 const selectedPreset = ref<string>('')
@@ -225,7 +58,7 @@ const promptOptions = computed(() => promptsStore.v)
 /** 合并后的预设选项（内置 + 用户自定义） */
 const allPresetOptions = computed(() => {
   return [
-    ...BUILTIN_PRESETS.map(p => ({ ...p, isBuiltin: true })),
+    ...AI_SUGGESTION_PRESETS.map(p => ({ ...p, isBuiltin: true })),
     ...promptOptions.value.map(p => ({
       id: p.id,
       title: p.title,
@@ -268,8 +101,8 @@ onMounted(async () => {
     applyPreset(savedConfig.presetId)
   } else {
     // 默认使用第一个内置预设
-    selectedPreset.value = BUILTIN_PRESETS[0].id
-    applyPreset(BUILTIN_PRESETS[0].id)
+    selectedPreset.value = AI_SUGGESTION_PRESETS[0].id
+    applyPreset(AI_SUGGESTION_PRESETS[0].id)
   }
 
   // 如果有自定义保存的提示词，覆盖预设
@@ -340,7 +173,7 @@ async function loadArticles() {
 
 /** 获取默认系统提示词 */
 function getDefaultSystemPrompt(): string {
-  return BUILTIN_PRESETS[0].systemPrompt
+  return AI_SUGGESTION_PRESETS[0].systemPrompt
 }
 
 /** 获取默认用户提示词 */

@@ -5,56 +5,11 @@ import { usePromptsStore } from '@domains/settings/stores/prompts.store'
 import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { openaiFetch, type OpenAiParams } from '@core/api'
 import { $tips } from '@app/plugins'
+import { NAME_GENERATOR_REQUIREMENTS } from '../constants/ai-prompts'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
 const settingStore = useSettingStore()
-
-/** 内置额外要求提示词 */
-const BUILTIN_REQUIREMENTS = [
-  {
-    id: 'water-element',
-    title: '💧 带有水的元素',
-    content: '需要带有水、海洋、流动、潮汐等水相关的元素或寓意'
-  },
-  {
-    id: 'fire-element',
-    title: '🔥 带有火的元素',
-    content: '需要带有火、烈焰、热情、光明等火相关的元素或寓意'
-  },
-  {
-    id: 'elegant',
-    title: '✨ 优雅高贵',
-    content: '名字需要显得优雅、高贵、有气质，适合贵族或上流社会人物'
-  },
-  {
-    id: 'powerful',
-    title: '⚡ 强大有力',
-    content: '名字需要体现出强大、有力量、威严、震慑的感觉'
-  },
-  {
-    id: 'gentle',
-    title: '🌸 温柔美好',
-    content: '名字需要温柔、美好、清新、宁静的感觉，寓意美好'
-  },
-  {
-    id: 'mysterious',
-    title: '🌙 神秘深邃',
-    content: '名字需要神秘、深邃、难以捉摸、带有神秘色彩'
-  },
-  {
-    id: 'two-characters',
-    title: '🔢 两个字',
-    content: '名字必须是两个字，简洁易记'
-  },
-  {
-    id: 'three-characters',
-    title: '🔢 三个字',
-    content: '名字必须是三个字，韵律优美'
-  }
-] as const
-
-/** 选中的模型 */
 const selectedModel = ref<OpenAiParams | null>(null)
 /** 取名类型 */
 const nameType = ref<string>('人名')
@@ -95,7 +50,7 @@ const promptOptions = computed(() => promptsStore.v)
 /** 合并后的额外要求选项（内置 + 自定义） */
 const allRequirementOptions = computed(() => {
   return [
-    ...BUILTIN_REQUIREMENTS.map(r => ({ ...r, isBuiltin: true })),
+    ...NAME_GENERATOR_REQUIREMENTS.map(r => ({ ...r, isBuiltin: true })),
     ...promptOptions.value.map(p => ({
       id: p.id,
       title: p.title,

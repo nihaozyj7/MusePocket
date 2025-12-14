@@ -1,0 +1,390 @@
+/**
+ * 通用组件样式
+ * 用于统一管理项目中重复使用的UI组件样式
+ */
+
+/* ==================== 表单相关样式 ==================== */
+
+/* 通用表单项容器 */
+.form-item {
+  margin-bottom: 1rem;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 表单标签 */
+.form-item label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* 表单输入框、选择框、文本域统一样式 */
+.form-item select,
+.form-item textarea,
+.form-item input[type="text"],
+.form-item input[type="number"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.form-item select:focus,
+.form-item textarea:focus,
+.form-item input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.form-item textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* ==================== 按钮样式 ==================== */
+
+/* 主要按钮 */
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 小按钮 */
+.btn-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small:hover:not(:disabled) {
+  background-color: var(--background-secondary);
+}
+
+.btn-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 次要按钮 */
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--background-secondary);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 危险按钮 */
+.btn-danger {
+  padding: 0.5rem 1rem;
+  background-color: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== 标签页样式 ==================== */
+
+.tabs {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--background-tertiary);
+  height: 2.2rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  flex: 1;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-bottom: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.tabs button:last-child {
+  border-right: none;
+}
+
+.tabs button:hover {
+  color: var(--text-primary);
+}
+
+.tabs button.active {
+  color: var(--primary);
+  border-bottom: 2px solid var(--primary);
+}
+
+/* ==================== 空状态样式 ==================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+/* ==================== 复选框样式 ==================== */
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+/* ==================== 进度/加载提示 ==================== */
+
+.progress {
+  padding: 0.5rem;
+  background-color: var(--background-tertiary);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.progress.error {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: var(--danger);
+}
+
+/* ==================== 卡片样式 ==================== */
+
+.card {
+  padding: 1rem;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== 分割线 ==================== */
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1rem 0;
+}
+
+/* ==================== 描述文本 ==================== */
+
+.description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+/* ==================== 信息框 ==================== */
+
+.info-box {
+  background-color: var(--background-secondary);
+  border-left: 3px solid var(--primary);
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  margin: 1rem 0;
+}
+
+.info-box h4 {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.info-box p,
+.info-box ul {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.info-box ul {
+  padding-left: 1.5rem;
+}
+
+.info-box li {
+  margin-bottom: 0.25rem;
+}
+
+/* ==================== 警告提示 ==================== */
+
+.warning {
+  color: var(--warning);
+  font-size: 0.85rem;
+}
+
+.warning-box {
+  padding: 0.75rem;
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 0.25rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+/* ==================== 操作按钮组 ==================== */
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions.actions-center {
+  justify-content: center;
+}
+
+.actions.actions-end {
+  justify-content: flex-end;
+}
+
+/* ==================== 下拉选择器样式 ==================== */
+
+.select-box {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select-box:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ==================== 文本框样式 ==================== */
+
+.textarea-box {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.textarea-box:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ==================== 输入框样式 ==================== */
+
+.input-box {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: border-color 0.2s;
+}
+
+.input-box:focus {
+  outline: none;
+  border-color: var(--primary);
+}

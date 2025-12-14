@@ -295,48 +295,48 @@ async function startProofread() {
     try {
       parsedIssues = JSON.parse(aiContent)
     } catch {
-                  // 尝试提取JSON代码块
-                  const jsonMatch = aiContent.match(/```(?:json)?\s*([\s\S]*?)```/)
-                  if (jsonMatch) {
-                  parsedIssues = JSON.parse(jsonMatch[1].trim())
-                  } else {
-                  throw new Error('无法解析AI返回的数据')
-                  }
-                  }
+      // 尝试提取JSON代码块
+      const jsonMatch = aiContent.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (jsonMatch) {
+        parsedIssues = JSON.parse(jsonMatch[1].trim())
+      } else {
+        throw new Error('无法解析AI返回的数据')
+      }
+    }
 
-                  if (!Array.isArray(parsedIssues)) {
-                  throw new Error('AI返回的数据不是数组格式')
-                  }
+    if (!Array.isArray(parsedIssues)) {
+      throw new Error('AI返回的数据不是数组格式')
+    }
 
-                  // 转换为内部格式
-                  issues.value = parsedIssues.map(issue => ({
-                  id: uid(),
-                  type: issue.type || 'suggestion',
-                  category: issue.category || '未分类',
-                  original: issue.original || '',
-                  suggestion: issue.suggestion || '',
-                  reason: issue.reason || '',
-                  position: issue.position,
-                  selected: false
-                  }))
+    // 转换为内部格式
+    issues.value = parsedIssues.map(issue => ({
+      id: uid(),
+      type: issue.type || 'suggestion',
+      category: issue.category || '未分类',
+      original: issue.original || '',
+      suggestion: issue.suggestion || '',
+      reason: issue.reason || '',
+      position: issue.position,
+      selected: false
+    }))
 
-                  progress.value = `校对完成，发现 ${issues.value.length} 个问题`
-                  $tips.success(`校对完成，发现 ${issues.value.length} 个问题`)
+    progress.value = `校对完成，发现 ${issues.value.length} 个问题`
+    $tips.success(`校对完成，发现 ${issues.value.length} 个问题`)
 
-                  // 切换到错误列表标签
-                  activeTab.value = 'errors'
+    // 切换到错误列表标签
+    activeTab.value = 'errors'
 
-                  } catch (err: any) {
-                  console.error('校对失败:', err)
-                  progress.value = '校对失败'
-                  $tips.error(`校对失败: ${err.message}`)
-                  } finally {
-                  isProofreading.value = false
-                  }
-                  }
+  } catch (err: any) {
+    console.error('校对失败:', err)
+    progress.value = '校对失败'
+    $tips.error(`校对失败: ${err.message}`)
+  } finally {
+    isProofreading.value = false
+  }
+}
 
-                  /** 应用单个修改 */
-                  function applyIssue(issue: ProofreadIssue) {
+/** 应用单个修改 */
+function applyIssue(issue: ProofreadIssue) {
                   // 触发应用修改的事件
                   emit('apply-fix', issue)
                   // 从列表中移除

@@ -77,7 +77,6 @@ async function saveDraft() {
     : await draftdb.updateDraft(currentDraft.value)
 
   if (result.success) {
-    $tips.success('草稿保存成功')
     await loadDrafts()
   } else {
     $tips.error(`保存失败: ${result.message}`)
@@ -107,6 +106,7 @@ async function deleteDraft(draft: Draft) {
 
 /** 关闭编辑器 */
 function closeEditor() {
+  saveDraft()
   showEditor.value = false
   currentDraft.value = null
 }
@@ -317,9 +317,5 @@ function closeEditor() {
   line-height: 1.6;
   resize: none;
   outline: none;
-}
-
-.draft-textarea:focus {
-  border-color: var(--primary);
 }
 </style>

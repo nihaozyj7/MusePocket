@@ -223,11 +223,9 @@ async function saveArticle(text: string, oldText?: string, skipHistory: boolean 
     try {
       // 检查当前是否在历史版本中（非栈顶位置）
       const currentIndex = historyStore.getCurrentIndex()
-      console.log(`[保存] 当前索引: ${currentIndex}, 内容已变化，准备保存历史`)
 
       // 如果在非栈顶位置保存，需要先舍弃当前索引到栈顶之间的记录
       if (currentIndex > 0) {
-        console.log(`[保存] 检测到在索引 ${currentIndex} 位置保存，将舍弃该索引之前的 ${currentIndex} 条记录`)
         await historyStore.discardRecordsAfterIndex(currentIndex)
       }
 
@@ -876,117 +874,117 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
 </script>
 
 <template>
-  <div class="container">
-    <div class="sidebar">
-      <!-- 搜索栏 -->
-      <div class="search" @click="openSearchPopup">搜索章节</div>
-      <!-- 操作按钮 -->
-      <div class="operations">
-        <!-- 回到主页 -->
-        <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
-        <!-- 占位符 -->
-        <div style="flex: 1;"></div>
-        <!-- 回收站 -->
-        <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
-        <!-- 新建书籍 -->
-        <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
-      </div>
-      <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
-        <div class="scroll-container">
-          <div class="article-item" :class="{
-            'selected': isSelected(article),
-            'dragging': draggedItem && draggedItem.id === article.id,
-            'drag-over': dragOverIndex === index
-          }" v-for="(article, index) in articles" :data-article-id="article.id" :key="article.id" draggable="true" @dragstart="handleDragStart($event, article)" @dragend="handleDragEnd" @dragover="handleDragOver($event, index)" @dragleave="handleDragLeave" @drop="handleDrop($event, index)">
-            <span>📜</span>
-            <h4>{{ article.title }}</h4>
-            <div class="count">{{ article.wordCount }}</div>
-          </div>
-        </div>
-      </div>
+<div class="container">
+  <div class="sidebar">
+    <!-- 搜索栏 -->
+    <div class="search" @click="openSearchPopup">搜索章节</div>
+    <!-- 操作按钮 -->
+    <div class="operations">
+      <!-- 回到主页 -->
+      <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
+      <!-- 占位符 -->
+      <div style="flex: 1;"></div>
+      <!-- 回收站 -->
+      <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
+      <!-- 新建书籍 -->
+      <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
     </div>
-    <div class="right-container">
-      <header class="toolbar">
-        <!-- 面包屑 -->
-        <div class="breadcrumb">
-          <span style="font-size: 1.2rem; display: block; margin-top: -.3rem;">📖</span>
-          <span>{{ selectedBookStore.v?.title }}</span>
-        </div>
-        <!-- 工具按钮 -->
-        <div class="tools">
-          <button title="对当前文章进行排版" @click="handleFormat">✨ 一键排版</button>
-          <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
-          <button title="查找与替换" @click="openFindReplace">🔍 查找替换</button>
-          <div class="button-group">
-            <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
-              ↩️
-            </button>
-            <button title="重做(Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo">
-              ↪️
-            </button>
-          </div>
-          <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
-          <button title="导出备份文件和从备份文件导入" @click="openImportExportPopup">💾 导入导出</button>
-          <button title="软件设置" @click="openSettings">⚙️ 配置</button>
-        </div>
-      </header>
-      <div class="bottom">
-        <!-- 编辑器 -->
-        <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" @undo="handleUndo" @redo="handleRedo" />
-        <!-- 工具窗口 -->
-        <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
-          <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
-          <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
-          <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" :getEditorBody="() => editorRef?.getBodyText()" :applyTextFix="handleProofreadFix" @apply-fix="handleProofreadFix" />
-          <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
-          <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
-          <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />
-          <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
-        </div>
-        <!-- 侧边工具栏 -->
-        <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">
-          <button :class="{ selected: settingStore.rutilsTitle === rt }" v-for="rt in rutilsTitles">{{ rt }}</button>
+    <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
+      <div class="scroll-container">
+        <div class="article-item" :class="{
+          'selected': isSelected(article),
+          'dragging': draggedItem && draggedItem.id === article.id,
+          'drag-over': dragOverIndex === index
+        }" v-for="(article, index) in articles" :data-article-id="article.id" :key="article.id" draggable="true" @dragstart="handleDragStart($event, article)" @dragend="handleDragEnd" @dragover="handleDragOver($event, index)" @dragleave="handleDragLeave" @drop="handleDrop($event, index)">
+          <span>📜</span>
+          <h4>{{ article.title }}</h4>
+          <div class="count">{{ article.wordCount }}</div>
         </div>
       </div>
     </div>
   </div>
-  <!-- 右键菜单 -->
-  <ContextMenu ref="articleContextMenuRef" />
-  <!-- 插入预设弹出层 -->
-  <InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
-  <!-- 历史记录弹出层 -->
-  <HistoryViewPopup ref="historyViewPopupRef" @undo="handleUndo" @redo="handleRedo" />
-  <!-- 文章回收站弹出层 -->
-  <RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
-  <!-- 搜索文章弹出层 -->
-  <SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
-  <!-- 查找替换弹出层 -->
-  <FindReplacePopup ref="findReplacePopupRef" @replace="handleFindReplace" />
-
-  <!-- 导入导出弹出层 -->
-  <Popup ref="importExportPopupRef" title="💾 文章导入导出">
-    <div class="import-export-container">
-      <!-- 导入文章 -->
-      <div class="section">
-        <h3>📂 导入文章</h3>
-        <ArticleImportExport :bookId="selectedBookStore.v?.id || ''" @importSuccess="handleImportSuccess" />
+  <div class="right-container">
+    <header class="toolbar">
+      <!-- 面包屑 -->
+      <div class="breadcrumb">
+        <span style="font-size: 1.2rem; display: block; margin-top: -.3rem;">📖</span>
+        <span>{{ selectedBookStore.v?.title }}</span>
       </div>
-
-      <div class="divider"></div>
-
-      <!-- 导出文章 -->
-      <div class="section">
-        <h3>💾 导出文章</h3>
-        <p class="description">
-          导出当前选中的文章或所有文章为 JSON 文件
-        </p>
+      <!-- 工具按钮 -->
+      <div class="tools">
+        <button title="对当前文章进行排版" @click="handleFormat">✨ 一键排版</button>
+        <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
+        <button title="查找与替换" @click="openFindReplace">🔍 查找替换</button>
         <div class="button-group">
-          <button @click="exportCurrentArticle" class="btn-primary">📝 导出当前文章</button>
-          <button @click="exportAllArticles" class="btn-primary">📚 导出所有文章</button>
+          <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
+            ↩️
+          </button>
+          <button title="重做(Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo">
+            ↪️
+          </button>
         </div>
+        <button title="章节的历史操作记录" @click="showHistoryPopup">🕒 历史</button>
+        <button title="导出备份文件和从备份文件导入" @click="openImportExportPopup">💾 导入导出</button>
+        <button title="软件设置" @click="openSettings">⚙️ 配置</button>
+      </div>
+    </header>
+    <div class="bottom">
+      <!-- 编辑器 -->
+      <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" @undo="handleUndo" @redo="handleRedo" />
+      <!-- 工具窗口 -->
+      <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
+        <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
+        <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
+        <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" :getEditorBody="() => editorRef?.getBodyText()" :applyTextFix="handleProofreadFix" @apply-fix="handleProofreadFix" />
+        <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
+        <AiSuggestionTool v-show="settingStore.rutilsTitle === rutilsTitles[3]" />
+        <DraftManager v-show="settingStore.rutilsTitle === rutilsTitles[4]" :bookId="selectedBookStore.v?.id || ''" />
+        <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
+      </div>
+      <!-- 侧边工具栏 -->
+      <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">
+        <button :class="{ selected: settingStore.rutilsTitle === rt }" v-for="rt in rutilsTitles">{{ rt }}</button>
       </div>
     </div>
-  </Popup>
+  </div>
+</div>
+<!-- 右键菜单 -->
+<ContextMenu ref="articleContextMenuRef" />
+<!-- 插入预设弹出层 -->
+<InsertSnippetPopup ref="insertSnippetPopupRef" @insert="handleInsertSnippet" />
+<!-- 历史记录弹出层 -->
+<HistoryViewPopup ref="historyViewPopupRef" @undo="handleUndo" @redo="handleRedo" />
+<!-- 文章回收站弹出层 -->
+<RecycleBinArticlePopup ref="recycleBinArticlePopupRef" @restored="handleArticleRestored" />
+<!-- 搜索文章弹出层 -->
+<SearchArticlePopup ref="searchArticlePopupRef" @select="handleSearchSelectArticle" />
+<!-- 查找替换弹出层 -->
+<FindReplacePopup ref="findReplacePopupRef" @replace="handleFindReplace" />
+
+<!-- 导入导出弹出层 -->
+<Popup ref="importExportPopupRef" title="💾 文章导入导出">
+  <div class="import-export-container">
+    <!-- 导入文章 -->
+    <div class="section">
+      <h3>📂 导入文章</h3>
+      <ArticleImportExport :bookId="selectedBookStore.v?.id || ''" @importSuccess="handleImportSuccess" />
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 导出文章 -->
+    <div class="section">
+      <h3>💾 导出文章</h3>
+      <p class="description">
+        导出当前选中的文章或所有文章为 JSON 文件
+      </p>
+      <div class="button-group">
+        <button @click="exportCurrentArticle" class="btn-primary">📝 导出当前文章</button>
+        <button @click="exportAllArticles" class="btn-primary">📚 导出所有文章</button>
+      </div>
+    </div>
+  </div>
+</Popup>
 </template>
 
 <style scoped>

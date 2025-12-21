@@ -1,4 +1,3 @@
-import { $tips } from '@app/plugins'
 
 /**
  * 清理 AI 返回内容中的思考块

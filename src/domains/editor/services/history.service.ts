@@ -78,7 +78,6 @@ export async function reconstructContentAtIndex(
 ): Promise<string | null> {
   try {
     const histories = await historydb.getArticleHistories(articleId)
-    console.log(`[重建内容] 文章ID: ${articleId}, 目标索引: ${targetIndex}, 总记录数: ${histories.length}`)
 
     if (histories.length === 0 || targetIndex >= histories.length) {
       console.error(`[重建内容] 索引超出范围`)
@@ -87,7 +86,6 @@ export async function reconstructContentAtIndex(
 
     // 从栈顶（索引 0）开始
     const topHistory = histories[0]
-    console.log(`[重建内容] 栈顶记录ID: ${topHistory.id}, 有快照: ${topHistory.fullContent !== null}, 快照长度: ${topHistory.fullContent?.length ?? 'null'}`)
 
     if (topHistory.fullContent === null) {
       console.error('栈顶快照丢失')
@@ -96,7 +94,6 @@ export async function reconstructContentAtIndex(
 
     // 如果目标就是栈顶，直接返回
     if (targetIndex === 0) {
-      console.log(`[重建内容] 目标就是栈顶，直接返回`)
       return topHistory.fullContent
     }
 
@@ -113,10 +110,8 @@ export async function reconstructContentAtIndex(
       const diffs: DiffOperation[] = JSON.parse(history.diffFromPrev)
       const reversedDiffs = reverseDiff(diffs)
       content = applyDiff(content, reversedDiffs)
-      console.log(`[重建内容] 应用第 ${i} 条 diff，当前内容长度: ${content.length}`)
     }
 
-    console.log(`[重建内容] 完成，最终内容长度: ${content.length}`)
     return content
   } catch (err: any) {
     console.error('重建内容失败:', err)
@@ -143,8 +138,6 @@ export async function saveNewVersion(
     const diffs = computeDiff(oldContent, newContent)
     const diffJson = JSON.stringify(diffs)
 
-    console.log(`[保存版本] 文章ID: ${articleId}, 旧内容长度: ${oldContent.length}, 新内容长度: ${newContent.length}`)
-
     // 2. 创建新的栈顶记录（先创建，确保总有快照）
     const newRecord: ArticleHistoryRecord = {
       id: uid(),
@@ -157,15 +150,12 @@ export async function saveNewVersion(
     }
 
     await historydb.createHistory(newRecord)
-    console.log(`[保存版本] 新记录已创建: ${newRecord.id}`)
 
     // 3. 清除旧栈顶的快照（在新记录创建后）
     const clearResult = await historydb.clearOldTopSnapshot(articleId)
-    console.log(`[保存版本] 清除旧快照: ${clearResult.success}`)
 
     // 4. 更新 KV 存储中的当前版本为新栈顶 ID
     await kvdb.setCurrentHistoryId(articleId, newRecord.id)
-    console.log(`[保存版本] 已更新 KV 存储的当前版本 ID: ${newRecord.id}`)
 
     // 5. 返回新记录的 ID
     return newRecord.id

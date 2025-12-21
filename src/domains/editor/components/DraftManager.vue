@@ -113,41 +113,41 @@ function closeEditor() {
 </script>
 
 <template>
-  <div class="draft-manager">
-    <div class="header">
-      <h3>📝 草稿箱</h3>
-      <div class="editor-actions" v-show="showEditor">
-        <button @click="saveDraft" :disabled="isSaving" class="btn-save">
-          {{ isSaving ? '保存中...' : '💾 保存' }}
-        </button>
-        <button @click="closeEditor" class="btn-close">✖️ 关闭</button>
-      </div>
-      <button @click="createDraft" class="btn-create">+ 新建草稿</button>
+<div class="draft-manager">
+  <div class="header">
+    <h3>📝 草稿箱</h3>
+    <div class="editor-actions" v-show="showEditor">
+      <button @click="saveDraft" :disabled="isSaving" class="btn-save">
+        {{ isSaving ? '保存中...' : '💾 保存' }}
+      </button>
+      <button @click="closeEditor" class="btn-close">✖️ 关闭</button>
     </div>
+    <button @click="createDraft" class="btn-create">+ 新建草稿</button>
+  </div>
 
-    <div v-if="!showEditor" class="draft-list">
-      <div v-if="drafts.length === 0" class="empty-state">
-        暂无草稿，点击上方按钮创建
-      </div>
-      <div v-for="draft in drafts" :key="draft.id" class="draft-item" @click="openDraft(draft)">
-        <div class="draft-info">
-          <div class="draft-title">{{ draft.title }}</div>
-          <div class="draft-time">{{ new Date(draft.modifiedTime).toLocaleString() }}</div>
-        </div>
-        <button @click.stop="deleteDraft(draft)" class="btn-delete">🗑️</button>
-      </div>
+  <div v-if="!showEditor" class="draft-list">
+    <div v-if="drafts.length === 0" class="empty-state">
+      暂无草稿，点击上方按钮创建
     </div>
-
-    <div v-else class="editor-container">
-      <div class="editor-header">
-        <input v-model="currentDraft!.title" class="draft-title-input" placeholder="草稿标题" />
+    <div v-for="draft in drafts" :key="draft.id" class="draft-item" @click="openDraft(draft)">
+      <div class="draft-info">
+        <div class="draft-title">{{ draft.title }}</div>
+        <div class="draft-time">{{ new Date(draft.modifiedTime).toLocaleString() }}</div>
       </div>
-
-      <div class="markdown-editor">
-        <textarea v-model="editorContent" placeholder="开始编写你的草稿..." class="draft-textarea"></textarea>
-      </div>
+      <button @click.stop="deleteDraft(draft)" class="btn-delete">🗑️</button>
     </div>
   </div>
+
+  <div v-else class="editor-container">
+    <div class="editor-header">
+      <input v-model="currentDraft!.title" class="draft-title-input" placeholder="草稿标题" />
+    </div>
+
+    <div class="markdown-editor">
+      <textarea v-model="editorContent" placeholder="开始编写你的草稿..." class="draft-textarea"></textarea>
+    </div>
+  </div>
+</div>
 </template>
 
 <style scoped>

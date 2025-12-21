@@ -134,7 +134,6 @@ function createWindow() {
       windowConfig.height = savedState.height
     } else {
       // 窗口在屏幕外，居中显示
-      console.log('Window was outside screen bounds, centering...')
       windowConfig.center = true
     }
   } else {

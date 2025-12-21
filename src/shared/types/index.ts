@@ -1,3 +1,4 @@
+import type { ProofreadError } from "@/domains/editor"
 import { type DBSchema } from "idb"
 
 /** 创建时间和修改时间 */
@@ -327,4 +328,20 @@ export interface ConfigExportData {
   textSnippets?: TextSnippet[]
   /** 导出时间 */
   exportTime: number
+}
+
+
+/**
+ * 本地校对问题接口定义
+ * 用于描述本地文本校对中发现的问题信息
+ */
+export interface LocalProofreadIssue {
+  /** 问题的唯一标识符 */
+  id: string
+  /** 问题所在行号 */
+  lineNumber: number
+  /** 错误信息，包含可选的行文本内容 */
+  error: ProofreadError & { lineText?: string }
+  /** 标识问题是否被选中 */
+  selected: boolean
 }

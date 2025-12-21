@@ -111,7 +111,6 @@ export const useHistoryStore = defineStore('history', {
           const index = histories.findIndex(h => h.id === currentHistoryId)
           if (index !== -1) {
             currentIndex = index
-            console.log(`[加载历史] 从数据库恢复当前版本索引: ${currentIndex} (ID: ${currentHistoryId})`)
           } else {
             console.warn(`[加载历史] 当前版本 ID ${currentHistoryId} 未找到，重置为 -1`)
           }
@@ -154,7 +153,6 @@ export const useHistoryStore = defineStore('history', {
 
       // 计算目标索引
       const targetIndex = state.currentIndex === -1 ? 0 : state.currentIndex + 1
-      console.log(`[撤销] 当前索引: ${state.currentIndex}, 目标索引: ${targetIndex}, 总记录数: ${state.totalCount}`)
 
       // 检查边界
       if (targetIndex >= state.totalCount) {
@@ -168,7 +166,6 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
-      console.log(`[撤销] 已更新索引为: ${targetIndex}`)
 
       // 持久化当前版本
       await this.saveCurrentVersion()
@@ -187,7 +184,6 @@ export const useHistoryStore = defineStore('history', {
 
       // 计算目标索引
       const targetIndex = state.currentIndex - 1
-      console.log(`[重做] 当前索引: ${state.currentIndex}, 目标索引: ${targetIndex}, 总记录数: ${state.totalCount}`)
 
       // 如果目标是 -1，直接返回栈顶快照
       if (targetIndex === -1) {
@@ -198,7 +194,6 @@ export const useHistoryStore = defineStore('history', {
         }
 
         state.currentIndex = -1
-        console.log(`[重做] 已更新索引为: -1 (最新版本)`)
         // 持久化当前版本
         await this.saveCurrentVersion()
         return topHistory.fullContent
@@ -210,7 +205,6 @@ export const useHistoryStore = defineStore('history', {
 
       // 更新索引
       state.currentIndex = targetIndex
-      console.log(`[重做] 已更新索引为: ${targetIndex}`)
 
       // 持久化当前版本
       await this.saveCurrentVersion()
@@ -238,7 +232,6 @@ export const useHistoryStore = defineStore('history', {
       const state = this.articleStates.get(this.currentArticleId)
       if (state) {
         state.currentIndex = targetIndex
-        console.log(`[回退] currentIndex 设置为: ${targetIndex}`)
         // 持久化当前版本
         await this.saveCurrentVersion()
       }
@@ -307,16 +300,13 @@ export const useHistoryStore = defineStore('history', {
       const state = this.articleStates.get(this.currentArticleId)
       if (state) {
         state.currentIndex = -1
-        console.log(`[重置] currentIndex 设置为: -1`)
 
         // 如果提供了新栈顶 ID，更新 KV 存储
         if (newTopHistoryId) {
           await kvdb.setCurrentHistoryId(this.currentArticleId, newTopHistoryId)
-          console.log(`[重置] 已更新 KV 存储的栈顶 ID: ${newTopHistoryId}`)
         } else {
           // 否则删除 KV 记录（表示在最新版本）
           await kvdb.deleteCurrentHistoryId(this.currentArticleId)
-          console.log(`[重置] 已删除 KV 记录，当前在最新版本`)
         }
       }
     },
@@ -328,18 +318,13 @@ export const useHistoryStore = defineStore('history', {
     async discardRecordsAfterIndex(currentIndex: number) {
       if (!this.currentArticleId || currentIndex <= 0) return
 
-      console.log(`[舍弃记录] 开始舍弃索引 0 到 ${currentIndex - 1} 的记录`)
-
       // 获取需要删除的记录 ID
       const recordsToDelete = this.currentHistories.slice(0, currentIndex)
 
       // 从数据库中删除
       for (const record of recordsToDelete) {
         await historydb.deleteHistory(record.id)
-        console.log(`[舍弃记录] 已删除: ${record.id}`)
       }
-
-      console.log(`[舍弃记录] 共删除 ${recordsToDelete.length} 条记录`)
     },
 
     /**
@@ -354,7 +339,6 @@ export const useHistoryStore = defineStore('history', {
       // 如果在最新版本，删除 KV 记录
       if (state.currentIndex === -1) {
         await kvdb.deleteCurrentHistoryId(this.currentArticleId)
-        console.log(`[保存版本] 已删除 KV 记录，当前在最新版本`)
         return
       }
 
@@ -362,7 +346,6 @@ export const useHistoryStore = defineStore('history', {
       const currentHistory = this.currentHistories[state.currentIndex]
       if (currentHistory) {
         await kvdb.setCurrentHistoryId(this.currentArticleId, currentHistory.id)
-        console.log(`[保存版本] 已保存当前版本 ID: ${currentHistory.id} (索引: ${state.currentIndex})`)
       }
     }
   }

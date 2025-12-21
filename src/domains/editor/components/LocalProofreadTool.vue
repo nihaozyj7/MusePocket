@@ -4,13 +4,7 @@ import { useSettingStore } from '@domains/settings/stores/settings.store'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
 import { proofreadingService, type ProofreadError } from '@domains/editor/services/proofreading.service'
 import { $tips } from '@app/plugins'
-
-interface LocalProofreadIssue {
-  id: string
-  lineNumber: number
-  error: ProofreadError & { lineText?: string }
-  selected: boolean
-}
+import type { LocalProofreadIssue } from '@/shared/types'
 
 const settingStore = useSettingStore()
 const selectedArticleStore = useSelectedArticleStore()
@@ -64,70 +58,50 @@ async function checkServiceAvailability() {
 }
 
 /**
- * 将文本按句子分割并智能合并，每次发送不超过30字
+ * 将文本按句子分割并智能合并
  * 优先按标点符号分割，遇到换行必须截断
- * 短句可以合并发送，但总长度不超过30字
  */
 function splitAndMergeText(text: string, maxLength: number = 30): string[] {
   const result: string[] = []
 
-  // 先按换行符分割（换行必须截断）
+  // 1. 先按换行符分割（换行必须截断）
   const lines = text.split('\n')
 
+  // 2. 定义匹配句子的正则（匹配非标点序列 + 标点序列）
+  const sentencePattern = /[^。！？；!?;，,、]*(?:[。！？；!?;，,、]|$)/g
+
   lines.forEach(line => {
-    const trimmed = line.trim()
-    if (!trimmed) return
+    const trimmedLine = line.trim()
+    if (!trimmedLine) return
 
-    // 按标点符号分割句子
-    const sentences = trimmed.split(/(?<=[。！？；!?;，,、])/)
+    // 3. 使用匹配代替分割，避免连续标点问题
+    const matches = trimmedLine.match(sentencePattern) || []
 
-    let buffer = ''
+    // 4. 过滤空字符串并处理匹配结果
+    const validSentences = matches
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
 
-    sentences.forEach(sentence => {
-      const trimmedSentence = sentence.trim()
-      if (!trimmedSentence) return
-
-      // 如果单个句子超过30字，需要截断
-      if (trimmedSentence.length > maxLength) {
-        // 先处理buffer中的内容
-        if (buffer) {
-          result.push(buffer.trim())
-          buffer = ''
-        }
-
-        // 截断长句
-        for (let i = 0; i < trimmedSentence.length; i += maxLength) {
-          const chunk = trimmedSentence.substring(i, i + maxLength)
-          if (chunk.trim()) {
-            result.push(chunk.trim())
-          }
-        }
+    // 5. 处理每个句子（可能需要按最大长度分割）
+    validSentences.forEach(sentence => {
+      if (sentence.length <= maxLength) {
+        result.push(sentence)
       } else {
-        // 尝试合并到buffer
-        const potentialBuffer = buffer + trimmedSentence
-
-        if (potentialBuffer.length <= maxLength) {
-          // 可以合并
-          buffer = potentialBuffer
-        } else {
-          // 不能合并，先输出buffer
-          if (buffer) {
-            result.push(buffer.trim())
-          }
-          buffer = trimmedSentence
+        // 按最大长度分割长句
+        let start = 0
+        while (start < sentence.length) {
+          const end = Math.min(start + maxLength, sentence.length)
+          const segment = sentence.substring(start, end).trim()
+          if (segment) result.push(segment)
+          start = end
         }
       }
     })
-
-    // 处理剩余的buffer
-    if (buffer) {
-      result.push(buffer.trim())
-      buffer = ''
-    }
   })
 
   return result
 }
+
 
 /**
  * 根据行号合并同一句子的所有错误
@@ -338,110 +312,110 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 </script>
 
 <template>
-  <div class="local-proofread-tool">
-    <!-- 服务状态 -->
-    <div class="service-status">
-      <div class="status-text">
-        <span>服务状态：</span>
-        <span :class="['status-indicator', isServiceEnabled ? 'enabled' : 'disabled']">
-          {{ proofreadState }}
-        </span>
+<div class="local-proofread-tool">
+  <!-- 服务状态 -->
+  <div class="service-status">
+    <div class="status-text">
+      <span>服务状态：</span>
+      <span :class="['status-indicator', isServiceEnabled ? 'enabled' : 'disabled']">
+        {{ proofreadState }}
+      </span>
+    </div>
+    <button v-if="!isServiceEnabled" @click="checkServiceAvailability" class="btn-refresh">
+      🔄 重新检查
+    </button>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="action-buttons">
+    <button @click="startProofread" :disabled="!isServiceEnabled || isProofreading" class="btn-primary">
+      {{ isProofreading ? '⏳ 检查中...' : '🔍 开始纠错' }}
+    </button>
+
+    <button v-if="issues.length > 0" @click="clearAllIssues" class="btn-secondary">
+      🗑️ 清空结果
+    </button>
+  </div>
+
+  <!-- 提示信息 -->
+  <div v-if="!isServiceEnabled" class="hint-message">
+    <p>⚠️ 纠错服务未配置或不可用</p>
+    <p class="hint-desc">
+      请前往【设置 → 基础设置 → 纠错设置】配置纠错接口地址
+    </p>
+  </div>
+
+  <!-- 问题列表 -->
+  <div v-if="issues.length > 0" class="issues-section">
+    <div class="issues-header">
+      <div class="stats">
+        <span class="total-count">共 {{ issues.length }} 个错误</span>
       </div>
-      <button v-if="!isServiceEnabled" @click="checkServiceAvailability" class="btn-refresh">
-        🔄 重新检查
-      </button>
+      <div class="batch-actions">
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="isAllSelected" />
+          全选
+        </label>
+        <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
+          批量修改
+        </button>
+      </div>
     </div>
 
-    <!-- 操作按钮 -->
-    <div class="action-buttons">
-      <button @click="startProofread" :disabled="!isServiceEnabled || isProofreading" class="btn-primary">
-        {{ isProofreading ? '⏳ 检查中...' : '🔍 开始纠错' }}
-      </button>
-
-      <button v-if="issues.length > 0" @click="clearAllIssues" class="btn-secondary">
-        🗑️ 清空结果
-      </button>
-    </div>
-
-    <!-- 提示信息 -->
-    <div v-if="!isServiceEnabled" class="hint-message">
-      <p>⚠️ 纠错服务未配置或不可用</p>
-      <p class="hint-desc">
-        请前往【设置 → 基础设置 → 纠错设置】配置纠错接口地址
-      </p>
-    </div>
-
-    <!-- 问题列表 -->
-    <div v-if="issues.length > 0" class="issues-section">
-      <div class="issues-header">
-        <div class="stats">
-          <span class="total-count">共 {{ issues.length }} 个错误</span>
-        </div>
-        <div class="batch-actions">
+    <div class="issues-list">
+      <div v-for="issue in issues" :key="issue.id" class="issue-item">
+        <div class="issue-header">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="isAllSelected" />
-            全选
+            <input type="checkbox" v-model="issue.selected" />
+            <span class="line-number">第 {{ issue.lineNumber }} 行</span>
           </label>
-          <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
-            批量修改
+          <span class="position">位置: {{ issue.error.position }}</span>
+        </div>
+
+        <div class="issue-content">
+          <!-- 完整句子展示 -->
+          <div class="sentence-display" v-if="issue.error.lineText">
+            <span class="label">原句:</span>
+            <div class="sentence-text">
+              <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
+                <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
+                <span v-else>{{ part.text }}</span>
+              </template>
+            </div>
+          </div>
+
+          <!-- 错误与建议 -->
+          <div class="error-info">
+            <div class="error-text">
+              <span class="label">错误:</span>
+              <span class="text original">{{ issue.error.original }}</span>
+            </div>
+            <div class="arrow">→</div>
+            <div class="correct-text">
+              <span class="label">建议:</span>
+              <span class="text suggestion">{{ issue.error.corrected }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="issue-actions">
+          <button class="btn-apply" @click="handleApplyFix(issue)">
+            ✓ 应用
+          </button>
+          <button class="btn-ignore" @click="ignoreIssue(issue)">
+            × 忽略
           </button>
         </div>
       </div>
-
-      <div class="issues-list">
-        <div v-for="issue in issues" :key="issue.id" class="issue-item">
-          <div class="issue-header">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="issue.selected" />
-              <span class="line-number">第 {{ issue.lineNumber }} 行</span>
-            </label>
-            <span class="position">位置: {{ issue.error.position }}</span>
-          </div>
-
-          <div class="issue-content">
-            <!-- 完整句子展示 -->
-            <div class="sentence-display" v-if="issue.error.lineText">
-              <span class="label">原句:</span>
-              <div class="sentence-text">
-                <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
-                  <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
-                  <span v-else>{{ part.text }}</span>
-                </template>
-              </div>
-            </div>
-
-            <!-- 错误与建议 -->
-            <div class="error-info">
-              <div class="error-text">
-                <span class="label">错误:</span>
-                <span class="text original">{{ issue.error.original }}</span>
-              </div>
-              <div class="arrow">→</div>
-              <div class="correct-text">
-                <span class="label">建议:</span>
-                <span class="text suggestion">{{ issue.error.corrected }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="issue-actions">
-            <button class="btn-apply" @click="handleApplyFix(issue)">
-              ✓ 应用
-            </button>
-            <button class="btn-ignore" @click="ignoreIssue(issue)">
-              × 忽略
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 空状态 -->
-    <div v-else-if="!isProofreading && isServiceEnabled" class="empty-state">
-      <div class="empty-icon">📝</div>
-      <p>点击"开始纠错"检查当前文章</p>
     </div>
   </div>
+
+  <!-- 空状态 -->
+  <div v-else-if="!isProofreading && isServiceEnabled" class="empty-state">
+    <div class="empty-icon">📝</div>
+    <p>点击"开始纠错"检查当前文章</p>
+  </div>
+</div>
 </template>
 
 <style scoped>

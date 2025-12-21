@@ -994,7 +994,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   display: flex;
   border-top: 1px solid var(--border-color);
 }
-
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -1003,7 +1002,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   background-color: var(--background-secondary);
   border-right: 1px solid var(--border-color);
 }
-
 .search {
   height: 2.7rem;
   display: flex;
@@ -1015,7 +1013,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   font-size: .9rem;
   cursor: text;
 }
-
 .operations {
   display: flex;
   height: 2.5rem;
@@ -1023,7 +1020,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   padding: 0 .25rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .operations button {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
@@ -1031,17 +1027,14 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   margin-right: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
 .operations button:last-child {
   margin-right: 0;
 }
-
 .bookshelf {
   flex: 1;
   height: 0;
   padding: .5rem 0;
 }
-
 .book-item {
   display: flex;
   align-items: start;
@@ -1050,11 +1043,9 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   padding: .5rem;
   margin: 0 .25rem .25rem .25rem;
 }
-
 .book-item.checked {
   background-color: var(--background-tertiary);
 }
-
 .book-item .cover {
   height: 8rem;
   width: 5rem;
@@ -1062,29 +1053,24 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   margin-right: .5rem;
   overflow: hidden;
 }
-
 .book-item .cover img {
   height: 100%;
   width: 100%;
 }
-
 .bookInfo {
   display: flex;
   flex-direction: column;
   flex: 1;
   width: 0;
 }
-
 .book-item>div>:nth-child(1) {
   color: var(--text-primary);
   margin-top: .25rem;
 }
-
 .book-item>div>:nth-child(2) {
   font-size: .8rem;
   margin-top: .6rem;
 }
-
 .book-item>div>:nth-child(3) {
   font-size: .8rem;
   margin-top: .6rem;
@@ -1097,13 +1083,11 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   text-overflow: ellipsis;
   word-break: break-all;
 }
-
 .right-container {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 .toolbar {
   display: flex;
   height: 2.7rem;
@@ -1111,25 +1095,21 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   justify-content: space-between;
   background-color: var(--background-secondary);
 }
-
 .breadcrumb {
   height: 100%;
   display: flex;
   align-items: center;
 }
-
 .breadcrumb span {
   display: block;
   margin-left: .5rem;
   font-size: .8rem;
 }
-
 .tools {
   display: flex;
   align-items: center;
   margin-right: .5rem;
 }
-
 .tools>button {
   margin-left: 0.5rem;
   background-color: var(--background-tertiary);
@@ -1137,7 +1117,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .button-group {
   display: flex;
   align-items: center;
@@ -1146,24 +1125,20 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .button-group button {
   font-size: 1rem;
   padding: 0.19rem;
   margin: 0;
 }
-
 .button-group button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
-
 .right-container .bottom {
   display: flex;
   flex: 1;
   height: 0;
 }
-
 .utils-panel {
   width: 2.7rem;
   padding-top: .5rem;
@@ -1171,7 +1146,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   background-color: var(--background-secondary);
   overflow-y: hidden;
 }
-
 .vertical-text {
   writing-mode: vertical-rl;
   text-orientation: sideways;
@@ -1181,7 +1155,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   padding-bottom: 1rem;
   user-select: text;
 }
-
 .utils-panel button {
   background-color: var(--background-tertiary);
   padding: .5rem .1rem .5rem .25rem !important;
@@ -1190,19 +1163,15 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   margin-right: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
-
 .utils-panel button.selected {
   background-color: var(--primary-dark);
   color: var(--text-primary);
 }
-
 .articleshelf {
   flex: 1;
   height: 0;
   padding: .25rem 0;
 }
-
 .article-item {
   display: flex;
   padding: 0.5rem;
@@ -1213,43 +1182,34 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   margin: 0 0.5rem 0.5rem 0.5rem;
   border: 1px solid transparent;
 }
-
 .article-item:active {
   cursor: grabbing;
 }
-
 .article-item.dragging {
   opacity: 0.5;
 }
-
 .article-item.drag-over {
   border-top: 2px solid var(--primary);
   margin-top: 2px;
 }
-
 .article-item:hover h4 {
   color: var(--primary-light);
 }
-
 .article-item .count {
   font-size: .6rem;
   color: var(--text-tertiary);
   display: block;
   margin-top: .25rem;
 }
-
 .article-item.selected {
   background-color: var(--background-tertiary);
 }
-
 .article-item.selected h4 {
   color: var(--primary);
 }
-
 .article-item span {
   width: 2rem;
 }
-
 .article-item h4 {
   white-space: nowrap;
   overflow: hidden;
@@ -1257,11 +1217,9 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   font-size: .8rem;
   flex: 1;
 }
-
 .utils-drawer {
   display: flex;
 }
-
 .utils-drawer .split-line {
   width: .5rem;
   background-color: var(--background-secondary);
@@ -1269,39 +1227,32 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
 }
-
 ::v-deep(.utils-drawer>*:nth-child(2)) {
   flex: 1;
   width: 0;
 }
-
 .import-export-container {
   max-width: 700px;
   margin: 0 auto;
 }
-
 .import-export-container .section {
   margin-bottom: 1.5rem;
 }
-
 .import-export-container h3 {
   color: var(--text-primary);
   margin-bottom: 0.75rem;
   font-size: 1rem;
 }
-
 .import-export-container .description {
   color: var(--text-secondary);
   font-size: 0.85rem;
   line-height: 1.5;
   margin-bottom: 0.75rem;
 }
-
 .import-export-container .button-group {
   display: flex;
   gap: 0.75rem;
 }
-
 .import-export-container .btn-primary {
   padding: .5rem 1rem;
   background-color: var(--primary);
@@ -1313,7 +1264,6 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   transition: background-color 0.2s;
   flex: 1;
 }
-
 .import-export-container .divider {
   height: 1px;
   background-color: var(--border-color);

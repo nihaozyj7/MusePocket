@@ -90,7 +90,7 @@ defineExpose({
 
     <!-- 基本信息 -->
     <div class="info-section">
-      <div class="header">
+      <div class="header" style="display: flex; justify-content: space-between;">
         <h4 @click="copy(entity.title)" title="点击复制">{{ entity.title }}</h4>
         <span class="type-tag">{{ entity.type }}</span>
       </div>

@@ -313,16 +313,15 @@ defineExpose({ show, move, update, hide })
 
 </script>
 
-<template>
-  <!-- 展示实体信息 -->
-  <div class="entity-box" ref="hoverRef" v-show="isVisible">
-    <div class="item" :class="{ selected: selectedIndex === index }" @click="hide(result.entity, result.coverLength)" v-for="result, index in matchResults" :key="result.entity.id">
-      <span>{{ result.entity.type }}</span>
-      <h5>{{ result.entity.title }}</h5>
-    </div>
-    <!-- 用户输入时的实体信息悬浮窗 -->
-    <EntityHover ref="entityInfoRef" />
+<template><!-- 展示实体信息 -->
+<div class="entity-box" ref="hoverRef" v-show="isVisible">
+  <div class="item" :class="{ selected: selectedIndex === index }" @click="hide(result.entity, result.coverLength)" v-for="result, index in matchResults" :key="result.entity.id">
+    <span>{{ result.entity.type.slice(0, 2) }}</span>
+    <h5>{{ result.entity.title }}</h5>
   </div>
+  <!-- 用户输入时的实体信息悬浮窗 -->
+  <EntityHover ref="entityInfoRef" />
+</div>
 </template>
 
 <style scoped>
@@ -341,7 +340,6 @@ defineExpose({ show, move, update, hide })
   top: 0;
   overflow-y: auto;
 }
-
 .item {
   padding: .5rem;
   white-space: nowrap;
@@ -349,18 +347,24 @@ defineExpose({ show, move, update, hide })
   text-overflow: ellipsis;
   cursor: pointer;
   display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
-
 .item span {
   color: var(--text-secondary);
-  background-color: var();
+  background-color: var(--background-secondary);
   color: var(--danger);
-  width: 0.8rem;
+  width: 2rem;
   overflow: hidden;
   margin-right: .5rem;
+  font-size: .6rem;
+  padding: .25rem 0;
+  border-radius: .25rem;
+  margin-left: .25rem;
+  margin-right: .25rem;
+  margin-top: .1rem;
+  text-align: center;
 }
-
 .item h4 {
   flex: 1;
   width: 0;
@@ -368,11 +372,16 @@ defineExpose({ show, move, update, hide })
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .selected {
   background-color: var(--background-tertiary);
+  position: relative;
 }
-
+.selected::before {
+  content: '>';
+  position: absolute;
+  top: .59rem;
+  left: 0rem;
+}
 .item:hover {
   background-color: var(--background-tertiary);
 }

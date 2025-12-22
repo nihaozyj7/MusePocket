@@ -7,7 +7,7 @@ const props = defineProps<{ entity: Entity }>()
 
 <template>
 <div class="entity-detail">
-  <div class="header">
+  <div class="header" style="display: flex; justify-content: space-between;">
     <h4>{{ props.entity.title }}</h4>
     <span class="type-tag">{{ props.entity.type }}</span>
   </div>

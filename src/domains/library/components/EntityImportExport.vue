@@ -158,7 +158,7 @@ function handleFileChange(event: Event) {
       <p class="description">
         将当前书籍的所有实体导出为JSON文件
       </p>
-      <button @click="exportEntities" :disabled="isExporting" class="btn-primary">
+      <button @click="exportEntities" :disabled="isExporting" class="btn-primary wfull">
         {{ isExporting ? '导出中...' : '💾 导出实体' }}
       </button>
     </div>

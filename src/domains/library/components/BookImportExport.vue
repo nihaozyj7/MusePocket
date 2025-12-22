@@ -90,7 +90,7 @@ function handleFileChange(event: Event) {
         <span class="warning">⚠️ 导入会生成新的ID，不会覆盖现有书籍</span>
       </p>
       <input ref="fileInputRef" type="file" accept=".json" @change="handleFileChange" style="display: none;" />
-      <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary">
+      <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary wfull">
         {{ isImporting ? '导入中...' : '📁 选择JSON文件' }}
       </button>
     </div>

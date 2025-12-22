@@ -147,7 +147,7 @@ function reloadStores() {
       <p class="description">
         导出AI接口、提示词和文本预设配置
       </p>
-      <button @click="exportConfigs" :disabled="isExporting" class="btn-primary">
+      <button @click="exportConfigs" :disabled="isExporting" class="btn-primary wfull">
         {{ isExporting ? '导出中...' : '💾 导出配置' }}
       </button>
     </div>

@@ -99,44 +99,44 @@ function deleteEntityAttr(index: number) {
 </script>
 
 <template>
-  <div class="entity-create">
-    <div class="form">
-      <div class="separator">固有属性</div>
-      <div class="form-group">
-        <label for="entity-id">名称</label>
-        <input type="text" id="entity-id" v-model="newEntity.title" placeholder="输入该实体的名称" autocomplete="off"></input>
-      </div>
-      <div class="form-group">
-        <label for="entity-type">类型</label>
-        <input type="text" id="entity-type" v-model="newEntity.type" placeholder="输入或在下方选取类型" autocomplete="off"></input>
-        <div class="types" @click="handleTypesClick">
-          <span v-for="type in entityTypes.array">{{ type[0] }}</span>
-          <span v-if="entityTypes.array.every(type => type[0] !== '其他')">其他</span>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="entity-description">描述</label>
-        <textarea id="entity-description" v-model="newEntity.description" placeholder="输入对该实体的介绍或者描述"></textarea>
-      </div>
-      <div class="separator">自定义属性</div>
-      <div class="form-group">
-        <button @click="addEntityAttr">添加属性</button>
-      </div>
-      <div class="attrs">
-        <div class="form-group" v-for="attr, index in newEntity?.attrs">
-          <div class="line-group">
-            <input type="text" v-model="attr.title" placeholder="属性名称" title="属性的名称"></input>
-            <input type="number" v-model="attr.sortIndex" title="排序索引，越小越靠前"></input>
-            <button class="delete-button" @click="deleteEntityAttr(index)">❌</button>
-          </div>
-          <textarea class="value" v-model="attr.value" placeholder="输入属性的值"></textarea>
-        </div>
+<div class="entity-create">
+  <div class="form">
+    <div class="separator">固有属性</div>
+    <div class="form-group">
+      <label for="entity-id">名称</label>
+      <input type="text" id="entity-id" v-model="newEntity.title" placeholder="输入该实体的名称" autocomplete="off"></input>
+    </div>
+    <div class="form-group">
+      <label for="entity-type">类型</label>
+      <input type="text" id="entity-type" v-model="newEntity.type" placeholder="输入或在下方选取类型" autocomplete="off"></input>
+      <div class="types" @click="handleTypesClick">
+        <span v-for="type in entityTypes.array">{{ type[0] }}</span>
+        <span v-if="entityTypes.array.every(type => type[0] !== '其他')">其他</span>
       </div>
     </div>
     <div class="form-group">
-      <button @click="saveEntity" class="save-button">{{ props.isUpdateMode ? "提交修改" : "保存实体" }}</button>
+      <label for="entity-description">描述</label>
+      <textarea id="entity-description" v-model="newEntity.description" placeholder="输入对该实体的介绍或者描述"></textarea>
+    </div>
+    <div class="separator">自定义属性</div>
+    <div class="form-group">
+      <button @click="addEntityAttr">添加属性</button>
+    </div>
+    <div class="attrs">
+      <div class="form-group" v-for="attr, index in newEntity?.attrs">
+        <div class="line-group">
+          <input type="text" v-model="attr.title" placeholder="属性名称" title="属性的名称"></input>
+          <input type="number" v-model="attr.sortIndex" title="排序索引，越小越靠前"></input>
+          <button class="delete-button" @click="deleteEntityAttr(index)">❌</button>
+        </div>
+        <textarea class="value" v-model="attr.value" placeholder="输入属性的值"></textarea>
+      </div>
     </div>
   </div>
+  <div class="form-group">
+    <button @click="saveEntity" class="btn-primary wfull">{{ props.isUpdateMode ? "提交修改" : "保存实体" }}</button>
+  </div>
+</div>
 </template>
 
 <style scoped>
@@ -144,7 +144,6 @@ function deleteEntityAttr(index: number) {
   display: flex;
   flex-direction: column;
 }
-
 .form {
   flex: 1;
   height: 0;
@@ -153,30 +152,25 @@ function deleteEntityAttr(index: number) {
   flex-direction: column;
   /* border: 1px solid var(--border-color); */
 }
-
 .form-group {
   padding: .4rem;
   margin: .2rem .2rem 0 .2rem;
   display: flex;
   flex-direction: column;
 }
-
 .form-group label {
   margin-bottom: .2rem;
   font-size: .75rem;
   color: var(--text-tertiary);
 }
-
 .form-group label::after {
   content: ' :';
 }
-
 .line-group input, .form-group input {
   padding: .4rem .5rem;
   color: var(--text-primary);
   margin-bottom: .2rem;
 }
-
 .form-group textarea {
   border: 1px solid var(--border-color);
   height: 3rem;
@@ -186,31 +180,17 @@ function deleteEntityAttr(index: number) {
   border-radius: .25rem;
   color: var(--text-primary);
 }
-
-
 .form-group .text-button {
   margin-left: auto;
   margin-top: .4rem;
   color: var(--primary-dark);
   border-bottom: 1px solid var(--primary-dark);
 }
-
-.form-group button {
-  margin-left: auto;
-  line-height: 1.8rem;
-  border-radius: .25rem;
-  width: 100%;
-  background-color: var(--background-tertiary);
-  color: var(--text-primary);
-
-}
-
 .types {
   display: flex;
   margin-top: .2rem;
   flex-wrap: wrap;
 }
-
 .types span {
   padding: .2rem .4rem;
   border-radius: .25rem;
@@ -219,11 +199,9 @@ function deleteEntityAttr(index: number) {
   margin: .2rem .2rem 0 0;
   cursor: pointer;
 }
-
 .types span:first-child {
   margin-left: 0;
 }
-
 .separator {
   height: 1.8rem;
   background-color: var(--background-secondary);
@@ -232,7 +210,6 @@ function deleteEntityAttr(index: number) {
   padding-left: .5rem;
   color: var(--text-secondary);
 }
-
 .attrs textarea {
   height: 2rem;
   min-height: 2rem;
@@ -242,36 +219,29 @@ function deleteEntityAttr(index: number) {
   border: 1px solid var(--border-color);
   margin-top: .4rem;
 }
-
 .attrs label {
   margin-left: .2rem;
   margin-bottom: .2rem;
 }
-
 .attrs>div {
   background-color: var(--background-secondary);
   margin: .4rem .75rem .75rem .75rem;
   border-radius: .25rem;
 }
-
 .line-group {
   display: flex;
 }
-
 .line-group input:nth-child(1) {
   flex: 1;
   width: 0;
 }
-
 .line-group input:nth-child(2) {
   width: 5rem;
   margin-left: .5rem;
 }
-
 .line-group {
   position: relative;
 }
-
 .line-group .delete-button {
   position: absolute;
   width: auto;
@@ -282,9 +252,5 @@ function deleteEntityAttr(index: number) {
   top: -0.9rem;
   border-radius: 50%;
   background-color: var(--background-secondary);
-}
-
-.save-button {
-  background-color: var(--primary-dark) !important;
 }
 </style>

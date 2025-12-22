@@ -10,17 +10,7 @@ import { uid } from '@shared/utils'
 import { useSelectedArticleStore } from '@domains/editor/stores/selected-article.store'
 import { articledb } from '@shared/db'
 import LocalProofreadTool from './LocalProofreadTool.vue'
-
-interface ProofreadIssue {
-  id: string
-  type: 'error' | 'warning' | 'suggestion'
-  category: string // 例如：拼写错误、标点符号、语法错误、用词不当等
-  original: string // 原文
-  suggestion: string // 建议修改
-  reason: string // 修改原因
-  position?: number // 在文本中的位置
-  selected: boolean // 是否选中（用于批量操作）
-}
+import type { ProofreadIssue } from '@/shared/types'
 
 const modelsStore = useModelsStore()
 const promptsStore = usePromptsStore()
@@ -38,6 +28,12 @@ const mainTab = ref<'ai' | 'local'>('local')
 /** 是否显示本地纠错tab */
 const showLocalProofread = computed(() => {
   return settingStore.proofreadingSettings.apiUrl && settingStore.proofreadingSettings.apiUrl.trim() !== ''
+})
+
+watch(showLocalProofread, v => {
+  if (!v) {
+    mainTab.value = 'ai'
+  }
 })
 
 /** 选中的模型 */
@@ -170,52 +166,6 @@ const allPresetOptions = computed(() => {
     }))
   ]
 })
-
-/** 获取默认校对提示词 */
-function getDefaultProofreadPrompt(): string {
-  return `你是一个专业的文本校对专家。请仔细检查以下文本，找出所有的问题并给出修改建议。
-
-                检查内容包括但不限于：
-                1. 错别字和拼写错误
-                2. 标点符号使用错误
-                3. 语法错误
-                4. 用词不当
-                5. 表达不清晰的地方
-                6. 逻辑不通顺的句子
-                7. 语言风格不一致
-                8. 重复的表达
-
-                请以JSON数组格式返回，每个问题包含：
-                - type: "error"（明显错误）| "warning"（需要注意）| "suggestion"（优化建议）
-                - category: 问题类别（如“拼写错误”、“标点符号”、“语法错误”、“用词不当”等）
-                - original: 需要修改的原文片段（尽量精确到词组或句子）
-                - suggestion: 建议修改后的内容
-                - reason: 简明的修改原因说明
-
-                注意事项：
-                1. 只指出真正的问题，不要过度挑剔
-                2. original 字段应该是文本中实际存在的内容，以便精确替换
-                3. 保持原文的语言风格和意图
-                4. 对于文学作品，允许合理的修辞和艺术表达
-
-                示例格式：
-                [
-                {
-                "type": "error",
-                "category": "拼写错误",
-                "original": "旅游",
-                "suggestion": "旅游",
-                "reason": "正确写法应为“旅游”"
-                },
-                {
-                "type": "warning",
-                "category": "标点符号",
-                "original": "你好,世界",
-                "suggestion": "你好，世界",
-                "reason": "中文应使用全角逗号"
-                }
-                ]`
-}
 
 /** 选择校对提示词 */
 function selectProofreadPrompt(promptId: string) {
@@ -474,7 +424,7 @@ function applyIssue(issue: ProofreadIssue) {
                             </div>
 
                             <div class="actions">
-                              <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
+                              <button class="btn-primary wfull" :disabled="!canProofread || isProofreading" @click="startProofread">
                                 {{ isProofreading ? '校对中...' : '开始校对' }}
                               </button>
                             </div>

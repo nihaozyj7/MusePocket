@@ -345,3 +345,16 @@ export interface LocalProofreadIssue {
   /** 标识问题是否被选中 */
   selected: boolean
 }
+
+
+/** 校对问题接口定义 */
+export interface ProofreadIssue {
+  id: string
+  type: 'error' | 'warning' | 'suggestion'
+  category: string // 例如：拼写错误、标点符号、语法错误、用词不当等
+  original: string // 原文
+  suggestion: string // 建议修改
+  reason: string // 修改原因
+  position?: number // 在文本中的位置
+  selected: boolean // 是否选中（用于批量操作）
+}

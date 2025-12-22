@@ -315,7 +315,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 <div class="local-proofread-tool">
   <!-- 操作按钮 -->
   <div class="action-buttons">
-    <button @click="startProofread" :disabled="!isServiceEnabled || isProofreading" class="btn-primary">
+    <button @click="startProofread" :disabled="!isServiceEnabled || isProofreading" class="btn-primary wfull">
       {{ isProofreading ? '⏳ 检查中...' : '🔍 开始纠错' }}
     </button>
 

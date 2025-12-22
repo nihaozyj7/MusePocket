@@ -434,7 +434,7 @@ function copySuggestion(suggestion: any) {
 
       <!-- 操作按钮 -->
       <div class="actions">
-        <button class="btn-primary" :disabled="!canGenerate || isGenerating" @click="startGenerate">
+        <button class="btn-primary wfull" :disabled="!canGenerate || isGenerating" @click="startGenerate">
           {{ isGenerating ? '生成中...' : '生成建议' }}
         </button>
       </div>

@@ -206,53 +206,53 @@ function handleItemClick(entity: Entity) {
 </script>
 
 <template>
-  <div class="entity-list">
-    <div class="filter">
-      <div class="filter-title" @click="filterOpen = !filterOpen">
-        <div class="current-filter-conditions">
-          <span class="sort" v-if="currentSortMethod">{{ currentSortMethod }}</span>
-          <span class="type" v-for="type in currentFilterTypes">{{ type }}</span>
-          <span v-if="!currentSortMethod && !currentFilterTypes.length">点此处排序和筛选 😀</span>
-        </div>
-        <span v-if="filterOpen">🔼</span>
-        <span v-else>🔽</span>
+<div class="entity-list">
+  <div class="filter">
+    <div class="filter-title" @click="filterOpen = !filterOpen">
+      <div class="current-filter-conditions">
+        <span class="sort" v-if="currentSortMethod">{{ currentSortMethod }}</span>
+        <span class="type" v-for="type in currentFilterTypes">{{ type }}</span>
+        <span v-if="!currentSortMethod && !currentFilterTypes.length">点此处排序和筛选 😀</span>
       </div>
-      <div class="filter-panel" v-show="filterOpen">
-        <div class="search">
-          <input type="text" placeholder="输入关键词" v-model="searchValue" />
+      <span v-if="filterOpen">🔼</span>
+      <span v-else>🔽</span>
+    </div>
+    <div class="filter-panel" v-show="filterOpen">
+      <div class="search">
+        <input type="text" placeholder="输入关键词" v-model="searchValue" />
+      </div>
+      <div>
+        <div class="divider">排序方式</div>
+        <div class="sort" @click="handleSortItemClick">
+          <span :class="{ selected: currentSortMethod === sortType }" v-for="sortType in sortMethod">{{ sortType }}</span>
         </div>
-        <div>
-          <div class="divider-line">排序方式</div>
-          <div class="sort" @click="handleSortItemClick">
-            <span :class="{ selected: currentSortMethod === sortType }" v-for="sortType in sortMethod">{{ sortType }}</span>
-          </div>
-          <div class="divider-line">按类型筛选</div>
-          <div class="by-type" @click="handleFilterItemClick">
-            <span :class="{ selected: currentFilterTypes.length === 0 }">全部</span>
-            <span :class="{ selected: currentFilterTypes.includes(type[0]) }" v-for="type in entityTypes.array">{{ type[0] }}</span>
-          </div>
+        <div class="divider">按类型筛选</div>
+        <div class="by-type" @click="handleFilterItemClick">
+          <span :class="{ selected: currentFilterTypes.length === 0 }">全部</span>
+          <span :class="{ selected: currentFilterTypes.includes(type[0]) }" v-for="type in entityTypes.array">{{ type[0] }}</span>
         </div>
       </div>
     </div>
-    <div class="items">
-      <div class="item" :key="entity.id" v-for="entity in filteredEntitys" :data-id="entity.id" @contextmenu="handleEntityRightClick" @click="handleItemClick(entity)">
-        <h4 :title="entity.title">{{ entity.title }}</h4>
-        <span :title="entity.type">{{ entity.type }}</span>
-        <p>{{ entity.description }}</p>
-      </div>
-    </div>
-    <ContextMenu ref="entityContextMenuRef" />
-    <!-- 实体编辑 -->
-    <Popup ref="editEntityPopupRef" v-if="selectedEntity" mask title="✍️ 编辑属性">
-      <div style="width: 30rem;max-height: 60rem !important; overflow-y: auto;">
-        <EntityCreate isUpdateMode :entity="selectedEntity" @submit="handleEntityUpdate" :key="selectedEntity.id" />
-      </div>
-    </Popup>
-    <!-- 实体详情 -->
-    <Popup ref="showEntityPopupRef" mask mask-closable title="👀 实体详情">
-      <EntityDetail :key="selectedEntity.id" :entity="selectedEntity" v-if="selectedEntity" />
-    </Popup>
   </div>
+  <div class="items">
+    <div class="item" :key="entity.id" v-for="entity in filteredEntitys" :data-id="entity.id" @contextmenu="handleEntityRightClick" @click="handleItemClick(entity)">
+      <h4 :title="entity.title">{{ entity.title }}</h4>
+      <span :title="entity.type">{{ entity.type }}</span>
+      <p>{{ entity.description }}</p>
+    </div>
+  </div>
+  <ContextMenu ref="entityContextMenuRef" />
+  <!-- 实体编辑 -->
+  <Popup ref="editEntityPopupRef" v-if="selectedEntity" mask title="✍️ 编辑属性">
+    <div style="width: 30rem;max-height: 60rem !important; overflow-y: auto;">
+      <EntityCreate isUpdateMode :entity="selectedEntity" @submit="handleEntityUpdate" :key="selectedEntity.id" />
+    </div>
+  </Popup>
+  <!-- 实体详情 -->
+  <Popup ref="showEntityPopupRef" mask mask-closable title="👀 实体详情">
+    <EntityDetail :key="selectedEntity.id" :entity="selectedEntity" v-if="selectedEntity" />
+  </Popup>
+</div>
 </template>
 
 <style scoped>
@@ -262,7 +262,6 @@ function handleItemClick(entity: Entity) {
   padding-bottom: 0.5rem;
   overflow-y: auto;
 }
-
 .items {
   display: flex;
   flex-direction: column;
@@ -270,7 +269,6 @@ function handleItemClick(entity: Entity) {
   height: 0;
   overflow-y: auto;
 }
-
 .item {
   margin: 0.5rem;
   background-color: var(--background-secondary);
@@ -280,19 +278,16 @@ function handleItemClick(entity: Entity) {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .item:hover {
   background-color: var(--background-tertiary);
   border-color: var(--primary);
 }
-
 .item h4 {
   font-weight: bold;
   border-bottom: 1px solid var(--border-color);
   padding: 0.5rem;
   color: var(--primary);
 }
-
 .item span {
   position: absolute;
   right: 0.5rem;
@@ -307,7 +302,6 @@ function handleItemClick(entity: Entity) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .item p {
   font-size: 0.85rem;
   margin-top: 0.5rem;
@@ -320,7 +314,6 @@ function handleItemClick(entity: Entity) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .filter-title {
   display: flex;
   padding: 0.5rem;
@@ -331,14 +324,12 @@ function handleItemClick(entity: Entity) {
   align-items: center;
   cursor: pointer;
 }
-
 .current-filter-conditions {
   flex: 1;
   width: 0;
   font-size: 0.85rem;
   margin-bottom: -.5rem
 }
-
 .current-filter-conditions span {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -347,15 +338,12 @@ function handleItemClick(entity: Entity) {
   border-radius: 0.25rem;
   background-color: var(--background-tertiary);
 }
-
 .current-filter-conditions .sort {
   color: var(--info);
 }
-
 .current-filter-conditions .type {
   color: var(--danger);
 }
-
 .filter-panel {
   display: flex;
   flex-direction: column;
@@ -365,38 +353,27 @@ function handleItemClick(entity: Entity) {
   border-radius: 0.25rem;
   z-index: 2;
 }
-
 .search {
   padding: 0.5rem;
   height: 2.5rem;
   display: flex;
   align-items: center;
 }
-
 .search input {
   flex: 1;
   width: 0;
   border: none;
 }
-
 .search button {
   padding: 0.25rem 0.5rem;
   font-size: 1rem;
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
 }
-
-.divider-line {
-  font-size: 0.85rem;
-  background-color: var(--background-tertiary);
-  padding: 0.25rem 0.5rem;
-}
-
 .sort, .by-type {
   display: block;
   padding: 0.5rem;
 }
-
 .filter-panel span {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -408,13 +385,11 @@ function handleItemClick(entity: Entity) {
   transition: all 0.2s;
   border: 1px solid transparent;
 }
-
 .filter-panel span:hover {
   color: white;
   background-color: var(--primary);
   border-color: var(--primary);
 }
-
 .filter-panel span.selected {
   color: white;
   background-color: var(--primary);

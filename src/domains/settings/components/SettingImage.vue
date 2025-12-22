@@ -119,46 +119,46 @@ function copyImageId(id: string) {
 </script>
 
 <template>
-  <div>
-    <div class="title">{{ title }}</div>
-    <div class="content">
-      <!-- 操作栏 -->
-      <div class="toolbar">
-        <button @click="handleUpload" :disabled="uploading">
-          {{ uploading ? '上传中...' : '📤 上传图片' }}
-        </button>
-        <div class="info">
-          <span>共 {{ images.length }} 张图片</span>
-          <span class="tip">（支持批量上传，单张图片不超过5MB）</span>
-        </div>
-      </div>
-
-      <!-- 图片网格 -->
-      <div class="image-grid" v-if="images.length > 0">
-        <div class="image-item" v-for="image in images" :key="image.id">
-          <div class="image-wrapper">
-            <img :src="imageUrls.get(image.id)" :alt="image.id" />
-          </div>
-          <div class="image-actions">
-            <button class="btn-copy" @click="copyImageId(image.id)" title="复制ID">
-              📋
-            </button>
-            <button class="btn-delete" @click="handleDelete(image)" title="删除">
-              🗑️
-            </button>
-          </div>
-          <div class="image-id">{{ image.id }}</div>
-        </div>
-      </div>
-
-      <!-- 空状态 -->
-      <div class="empty-state" v-else>
-        <div class="empty-icon">🖼️</div>
-        <p>还没有上传图片</p>
-        <p class="empty-tip">点击上方按钮上传图片，用于书籍封面或其他用途</p>
+<div>
+  <div class="title">{{ title }}</div>
+  <div class="content">
+    <!-- 操作栏 -->
+    <div class="toolbar">
+      <button @click="handleUpload" :disabled="uploading">
+        {{ uploading ? '上传中...' : '📤 上传图片' }}
+      </button>
+      <div class="info">
+        <span>共 {{ images.length }} 张图片</span>
+        <span class="tip">（支持批量上传，单张图片不超过5MB）</span>
       </div>
     </div>
+
+    <!-- 图片网格 -->
+    <div class="image-grid" v-if="images.length > 0">
+      <div class="image-item" v-for="image in images" :key="image.id">
+        <div class="image-wrapper">
+          <img :src="imageUrls.get(image.id)" :alt="image.id" />
+        </div>
+        <div class="image-actions">
+          <button class="btn-copy" @click="copyImageId(image.id)" title="复制ID">
+            📋
+          </button>
+          <button class="btn-delete" @click="handleDelete(image)" title="删除">
+            🗑️
+          </button>
+        </div>
+        <div class="image-id">{{ image.id }}</div>
+      </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div class="empty-state" v-else>
+      <div class="empty-icon">🖼️</div>
+      <p>还没有上传图片</p>
+      <p class="empty-tip">点击上方按钮上传图片，用于书籍封面或其他用途</p>
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -170,7 +170,6 @@ function copyImageId(id: string) {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .info {
   display: flex;
   align-items: center;
@@ -178,18 +177,15 @@ function copyImageId(id: string) {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-
 .tip {
   font-size: 0.75rem;
   opacity: 0.7;
 }
-
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1rem;
 }
-
 .image-item {
   display: flex;
   flex-direction: column;
@@ -199,12 +195,10 @@ function copyImageId(id: string) {
   background-color: var(--background-secondary);
   transition: all 0.2s;
 }
-
 .image-item:hover {
   border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .image-wrapper {
   width: 100%;
   height: 150px;
@@ -214,20 +208,17 @@ function copyImageId(id: string) {
   align-items: center;
   justify-content: center;
 }
-
 .image-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .image-actions {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
   border-top: 1px solid var(--border-color);
 }
-
 .image-actions button {
   flex: 1;
   padding: 0.25rem;
@@ -235,8 +226,6 @@ function copyImageId(id: string) {
   border: 1px solid var(--border-color);
   background-color: var(--background-tertiary);
 }
-
-
 .image-id {
   padding: 0.5rem;
   font-size: 0.75rem;
@@ -248,23 +237,6 @@ function copyImageId(id: string) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--text-secondary);
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state p {
-  margin: 0.5rem 0;
-}
-
 .empty-tip {
   font-size: 0.85rem;
   opacity: 0.7;

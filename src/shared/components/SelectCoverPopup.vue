@@ -103,42 +103,42 @@ async function handleUpload() {
 </script>
 
 <template>
-  <Popup title="🖼️ 选择封面" ref="popupRef">
-    <div class="select-cover-container">
-      <!-- 操作栏 -->
-      <div class="toolbar">
-        <button @click="handleUpload" :disabled="uploading">
-          {{ uploading ? '上传中...' : '📤 上传新图片' }}
-        </button>
-        <span class="info">共 {{ images.length }} 张图片</span>
-      </div>
+<Popup title="🖼️ 选择封面" ref="popupRef">
+  <div class="select-cover-container">
+    <!-- 操作栏 -->
+    <div class="toolbar">
+      <button @click="handleUpload" :disabled="uploading">
+        {{ uploading ? '上传中...' : '📤 上传新图片' }}
+      </button>
+      <span class="info">共 {{ images.length }} 张图片</span>
+    </div>
 
-      <!-- 图片网格 -->
-      <div class="image-grid" v-if="images.length > 0">
-        <div class="image-item" :class="{ selected: image.id === selectedCoverId }" v-for="image in images" :key="image.id" @click="selectCover(image.id)">
-          <div class="image-wrapper">
-            <img :src="imageUrls.get(image.id)" :alt="image.id" />
-          </div>
-          <div class="selected-badge" v-if="image.id === selectedCoverId">
-            ✓
-          </div>
+    <!-- 图片网格 -->
+    <div class="image-grid" v-if="images.length > 0">
+      <div class="image-item" :class="{ selected: image.id === selectedCoverId }" v-for="image in images" :key="image.id" @click="selectCover(image.id)">
+        <div class="image-wrapper">
+          <img :src="imageUrls.get(image.id)" :alt="image.id" />
+        </div>
+        <div class="selected-badge" v-if="image.id === selectedCoverId">
+          ✓
         </div>
       </div>
-
-      <!-- 空状态 -->
-      <div class="empty-state" v-else>
-        <div class="empty-icon">🖼️</div>
-        <p>还没有图片</p>
-        <p class="empty-tip">点击上方按钮上传第一张图片</p>
-      </div>
-
-      <!-- 底部按钮 -->
-      <div class="footer">
-        <button @click="popupRef?.close()" class="btn-cancel">取消</button>
-        <button @click="confirmSelect" class="btn-confirm">确定</button>
-      </div>
     </div>
-  </Popup>
+
+    <!-- 空状态 -->
+    <div class="empty-state" v-else>
+      <div class="empty-icon">🖼️</div>
+      <p>还没有图片</p>
+      <p class="empty-tip">点击上方按钮上传第一张图片</p>
+    </div>
+
+    <!-- 底部按钮 -->
+    <div class="footer">
+      <button @click="popupRef?.close()" class="btn-cancel">取消</button>
+      <button @click="confirmSelect" class="btn-confirm">确定</button>
+    </div>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -148,7 +148,6 @@ async function handleUpload() {
   display: flex;
   flex-direction: column;
 }
-
 .toolbar {
   display: flex;
   align-items: center;
@@ -156,12 +155,10 @@ async function handleUpload() {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .info {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-
 .image-grid {
   flex: 1;
   overflow-y: auto;
@@ -170,7 +167,6 @@ async function handleUpload() {
   gap: 1rem;
   padding: 1rem 0;
 }
-
 .image-item {
   position: relative;
   aspect-ratio: 3/4;
@@ -180,17 +176,14 @@ async function handleUpload() {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .image-item:hover {
   border-color: var(--primary);
   transform: scale(1.05);
 }
-
 .image-item.selected {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.2);
 }
-
 .image-wrapper {
   width: 100%;
   height: 100%;
@@ -199,13 +192,11 @@ async function handleUpload() {
   align-items: center;
   justify-content: center;
 }
-
 .image-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .selected-badge {
   position: absolute;
   top: 0.5rem;
@@ -221,31 +212,10 @@ async function handleUpload() {
   font-size: 0.9rem;
   font-weight: bold;
 }
-
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state p {
-  margin: 0.5rem 0;
-}
-
 .empty-tip {
   font-size: 0.85rem;
   opacity: 0.7;
 }
-
 .footer {
   display: flex;
   justify-content: flex-end;
@@ -253,11 +223,9 @@ async function handleUpload() {
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
 }
-
 .btn-cancel {
   background-color: var(--background-tertiary);
 }
-
 .btn-confirm {
   background-color: var(--primary);
   color: white;

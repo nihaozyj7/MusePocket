@@ -101,41 +101,41 @@ defineExpose({
 </script>
 
 <template>
-  <div class="entity-mapping">
-    <div class="mapping-header">
-      <h5>实体引用统计</h5>
-    </div>
+<div class="entity-mapping">
+  <div class="mapping-header">
+    <h5>实体引用统计</h5>
+  </div>
 
-    <div class="mapping-stats">
-      <div class="stat-item">
-        <span class="stat-label">出现章节:</span>
-        <span class="stat-value">{{ chapterCount }}</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-label">插入次数:</span>
-        <span class="stat-value">{{ totalInsertCount }}</span>
-      </div>
+  <div class="mapping-stats">
+    <div class="stat-item">
+      <span class="stat-label">出现章节:</span>
+      <span class="stat-value">{{ chapterCount }}</span>
     </div>
-
-    <div v-if="isLoading" class="loading">
-      加载中...
-    </div>
-
-    <div v-else-if="mappingInfo.length === 0" class="empty-state">
-      该实体暂未在任何章节中使用
-    </div>
-
-    <div v-else class="mapping-list">
-      <div class="list-header">
-        <span class="header-chapter">章节</span>
-        <span class="header-count">次数</span>
-      </div>
-      <div v-for="item in mappingInfo" :key="item.articleId" class="mapping-item">
-        <span class="item-title">{{ item.articleTitle }}</span>
-        <span class="item-count">{{ item.count }}</span>
-      </div>
+    <div class="stat-item">
+      <span class="stat-label">插入次数:</span>
+      <span class="stat-value">{{ totalInsertCount }}</span>
     </div>
   </div>
+
+  <div v-if="isLoading" class="loading">
+    加载中...
+  </div>
+
+  <div v-else-if="mappingInfo.length === 0" class="empty-state">
+    该实体暂未在任何章节中使用
+  </div>
+
+  <div v-else class="mapping-list">
+    <div class="list-header">
+      <span class="header-chapter">章节</span>
+      <span class="header-count">次数</span>
+    </div>
+    <div v-for="item in mappingInfo" :key="item.articleId" class="mapping-item">
+      <span class="item-title">{{ item.articleTitle }}</span>
+      <span class="item-count">{{ item.count }}</span>
+    </div>
+  </div>
+</div>
 </template>
 
 <style scoped>
@@ -146,13 +146,11 @@ defineExpose({
   padding: 0.75rem 0;
   border-top: 1px solid var(--border-color);
 }
-
 .mapping-header h5 {
   margin: 0;
   font-size: 1.1em;
   color: var(--text-primary);
 }
-
 .mapping-stats {
   display: flex;
   gap: 1.5rem;
@@ -161,32 +159,26 @@ defineExpose({
   border-radius: 4px;
   padding: 0.5rem 0.75rem;
 }
-
 .stat-item {
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
-
 .stat-label {
   font-size: 0.9em;
   color: var(--text-secondary);
 }
-
 .stat-value {
   font-size: 1em;
   font-weight: bold;
   color: var(--primary);
 }
-
-.loading,
-.empty-state {
+.loading {
   text-align: center;
   padding: 1.5rem;
   color: var(--text-tertiary);
   font-size: 0.9em;
 }
-
 .mapping-list {
   display: flex;
   flex-direction: column;
@@ -194,7 +186,6 @@ defineExpose({
   max-height: 200px;
   overflow-y: auto;
 }
-
 .list-header {
   display: flex;
   justify-content: space-between;
@@ -208,16 +199,13 @@ defineExpose({
   top: 0;
   z-index: 1;
 }
-
 .header-chapter {
   flex: 1;
 }
-
 .header-count {
   width: 3rem;
   text-align: center;
 }
-
 .mapping-item {
   display: flex;
   justify-content: space-between;
@@ -225,15 +213,12 @@ defineExpose({
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.2s;
 }
-
 .mapping-item:hover {
   background-color: var(--background-tertiary);
 }
-
 .mapping-item:last-child {
   border-bottom: none;
 }
-
 .item-title {
   flex: 1;
   font-size: 0.9em;
@@ -242,7 +227,6 @@ defineExpose({
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .item-count {
   width: 3rem;
   text-align: center;

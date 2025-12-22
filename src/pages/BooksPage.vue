@@ -481,226 +481,226 @@ function openSettings() {
 </script>
 
 <template>
-  <div class="left-container">
-    <div class="sidebar">
-      <!-- 搜索栏 -->
-      <div class="logo">
-        灵感口袋（MusePocket）
-      </div>
-      <!-- 操作按钮 -->
-      <div class="operations">
-        <!-- 导入导出 -->
-        <button class="button-m" title="导入导出" @click="openImportExportPopup">📥 导入导出</button>
-        <!-- 回收站 -->
-        <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
-        <!-- 占位符 -->
-        <div style="flex: 1;"></div>
-        <!-- 新建书籍 -->
-        <button class="button-m" title="创建新书籍" @click="openAddBookDialog">📓 新书</button>
-      </div>
-      <div class="bookshelf">
-        <div class="scroll-container">
-          <!-- 单个书籍项（示例） -->
-          <div class="book-item" :class="{ 'checked': bookIdEqual(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
-            <!-- 封面占位 -->
-            <div class="cover">
-              <img :src="getBookCoverUrl(book.id)" alt="封面" class="cover-img"></img>
-            </div>
-            <!-- 书籍信息 -->
-            <div class="bookInfo">
-              <h4>{{ book.title }}</h4>
-              <p>{{ getBookStats(book.id).wordCount }}字 | {{ formatTime(book.modifiedTime) }}更新</p>
-              <p>{{ book.description }}</p>
-            </div>
+<div class="left-container">
+  <div class="sidebar">
+    <!-- 搜索栏 -->
+    <div class="logo">
+      灵感口袋（MusePocket）
+    </div>
+    <!-- 操作按钮 -->
+    <div class="operations">
+      <!-- 导入导出 -->
+      <button class="button-m" title="导入导出" @click="openImportExportPopup">📥 导入导出</button>
+      <!-- 回收站 -->
+      <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
+      <!-- 占位符 -->
+      <div style="flex: 1;"></div>
+      <!-- 新建书籍 -->
+      <button class="button-m" title="创建新书籍" @click="openAddBookDialog">📓 新书</button>
+    </div>
+    <div class="bookshelf">
+      <div class="scroll-container">
+        <!-- 单个书籍项（示例） -->
+        <div class="book-item" :class="{ 'checked': bookIdEqual(book) }" v-for="book in books" :key="book.id" @contextmenu="handleBookItemContextMenu($event, book)" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
+          <!-- 封面占位 -->
+          <div class="cover">
+            <img :src="getBookCoverUrl(book.id)" alt="封面" class="cover-img"></img>
+          </div>
+          <!-- 书籍信息 -->
+          <div class="bookInfo">
+            <h4>{{ book.title }}</h4>
+            <p>{{ getBookStats(book.id).wordCount }}字 | {{ formatTime(book.modifiedTime) }}更新</p>
+            <p>{{ book.description }}</p>
           </div>
         </div>
       </div>
     </div>
-    <div class="right-container">
-      <header class="toolbar">
-        <!-- 面包屑 -->
-        <div class="breadcrumb">
-          <div class="flex" v-if="onHome">
-            <span>〽️&nbsp;&nbsp;总览</span>
-          </div>
-          <div class="flex" v-else>
-            <button style="padding: .5rem .1rem .5rem .5rem;" title="回到主页" @click="goHome">🔙</button>
-            <span>书籍详情</span>
-          </div>
+  </div>
+  <div class="right-container">
+    <header class="toolbar">
+      <!-- 面包屑 -->
+      <div class="breadcrumb">
+        <div class="flex" v-if="onHome">
+          <span>〽️&nbsp;&nbsp;总览</span>
         </div>
-        <!-- 工具按钮 -->
-        <div class="tools">
-          <button @click="settingStore.setDark(!settingStore.isDark)">
-            <span v-if="settingStore.isDark">🌝 切换主题</span>
-            <span v-else>☀️ 切换主题</span>
-          </button>
-          <button style="margin-left: 1rem;" @click="openSettings">⚙️ 设置</button>
+        <div class="flex" v-else>
+          <button style="padding: .5rem .1rem .5rem .5rem;" title="回到主页" @click="goHome">🔙</button>
+          <span>书籍详情</span>
         </div>
-      </header>
-      <main>
-        <!-- 总览界面 -->
-        <div v-if="onHome" class="overview">
-          <!-- 统计卡片 -->
-          <div class="stats-cards">
-            <div class="stat-card">
-              <div class="stat-icon">📚</div>
-              <div class="stat-info">
-                <div class="stat-label">书籍总数</div>
-                <div class="stat-value">{{ bookStats.totalBooks }}</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">✍️</div>
-              <div class="stat-info">
-                <div class="stat-label">总字数</div>
-                <div class="stat-value">{{ (bookStats.totalWords / 10000).toFixed(1) }}万</div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">🔥</div>
-              <div class="stat-info">
-                <div class="stat-label">本周活跃</div>
-                <div class="stat-value">{{ bookStats.recentUpdated }}</div>
-              </div>
+      </div>
+      <!-- 工具按钮 -->
+      <div class="tools">
+        <button @click="settingStore.setDark(!settingStore.isDark)">
+          <span v-if="settingStore.isDark">🌝 切换主题</span>
+          <span v-else>☀️ 切换主题</span>
+        </button>
+        <button style="margin-left: 1rem;" @click="openSettings">⚙️ 设置</button>
+      </div>
+    </header>
+    <main>
+      <!-- 总览界面 -->
+      <div v-if="onHome" class="overview">
+        <!-- 统计卡片 -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+              <div class="stat-label">书籍总数</div>
+              <div class="stat-value">{{ bookStats.totalBooks }}</div>
             </div>
           </div>
-
-          <!-- 最近活动 -->
-          <div class="recent-section">
-            <h3 class="section-title">📌 最近活动</h3>
-            <div class="recent-books">
-              <div v-for="book in books.slice(0, 5)" :key="book.id" class="recent-book-item" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
-                <img :src="getBookCoverUrl(book.id)" class="recent-book-cover" />
-                <div class="recent-book-info">
-                  <h4>{{ book.title }}</h4>
-                  <p class="book-time">{{ formatTime(book.modifiedTime) }}更新</p>
-                </div>
-              </div>
+          <div class="stat-card">
+            <div class="stat-icon">✍️</div>
+            <div class="stat-info">
+              <div class="stat-label">总字数</div>
+              <div class="stat-value">{{ (bookStats.totalWords / 10000).toFixed(1) }}万</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-info">
+              <div class="stat-label">本周活跃</div>
+              <div class="stat-value">{{ bookStats.recentUpdated }}</div>
             </div>
           </div>
         </div>
 
-        <!-- 书籍详情界面 -->
-        <div v-else class="book-detail">
-          <div v-if="clickSelectedBook" class="detail-content">
-            <!-- 书籍头部信息 -->
-            <div class="book-header">
-              <img :src="getBookCoverUrl(clickSelectedBook.id)" class="detail-cover" />
-              <div class="book-header-info">
-                <h2>{{ clickSelectedBook.title }}</h2>
-                <p class="book-desc">{{ clickSelectedBook.description || '暂无描述' }}</p>
-                <div class="book-meta">
-                  <span>📅 创建于 {{ formatDate(clickSelectedBook.createdTime) }}</span>
-                  <span>🕒 最近更新 {{ formatTime(clickSelectedBook.modifiedTime) }}</span>
-                </div>
+        <!-- 最近活动 -->
+        <div class="recent-section">
+          <h3 class="section-title">📌 最近活动</h3>
+          <div class="recent-books">
+            <div v-for="book in books.slice(0, 5)" :key="book.id" class="recent-book-item" @click="handleClickBookItem(book)" @dblclick="handleBookDoubleClick(book)">
+              <img :src="getBookCoverUrl(book.id)" class="recent-book-cover" />
+              <div class="recent-book-info">
+                <h4>{{ book.title }}</h4>
+                <p class="book-time">{{ formatTime(book.modifiedTime) }}更新</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- 统计数据面板 -->
-            <div class="detail-stats">
-              <div class="detail-stat-item">
-                <div class="detail-stat-value">{{ selectedBookStats.articleCount }}</div>
-                <div class="detail-stat-label">文章数</div>
-              </div>
-              <div class="detail-stat-item">
-                <div class="detail-stat-value">{{ (selectedBookStats.totalWords / 10000).toFixed(1) }}万</div>
-                <div class="detail-stat-label">总字数</div>
-              </div>
-              <div class="detail-stat-item">
-                <div class="detail-stat-value">{{ selectedBookStats.entityCount }}</div>
-                <div class="detail-stat-label">实体数</div>
-              </div>
-              <div class="detail-stat-item" v-if="selectedBookStats.deletedArticleCount > 0">
-                <div class="detail-stat-value warning">{{ selectedBookStats.deletedArticleCount }}</div>
-                <div class="detail-stat-label">已删除</div>
+      <!-- 书籍详情界面 -->
+      <div v-else class="book-detail">
+        <div v-if="clickSelectedBook" class="detail-content">
+          <!-- 书籍头部信息 -->
+          <div class="book-header">
+            <img :src="getBookCoverUrl(clickSelectedBook.id)" class="detail-cover" />
+            <div class="book-header-info">
+              <h2>{{ clickSelectedBook.title }}</h2>
+              <p class="book-desc">{{ clickSelectedBook.description || '暂无描述' }}</p>
+              <div class="book-meta">
+                <span>📅 创建于 {{ formatDate(clickSelectedBook.createdTime) }}</span>
+                <span>🕒 最近更新 {{ formatTime(clickSelectedBook.modifiedTime) }}</span>
               </div>
             </div>
+          </div>
 
-            <!-- 实体分类统计 -->
-            <div v-if="Object.keys(selectedBookStats.entityTypes).length > 0" class="entity-types-section">
-              <h3 class="section-title">🎭 实体分类</h3>
-              <div class="entity-types">
-                <div v-for="(count, type) in selectedBookStats.entityTypes" :key="type" class="entity-type-tag">
-                  {{ type }} ({{ count }})
-                </div>
+          <!-- 统计数据面板 -->
+          <div class="detail-stats">
+            <div class="detail-stat-item">
+              <div class="detail-stat-value">{{ selectedBookStats.articleCount }}</div>
+              <div class="detail-stat-label">文章数</div>
+            </div>
+            <div class="detail-stat-item">
+              <div class="detail-stat-value">{{ (selectedBookStats.totalWords / 10000).toFixed(1) }}万</div>
+              <div class="detail-stat-label">总字数</div>
+            </div>
+            <div class="detail-stat-item">
+              <div class="detail-stat-value">{{ selectedBookStats.entityCount }}</div>
+              <div class="detail-stat-label">实体数</div>
+            </div>
+            <div class="detail-stat-item" v-if="selectedBookStats.deletedArticleCount > 0">
+              <div class="detail-stat-value warning">{{ selectedBookStats.deletedArticleCount }}</div>
+              <div class="detail-stat-label">已删除</div>
+            </div>
+          </div>
+
+          <!-- 实体分类统计 -->
+          <div v-if="Object.keys(selectedBookStats.entityTypes).length > 0" class="entity-types-section">
+            <h3 class="section-title">🎭 实体分类</h3>
+            <div class="entity-types">
+              <div v-for="(count, type) in selectedBookStats.entityTypes" :key="type" class="entity-type-tag">
+                {{ type }} ({{ count }})
               </div>
             </div>
+          </div>
 
-            <!-- 文章列表 -->
-            <div class="articles-section">
-              <div class="section-header">
-                <h3 class="section-title">📝 文章列表</h3>
-                <button class="button-m" @click="console.log('创建文章')">✨ 新建文章</button>
-              </div>
-              <div v-if="selectedBookStats.articles.length === 0" class="empty-state">
-                <div class="empty-icon">📄</div>
-                <p>还没有文章，点击上方按钮创建第一篇文章吧~</p>
-              </div>
-              <div v-else class="articles-list">
-                <div v-for="article in selectedBookStats.articles" :key="article.id" class="article-item" @click="openArticle(article)">
-                  <div class="article-main">
-                    <h4 class="article-title">{{ article.title }}</h4>
-                    <div class="article-meta">
-                      <span>{{ article.wordCount || 0 }} 字</span>
-                      <span>•</span>
-                      <span>{{ formatTime(article.modifiedTime) }}更新</span>
-                    </div>
+          <!-- 文章列表 -->
+          <div class="articles-section">
+            <div class="section-header">
+              <h3 class="section-title">📝 文章列表</h3>
+              <button class="button-m" @click="console.log('创建文章')">✨ 新建文章</button>
+            </div>
+            <div v-if="selectedBookStats.articles.length === 0" class="empty-state">
+              <div class="empty-icon">📄</div>
+              <p>还没有文章，点击上方按钮创建第一篇文章吧~</p>
+            </div>
+            <div v-else class="articles-list">
+              <div v-for="article in selectedBookStats.articles" :key="article.id" class="article-item" @click="openArticle(article)">
+                <div class="article-main">
+                  <h4 class="article-title">{{ article.title }}</h4>
+                  <div class="article-meta">
+                    <span>{{ article.wordCount || 0 }} 字</span>
+                    <span>•</span>
+                    <span>{{ formatTime(article.modifiedTime) }}更新</span>
                   </div>
-                  <button class="article-action" @click.stop="console.log('文章操作', article)">⋯</button>
                 </div>
+                <button class="article-action" @click.stop="console.log('文章操作', article)">⋯</button>
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 书籍右键菜单 -->
+<ContextMenu ref="bookContextMenuRef" />
+
+<!-- 新建弹出层 -->
+<EditBookPopup ref="createBookPopupRef" @status:save="addBook" />
+
+<!-- 修改书籍弹出层 -->
+<EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" />
+
+<!-- 书籍回收站弹出层 -->
+<RecycleBinBookPopup ref="recycleBinBookPopupRef" @restored="handleBookRestored" />
+
+<!-- 导入导出弹出层 -->
+<Popup ref="importExportPopupRef" title="📥 导入导出">
+  <div class="import-export-container">
+    <!-- 书籍导入 -->
+    <div class="section">
+      <h3>📚 书籍导入</h3>
+      <BookImportExport @importSuccess="handleImportSuccess" />
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 配置导入导出 -->
+    <div class="section">
+      <h3>⚙️ 配置导入导出</h3>
+      <ConfigImportExport @importSuccess="handleConfigImportSuccess" />
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 全库操作 -->
+    <div class="section">
+      <h3>🏛️ 全库操作</h3>
+      <p class="description">
+        导出或导入整个数据库（包含所有书籍、文章、实体和配置）<br />
+        <span class="warning">⚠️ 注意：导入全库数据时会与现有数据合并</span>
+      </p>
+      <div class="button-group">
+        <button @click="exportFullDatabase" class="btn-primary">💾 导出全库</button>
+        <button @click="importFullDatabaseMerge" class="btn-primary">📂 导入全库</button>
+      </div>
     </div>
   </div>
-
-  <!-- 书籍右键菜单 -->
-  <ContextMenu ref="bookContextMenuRef" />
-
-  <!-- 新建弹出层 -->
-  <EditBookPopup ref="createBookPopupRef" @status:save="addBook" />
-
-  <!-- 修改书籍弹出层 -->
-  <EditBookPopup ref="updateBookPopupRef" @status:save="updateBook" />
-
-  <!-- 书籍回收站弹出层 -->
-  <RecycleBinBookPopup ref="recycleBinBookPopupRef" @restored="handleBookRestored" />
-
-  <!-- 导入导出弹出层 -->
-  <Popup ref="importExportPopupRef" title="📥 导入导出">
-    <div class="import-export-container">
-      <!-- 书籍导入 -->
-      <div class="section">
-        <h3>📚 书籍导入</h3>
-        <BookImportExport @importSuccess="handleImportSuccess" />
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 配置导入导出 -->
-      <div class="section">
-        <h3>⚙️ 配置导入导出</h3>
-        <ConfigImportExport @importSuccess="handleConfigImportSuccess" />
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 全库操作 -->
-      <div class="section">
-        <h3>🏛️ 全库操作</h3>
-        <p class="description">
-          导出或导入整个数据库（包含所有书籍、文章、实体和配置）<br />
-          <span class="warning">⚠️ 注意：导入全库数据时会与现有数据合并</span>
-        </p>
-        <div class="button-group">
-          <button @click="exportFullDatabase" class="btn-primary">💾 导出全库</button>
-          <button @click="importFullDatabaseMerge" class="btn-primary">📂 导入全库</button>
-        </div>
-      </div>
-    </div>
-  </Popup>
+</Popup>
 </template>
 
 <style scoped>
@@ -710,7 +710,6 @@ function openSettings() {
   display: flex;
   border-top: 1px solid var(--border-color);
 }
-
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -719,7 +718,6 @@ function openSettings() {
   background-color: var(--background-secondary);
   border-right: 1px solid var(--border-color);
 }
-
 .logo {
   height: 2.7rem;
   display: flex;
@@ -732,7 +730,6 @@ function openSettings() {
   letter-spacing: .12rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .operations {
   display: flex;
   height: 2.5rem;
@@ -740,7 +737,6 @@ function openSettings() {
   padding: 0 .25rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .operations button {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
@@ -749,17 +745,14 @@ function openSettings() {
   font-size: 0.85rem;
   border: 1px solid var(--border-color);
 }
-
 .operations button:last-child {
   margin-right: 0;
 }
-
 .bookshelf {
   flex: 1;
   height: 0;
   padding: .5rem 0;
 }
-
 .book-item {
   display: flex;
   align-items: start;
@@ -771,55 +764,45 @@ function openSettings() {
   transition: all 0.2s;
   border: 1px solid transparent;
 }
-
 .book-item:hover {
   background-color: var(--background-tertiary);
   border-color: var(--border-color);
 }
-
 .book-item.checked {
   background-color: var(--background-tertiary);
 }
-
 .book-item.checked>div>:nth-child(1) {
   color: var(--text-primary);
 }
-
 .book-item .cover {
   height: 6.4rem;
   width: 4rem;
   margin-right: .5rem;
   overflow: hidden;
 }
-
 .book-item .cover img {
   height: 100%;
   width: 100%;
   object-fit: cover;
   border-radius: .25rem;
 }
-
 .bookInfo {
   display: flex;
   flex-direction: column;
   flex: 1;
   width: 0;
 }
-
 .book-item:hover>div>:nth-child(1) {
   color: var(--primary);
 }
-
 .book-item>div>:nth-child(1) {
   margin-top: .25rem;
   transition: color .2s;
 }
-
 .book-item>div>:nth-child(2) {
   font-size: .8rem;
   margin-top: .5rem;
 }
-
 .book-item>div>:nth-child(3) {
   font-size: .8rem;
   margin-top: .5rem;
@@ -832,13 +815,11 @@ function openSettings() {
   text-overflow: ellipsis;
   word-break: break-all;
 }
-
 .right-container {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 .toolbar {
   display: flex;
   height: 2.7rem;
@@ -846,55 +827,46 @@ function openSettings() {
   justify-content: space-between;
   background-color: var(--background-secondary);
 }
-
 .breadcrumb {
   height: 100%;
   display: flex;
   align-items: center;
 }
-
 .breadcrumb span {
   display: block;
   margin-left: .5rem;
   font-size: .8rem;
 }
-
 .tools {
   display: flex;
   align-items: center;
   margin-right: .5rem;
 }
-
 .tools button {
   padding: .25rem;
 }
-
 .bottom {
   display: flex;
   flex: 1;
   height: 100%;
 }
-
 main {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
   background-color: var(--background-primary);
 }
-
 /* ====== 总览页面样式 ====== */
 .overview {
   max-width: 1200px;
   margin: 0 auto;
 }
-
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
-
 .stat-card {
   display: flex;
   align-items: center;
@@ -905,49 +877,40 @@ main {
   transition: all 0.2s;
   box-shadow: var(--shadow-sm);
 }
-
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
-
 .stat-icon {
   font-size: 2.5rem;
   margin-right: 1rem;
 }
-
 .stat-info {
   flex: 1;
 }
-
 .stat-label {
   font-size: .85rem;
   color: var(--text-secondary);
   margin-bottom: .25rem;
 }
-
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--primary);
 }
-
 .recent-section {
   margin-top: 2rem;
 }
-
 .section-title {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--text-primary);
 }
-
 .recent-books {
   display: grid;
   gap: .75rem;
 }
-
 .recent-book-item {
   display: flex;
   align-items: center;
@@ -958,12 +921,10 @@ main {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .recent-book-item:hover {
   background-color: var(--background-tertiary);
   border-color: var(--primary);
 }
-
 .recent-book-cover {
   width: 3rem;
   height: 4.5rem;
@@ -971,34 +932,28 @@ main {
   border-radius: .25rem;
   margin-right: 1rem;
 }
-
 .recent-book-info {
   flex: 1;
 }
-
 .recent-book-info h4 {
   font-size: 1rem;
   margin-bottom: .25rem;
   color: var(--text-primary);
 }
-
 .book-time {
   font-size: .85rem;
   color: var(--text-secondary);
 }
-
 /* ====== 书籍详情页面样式 ====== */
 .book-detail {
   max-width: 1200px;
   margin: 0 auto;
 }
-
 .detail-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
-
 .book-header {
   display: flex;
   gap: 2rem;
@@ -1007,7 +962,6 @@ main {
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .detail-cover {
   width: 8rem;
   height: 12rem;
@@ -1015,41 +969,35 @@ main {
   border-radius: 0.25rem;
   box-shadow: var(--shadow-md);
 }
-
 .book-header-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-
 .book-header-info h2 {
   font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: .75rem;
   color: var(--text-primary);
 }
-
 .book-desc {
   font-size: .95rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 1rem;
 }
-
 .book-meta {
   display: flex;
   gap: 1.5rem;
   font-size: .85rem;
   color: var(--text-secondary);
 }
-
 .detail-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1rem;
 }
-
 .detail-stat-item {
   padding: 1rem;
   background-color: var(--background-secondary);
@@ -1057,37 +1005,31 @@ main {
   border: 1px solid var(--border-color);
   text-align: center;
 }
-
 .detail-stat-value {
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--primary);
   margin-bottom: .25rem;
 }
-
 .detail-stat-value.warning {
   color: var(--warning, #f59e0b);
 }
-
 .detail-stat-label {
   font-size: .85rem;
   color: var(--text-secondary);
 }
-
 .entity-types-section {
   padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .entity-types {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
   margin-top: .75rem;
 }
-
 .entity-type-tag {
   padding: 0.25rem 0.5rem;
   background-color: var(--background-tertiary);
@@ -1097,45 +1039,28 @@ main {
   color: var(--text-primary);
   transition: all 0.2s;
 }
-
 .entity-type-tag:hover {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary);
 }
-
 .articles-section {
   padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--text-secondary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: .5;
-}
-
 .articles-list {
   display: flex;
   flex-direction: column;
   gap: .5rem;
 }
-
 .article-item {
   display: flex;
   justify-content: space-between;
@@ -1147,30 +1072,25 @@ main {
   transition: all 0.2s;
   border: 1px solid transparent;
 }
-
 .article-item:hover {
   background-color: var(--background-primary);
   border-color: var(--primary);
 }
-
 .article-main {
   flex: 1;
 }
-
 .article-title {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: .5rem;
 }
-
 .article-meta {
   display: flex;
   gap: .5rem;
   font-size: .85rem;
   color: var(--text-secondary);
 }
-
 .article-action {
   padding: .5rem 1rem;
   font-size: 1.2rem;
@@ -1178,38 +1098,31 @@ main {
   opacity: 0;
   transition: opacity .2s;
 }
-
 .article-item:hover .article-action {
   opacity: 1;
 }
-
 .import-export-container {
   max-height: 90vh;
   overflow-y: auto;
 }
-
 .import-export-container h3 {
   color: var(--text-primary);
   font-size: 1rem;
 }
-
 .import-export-container .description {
   color: var(--text-secondary);
   font-size: 0.85rem;
   line-height: 1.5;
   margin-bottom: 0.75rem;
 }
-
 .import-export-container .warning {
   color: #ff9800;
   font-size: 0.8rem;
 }
-
 .import-export-container .button-group {
   display: flex;
   gap: 0.75rem;
 }
-
 .import-export-container .btn-primary {
   padding: .5rem 1rem;
   background-color: var(--primary);
@@ -1221,7 +1134,6 @@ main {
   transition: background-color 0.2s;
   flex: 1;
 }
-
 .import-export-container .divider {
   height: 1px;
   background-color: var(--border-color);

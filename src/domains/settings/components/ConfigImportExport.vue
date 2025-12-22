@@ -140,43 +140,43 @@ function reloadStores() {
 </script>
 
 <template>
-  <div class="config-import-export">
-    <div class="content">
-      <div class="section">
-        <h3>📤 导出配置</h3>
-        <p class="description">
-          导出AI接口、提示词和文本预设配置
-        </p>
-        <button @click="exportConfigs" :disabled="isExporting" class="btn-primary">
-          {{ isExporting ? '导出中...' : '💾 导出配置' }}
-        </button>
-      </div>
+<div class="config-import-export">
+  <div class="content">
+    <div class="section">
+      <h3>📤 导出配置</h3>
+      <p class="description">
+        导出AI接口、提示词和文本预设配置
+      </p>
+      <button @click="exportConfigs" :disabled="isExporting" class="btn-primary">
+        {{ isExporting ? '导出中...' : '💾 导出配置' }}
+      </button>
+    </div>
 
-      <div class="divider"></div>
+    <div class="divider"></div>
 
-      <div class="section">
-        <h3>📥 导入配置</h3>
-        <p class="description">
-          从 JSON 文件导入配置<br />
-          <span class="warning">⚠️ 注意：导入会与现有配置合并，不会覆盖</span>
-        </p>
-        <input ref="fileInputRef" type="file" accept=".json" @change="handleFileChange" style="display: none;" />
-        <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary">
-          {{ isImporting ? '导入中...' : '📁 选择JSON文件' }}
-        </button>
-      </div>
+    <div class="section">
+      <h3>📥 导入配置</h3>
+      <p class="description">
+        从 JSON 文件导入配置<br />
+        <span class="warning">⚠️ 注意：导入会与现有配置合并，不会覆盖</span>
+      </p>
+      <input ref="fileInputRef" type="file" accept=".json" @change="handleFileChange" style="display: none;" />
+      <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary">
+        {{ isImporting ? '导入中...' : '📁 选择JSON文件' }}
+      </button>
+    </div>
 
-      <div class="info-box">
-        <h4>💡 使用说明</h4>
-        <ul>
-          <li>配置包括：AI模型接口、提示词、文本预设</li>
-          <li>导出的配置可以在不同设备间共享</li>
-          <li>导入时会自动去重，不会产生重复配置</li>
-          <li>导入后会立即生效，无需刷新</li>
-        </ul>
-      </div>
+    <div class="info-box">
+      <h4>💡 使用说明</h4>
+      <ul>
+        <li>配置包括：AI模型接口、提示词、文本预设</li>
+        <li>导出的配置可以在不同设备间共享</li>
+        <li>导入时会自动去重，不会产生重复配置</li>
+        <li>导入后会立即生效，无需刷新</li>
+      </ul>
     </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -187,78 +187,17 @@ function reloadStores() {
   overflow-y: auto;
   padding: 1rem;
 }
-
 .content {
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
 }
-
 .section {
   margin-bottom: 1.25rem;
 }
-
 .section h3 {
   color: var(--text-primary);
   margin-bottom: 0.6rem;
   font-size: 0.95rem;
-}
-
-.description {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
-}
-
-.warning {
-  color: #ff9800;
-  font-size: 0.8rem;
-}
-
-.btn-primary {
-  padding: .25rem .5rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 1.25rem 0;
-}
-
-.info-box {
-  background-color: var(--bg-secondary);
-  border-radius: 0.25rem;
-  padding: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.info-box h4 {
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.info-box ul {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  line-height: 1.6;
-  margin-left: 1.25rem;
-}
-
-.info-box li {
-  margin-bottom: 0.25rem;
 }
 </style>

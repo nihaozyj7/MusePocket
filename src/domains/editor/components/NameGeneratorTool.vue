@@ -207,112 +207,112 @@ function clearResults() {
 </script>
 
 <template>
-  <div class="name-generator-tool">
-    <div class="content">
-      <!-- 模型选择 -->
-      <div class="section">
-        <h3>🤖 选择AI模型</h3>
-        <select v-model="selectedModel" class="select-box">
-          <option :value="null" disabled>请选择模型</option>
-          <option v-for="model in modelOptions" :key="model.model" :value="model">
-            {{ model.note || model.model }}
+<div class="name-generator-tool">
+  <div class="content">
+    <!-- 模型选择 -->
+    <div class="section">
+      <h3>🤖 选择AI模型</h3>
+      <select v-model="selectedModel" class="select-box">
+        <option :value="null" disabled>请选择模型</option>
+        <option v-for="model in modelOptions" :key="model.model" :value="model">
+          {{ model.note || model.model }}
+        </option>
+      </select>
+    </div>
+
+    <!-- 取名配置 -->
+    <div class="section">
+      <h3>⚙️ 取名配置</h3>
+
+      <div class="form-group">
+        <label>取名类型</label>
+        <select v-model="nameType" class="select-box">
+          <option v-for="type in nameTypes" :key="type" :value="type">
+            {{ type }}
           </option>
         </select>
       </div>
 
-      <!-- 取名配置 -->
-      <div class="section">
-        <h3>⚙️ 取名配置</h3>
-
-        <div class="form-group">
-          <label>取名类型</label>
-          <select v-model="nameType" class="select-box">
-            <option v-for="type in nameTypes" :key="type" :value="type">
-              {{ type }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>风格</label>
-          <select v-model="nameStyle" class="select-box">
-            <option v-for="style in nameStyles" :key="style" :value="style">
-              {{ style }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group" v-if="nameType === '人名'">
-          <label>性别</label>
-          <select v-model="gender" class="select-box">
-            <option v-for="g in genderOptions" :key="g" :value="g">
-              {{ g }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>生成数量</label>
-          <input type="number" v-model.number="nameCount" min="1" max="50" class="input-box" />
-        </div>
-
-        <div class="form-group">
-          <label>额外要求（可选）</label>
-          <div class="requirement-selector">
-            <select @change="selectRequirement(($event.target as HTMLSelectElement).value)" class="requirement-select">
-              <option value="">快速选择常用要求（可选）</option>
-              <optgroup label="内置要求">
-                <option v-for="req in allRequirementOptions.filter(r => r.isBuiltin)" :key="req.id" :value="req.id">
-                  {{ req.title }}
-                </option>
-              </optgroup>
-              <optgroup label="自定义提示词" v-if="allRequirementOptions.filter(r => !r.isBuiltin).length > 0">
-                <option v-for="req in allRequirementOptions.filter(r => !r.isBuiltin)" :key="req.id" :value="req.id">
-                  {{ req.title }}
-                </option>
-              </optgroup>
-            </select>
-          </div>
-          <textarea v-model="additionalRequirements" class="textarea-box" placeholder="例如：需要带有水的元素、寓意美好、两个字等..." rows="3"></textarea>
-        </div>
-
-        <button @click="generateNames" :disabled="!canGenerate || isGenerating" class="generate-btn">
-          {{ isGenerating ? '⏳ 生成中...' : '✨ 开始生成' }}
-        </button>
+      <div class="form-group">
+        <label>风格</label>
+        <select v-model="nameStyle" class="select-box">
+          <option v-for="style in nameStyles" :key="style" :value="style">
+            {{ style }}
+          </option>
+        </select>
       </div>
 
-      <!-- 进度信息 -->
-      <div class="section" v-if="progress">
-        <div class="progress-info" :class="{ error: progress.includes('错误') }">
-          {{ progress }}
-        </div>
+      <div class="form-group" v-if="nameType === '人名'">
+        <label>性别</label>
+        <select v-model="gender" class="select-box">
+          <option v-for="g in genderOptions" :key="g" :value="g">
+            {{ g }}
+          </option>
+        </select>
       </div>
 
-      <!-- 生成结果 -->
-      <div class="section results-section" v-if="generatedNames.length > 0">
-        <div class="results-header">
-          <h3>📝 生成结果 ({{ generatedNames.length }})</h3>
-          <div class="results-actions">
-            <button @click="copyAllNames" class="action-btn">📋 复制全部</button>
-            <button @click="clearResults" class="action-btn">🗑️ 清空</button>
-          </div>
-        </div>
-
-        <div class="names-grid">
-          <div v-for="(name, index) in generatedNames" :key="index" class="name-card" @click="copyName(name)" :title="'点击复制: ' + name">
-            <span class="name-text">{{ name }}</span>
-            <span class="copy-icon">📋</span>
-          </div>
-        </div>
+      <div class="form-group">
+        <label>生成数量</label>
+        <input type="number" v-model.number="nameCount" min="1" max="50" class="input-box" />
       </div>
 
-      <!-- 空状态提示 -->
-      <div class="empty-state" v-if="generatedNames.length === 0 && !progress">
-        <div class="empty-icon">✨</div>
-        <div class="empty-text">配置参数后点击"开始生成"创建名字</div>
+      <div class="form-group">
+        <label>额外要求（可选）</label>
+        <div class="requirement-selector">
+          <select @change="selectRequirement(($event.target as HTMLSelectElement).value)" class="requirement-select">
+            <option value="">快速选择常用要求（可选）</option>
+            <optgroup label="内置要求">
+              <option v-for="req in allRequirementOptions.filter(r => r.isBuiltin)" :key="req.id" :value="req.id">
+                {{ req.title }}
+              </option>
+            </optgroup>
+            <optgroup label="自定义提示词" v-if="allRequirementOptions.filter(r => !r.isBuiltin).length > 0">
+              <option v-for="req in allRequirementOptions.filter(r => !r.isBuiltin)" :key="req.id" :value="req.id">
+                {{ req.title }}
+              </option>
+            </optgroup>
+          </select>
+        </div>
+        <textarea v-model="additionalRequirements" class="textarea-box" placeholder="例如：需要带有水的元素、寓意美好、两个字等..." rows="3"></textarea>
+      </div>
+
+      <button @click="generateNames" :disabled="!canGenerate || isGenerating" class="generate-btn">
+        {{ isGenerating ? '⏳ 生成中...' : '✨ 开始生成' }}
+      </button>
+    </div>
+
+    <!-- 进度信息 -->
+    <div class="section" v-if="progress">
+      <div class="progress-info" :class="{ error: progress.includes('错误') }">
+        {{ progress }}
       </div>
     </div>
+
+    <!-- 生成结果 -->
+    <div class="section results-section" v-if="generatedNames.length > 0">
+      <div class="results-header">
+        <h3>📝 生成结果 ({{ generatedNames.length }})</h3>
+        <div class="results-actions">
+          <button @click="copyAllNames" class="action-btn">📋 复制全部</button>
+          <button @click="clearResults" class="action-btn">🗑️ 清空</button>
+        </div>
+      </div>
+
+      <div class="names-grid">
+        <div v-for="(name, index) in generatedNames" :key="index" class="name-card" @click="copyName(name)" :title="'点击复制: ' + name">
+          <span class="name-text">{{ name }}</span>
+          <span class="copy-icon">📋</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空状态提示 -->
+    <div class="empty-state" v-if="generatedNames.length === 0 && !progress">
+      <div class="empty-icon">✨</div>
+      <div class="empty-text">配置参数后点击"开始生成"创建名字</div>
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -323,7 +323,6 @@ function clearResults() {
   flex-direction: column;
   background-color: var(--background-secondary);
 }
-
 .content {
   flex: 1;
   overflow-y: auto;
@@ -332,48 +331,24 @@ function clearResults() {
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .section {
   background-color: var(--background-secondary);
   border-radius: 0.375rem;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
 }
-
 .section h3 {
   margin: 0 0 0.6rem 0;
   font-size: 0.9rem;
   color: var(--text-primary);
   font-weight: 600;
 }
-
-.select-box,
-.input-box,
-.textarea-box {
-  width: 100%;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  background-color: var(--background-tertiary);
-  color: var(--text-primary);
-  font-size: 0.85rem;
-}
-
-.select-box:focus,
-.input-box:focus,
-.textarea-box:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
 .form-group {
   margin-bottom: 0.75rem;
 }
-
 .form-group:last-child {
   margin-bottom: 0;
 }
-
 .form-group label {
   display: block;
   margin-bottom: 0.35rem;
@@ -381,11 +356,9 @@ function clearResults() {
   font-size: 0.8rem;
   font-weight: 500;
 }
-
 .requirement-selector {
   margin-bottom: 0.5rem;
 }
-
 .requirement-select {
   width: 100%;
   padding: 0.375rem 0.5rem;
@@ -396,19 +369,11 @@ function clearResults() {
   font-size: 0.8rem;
   cursor: pointer;
 }
-
 .requirement-select:focus {
   outline: none;
   border-color: var(--primary);
   color: var(--text-primary);
 }
-
-.textarea-box {
-  resize: vertical;
-  min-height: 50px;
-  font-family: inherit;
-}
-
 .generate-btn {
   width: 100%;
   padding: 0.6rem;
@@ -422,12 +387,10 @@ function clearResults() {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .generate-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .progress-info {
   padding: 0.6rem;
   background-color: var(--background-tertiary);
@@ -436,32 +399,26 @@ function clearResults() {
   font-size: 0.85rem;
   text-align: center;
 }
-
 .progress-info.error {
   background-color: rgba(255, 59, 48, 0.1);
   color: var(--danger);
 }
-
 .results-section {
   flex: 1;
 }
-
 .results-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
 }
-
 .results-header h3 {
   margin: 0;
 }
-
 .results-actions {
   display: flex;
   gap: 0.4rem;
 }
-
 .action-btn {
   padding: 0.35rem 0.7rem;
   font-size: 0.8rem;
@@ -472,13 +429,11 @@ function clearResults() {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .names-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.6rem;
 }
-
 .name-card {
   padding: 0.6rem;
   background-color: var(--background-tertiary);
@@ -491,14 +446,12 @@ function clearResults() {
   align-items: center;
   gap: 0.4rem;
 }
-
 .name-card:hover {
   background-color: var(--background-primary);
   border-color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .name-text {
   flex: 1;
   color: var(--text-primary);
@@ -508,32 +461,14 @@ function clearResults() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .copy-icon {
   opacity: 0;
   font-size: 0.85rem;
   transition: opacity 0.2s;
 }
-
 .name-card:hover .copy-icon {
   opacity: 1;
 }
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-  color: var(--text-secondary);
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
-  opacity: 0.5;
-}
-
 .empty-text {
   font-size: 0.85rem;
   text-align: center;

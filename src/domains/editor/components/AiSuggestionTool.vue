@@ -338,189 +338,189 @@ function copySuggestion(suggestion: any) {
 </script>
 
 <template>
-  <div class="ai-suggestion-tool">
-    <div class="tool-header">
-      <h3>💡 AI建议</h3>
-    </div>
+<div class="ai-suggestion-tool">
+  <div class="tool-header">
+    <h3>💡 AI建议</h3>
+  </div>
 
-    <!-- 标签页 -->
-    <div class="tabs">
-      <button :class="{ active: activeTab === 'config' }" @click="activeTab = 'config'">
-        配置
-      </button>
-      <button :class="{ active: activeTab === 'result' }" @click="activeTab = 'result'">
-        结果
-      </button>
-    </div>
+  <!-- 标签页 -->
+  <div class="tabs">
+    <button :class="{ active: activeTab === 'config' }" @click="activeTab = 'config'">
+      配置
+    </button>
+    <button :class="{ active: activeTab === 'result' }" @click="activeTab = 'result'">
+      结果
+    </button>
+  </div>
 
-    <div class="tool-body">
-      <!-- 配置区域 -->
-      <div class="config-section" v-if="activeTab === 'config'">
-        <!-- 模型选择 -->
-        <div class="form-item">
-          <label>AI 模型</label>
-          <select v-model="selectedModel">
-            <option :value="null" disabled>请选择模型</option>
-            <option v-for="model in modelOptions" :key="model.model" :value="model">
-              {{ model.note || model.model }}
+  <div class="tool-body">
+    <!-- 配置区域 -->
+    <div class="config-section" v-if="activeTab === 'config'">
+      <!-- 模型选择 -->
+      <div class="form-item">
+        <label>AI 模型</label>
+        <select v-model="selectedModel">
+          <option :value="null" disabled>请选择模型</option>
+          <option v-for="model in modelOptions" :key="model.model" :value="model">
+            {{ model.note || model.model }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 预设场景选择 -->
+      <div class="form-item">
+        <label>场景预设</label>
+        <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)">
+          <optgroup label="内置场景">
+            <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
+              {{ preset.title }}
+            </option>
+          </optgroup>
+          <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
+            <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
+              {{ preset.title }}
+            </option>
+          </optgroup>
+        </select>
+        <div class="preset-description" v-if="selectedPreset">
+          {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
+        </div>
+      </div>
+
+      <!-- 系统提示词 -->
+      <div class="form-item">
+        <label>系统提示词（可自定义修改）</label>
+        <textarea v-model="systemPrompt" placeholder="输入系统提示词..." rows="4"></textarea>
+      </div>
+
+      <!-- 用户提示词 -->
+      <div class="form-item">
+        <label>用户提示词（可自定义修改）</label>
+        <textarea v-model="userPrompt" placeholder="输入用户提示词..." rows="4"></textarea>
+      </div>
+
+      <!-- 是否使用当前文章 -->
+      <div class="form-item">
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="useCurrentArticle" />
+          使用当前文章作为上下文
+        </label>
+      </div>
+
+      <!-- 参考文章选择 -->
+      <div class="form-item">
+        <label>参考文章（可选）</label>
+        <select v-model="selectedReferenceArticleId" @change="selectReferenceArticle(selectedReferenceArticleId)">
+          <option value="">不选择参考文章</option>
+          <option v-for="article in articles" :key="article.id" :value="article.id">
+            {{ article.title }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 参考内容（手动输入或选择提示词） -->
+      <div class="form-item">
+        <label>或手动输入参考内容</label>
+        <div class="prompt-selector-wrapper">
+          <select @change="selectReferencePrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+            <option value="">从提示词库快速填入（可选）</option>
+            <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+              {{ prompt.title }}
             </option>
           </select>
         </div>
+        <textarea v-model="referenceContent" placeholder="可以粘贴任何参考内容..." rows="4"></textarea>
+      </div>
 
-        <!-- 预设场景选择 -->
-        <div class="form-item">
-          <label>场景预设</label>
-          <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)">
-            <optgroup label="内置场景">
-              <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
-                {{ preset.title }}
-              </option>
-            </optgroup>
-            <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
-              <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
-                {{ preset.title }}
-              </option>
-            </optgroup>
-          </select>
-          <div class="preset-description" v-if="selectedPreset">
-            {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
-          </div>
-        </div>
+      <!-- 操作按钮 -->
+      <div class="actions">
+        <button class="btn-primary" :disabled="!canGenerate || isGenerating" @click="startGenerate">
+          {{ isGenerating ? '生成中...' : '生成建议' }}
+        </button>
+      </div>
 
-        <!-- 系统提示词 -->
-        <div class="form-item">
-          <label>系统提示词（可自定义修改）</label>
-          <textarea v-model="systemPrompt" placeholder="输入系统提示词..." rows="4"></textarea>
-        </div>
+      <!-- 进度提示 -->
+      <div class="progress" v-if="progress">
+        {{ progress }}
+      </div>
+    </div>
 
-        <!-- 用户提示词 -->
-        <div class="form-item">
-          <label>用户提示词（可自定义修改）</label>
-          <textarea v-model="userPrompt" placeholder="输入用户提示词..." rows="4"></textarea>
-        </div>
-
-        <!-- 是否使用当前文章 -->
-        <div class="form-item">
-          <label class="checkbox-label">
-            <input type="checkbox" v-model="useCurrentArticle" />
-            使用当前文章作为上下文
-          </label>
-        </div>
-
-        <!-- 参考文章选择 -->
-        <div class="form-item">
-          <label>参考文章（可选）</label>
-          <select v-model="selectedReferenceArticleId" @change="selectReferenceArticle(selectedReferenceArticleId)">
-            <option value="">不选择参考文章</option>
-            <option v-for="article in articles" :key="article.id" :value="article.id">
-              {{ article.title }}
-            </option>
-          </select>
-        </div>
-
-        <!-- 参考内容（手动输入或选择提示词） -->
-        <div class="form-item">
-          <label>或手动输入参考内容</label>
-          <div class="prompt-selector-wrapper">
-            <select @change="selectReferencePrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
-              <option value="">从提示词库快速填入（可选）</option>
-              <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
-                {{ prompt.title }}
-              </option>
-            </select>
-          </div>
-          <textarea v-model="referenceContent" placeholder="可以粘贴任何参考内容..." rows="4"></textarea>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div class="actions">
-          <button class="btn-primary" :disabled="!canGenerate || isGenerating" @click="startGenerate">
-            {{ isGenerating ? '生成中...' : '生成建议' }}
+    <!-- 结果区域 -->
+    <div class="result-section" v-if="activeTab === 'result'">
+      <div class="result-header">
+        <h4>AI建议结果</h4>
+        <div class="result-actions">
+          <button class="btn-small" @click="copyToClipboard" :disabled="!suggestionResult">
+            📋 复制全部
+          </button>
+          <button class="btn-small" @click="clearResult">
+            🗑️ 清空
           </button>
         </div>
-
-        <!-- 进度提示 -->
-        <div class="progress" v-if="progress">
-          {{ progress }}
-        </div>
       </div>
 
-      <!-- 结果区域 -->
-      <div class="result-section" v-if="activeTab === 'result'">
-        <div class="result-header">
-          <h4>AI建议结果</h4>
-          <div class="result-actions">
-            <button class="btn-small" @click="copyToClipboard" :disabled="!suggestionResult">
-              📋 复制全部
-            </button>
-            <button class="btn-small" @click="clearResult">
-              🗑️ 清空
-            </button>
-          </div>
+      <!-- 结构化展示 -->
+      <div class="result-content" v-if="parsedResult && suggestionResult">
+        <!-- 标题 -->
+        <div class="result-title" v-if="parsedResult.title">
+          <h3>{{ parsedResult.title }}</h3>
         </div>
 
-        <!-- 结构化展示 -->
-        <div class="result-content" v-if="parsedResult && suggestionResult">
-          <!-- 标题 -->
-          <div class="result-title" v-if="parsedResult.title">
-            <h3>{{ parsedResult.title }}</h3>
-          </div>
+        <!-- 建议列表 -->
+        <div class="suggestions-list" v-if="parsedResult.suggestions && parsedResult.suggestions.length > 0">
+          <div class="suggestion-card" v-for="(suggestion, index) in parsedResult.suggestions" :key="index">
+            <div class="suggestion-header">
+              <div class="suggestion-number">{{ index + 1 }}</div>
+              <h4 class="suggestion-title">{{ suggestion.title }}</h4>
+              <button class="btn-copy-suggestion" @click="copySuggestion(suggestion)" title="复制此建议">
+                📋
+              </button>
+            </div>
 
-          <!-- 建议列表 -->
-          <div class="suggestions-list" v-if="parsedResult.suggestions && parsedResult.suggestions.length > 0">
-            <div class="suggestion-card" v-for="(suggestion, index) in parsedResult.suggestions" :key="index">
-              <div class="suggestion-header">
-                <div class="suggestion-number">{{ index + 1 }}</div>
-                <h4 class="suggestion-title">{{ suggestion.title }}</h4>
-                <button class="btn-copy-suggestion" @click="copySuggestion(suggestion)" title="复制此建议">
-                  📋
-                </button>
-              </div>
+            <div class="suggestion-description">
+              {{ suggestion.description }}
+            </div>
 
-              <div class="suggestion-description">
-                {{ suggestion.description }}
-              </div>
-
-              <div class="suggestion-keypoints" v-if="suggestion.keyPoints && suggestion.keyPoints.length > 0">
-                <div class="keypoints-title">关键要点：</div>
-                <ul>
-                  <li v-for="(point, pIndex) in suggestion.keyPoints" :key="pIndex">
-                    {{ point }}
-                  </li>
-                </ul>
-              </div>
+            <div class="suggestion-keypoints" v-if="suggestion.keyPoints && suggestion.keyPoints.length > 0">
+              <div class="keypoints-title">关键要点：</div>
+              <ul>
+                <li v-for="(point, pIndex) in suggestion.keyPoints" :key="pIndex">
+                  {{ point }}
+                </li>
+              </ul>
             </div>
           </div>
-
-          <!-- 总结 -->
-          <div class="result-summary" v-if="parsedResult.summary">
-            <div class="summary-icon">💬</div>
-            <div class="summary-content">{{ parsedResult.summary }}</div>
-          </div>
         </div>
 
-        <!-- 纯文本展示（降级方案） -->
-        <div class="result-content-plain" v-else-if="suggestionResult">
-          <div class="fallback-notice">
-            ℹ️ AI返回的不是标准格式，以下为原始内容：
-          </div>
-          <pre>{{ suggestionResult }}</pre>
-        </div>
-
-        <!-- 空状态 -->
-        <div class="empty-state" v-else>
-          <div class="empty-icon">💡</div>
-          <p>暂无生成结果，请先在配置页面生成</p>
+        <!-- 总结 -->
+        <div class="result-summary" v-if="parsedResult.summary">
+          <div class="summary-icon">💬</div>
+          <div class="summary-content">{{ parsedResult.summary }}</div>
         </div>
       </div>
 
-      <!-- 空状态（初始状态） -->
-      <div class="empty-state" v-if="activeTab === 'config' && !isGenerating && !progress && !suggestionResult">
+      <!-- 纯文本展示（降级方案） -->
+      <div class="result-content-plain" v-else-if="suggestionResult">
+        <div class="fallback-notice">
+          ℹ️ AI返回的不是标准格式，以下为原始内容：
+        </div>
+        <pre>{{ suggestionResult }}</pre>
+      </div>
+
+      <!-- 空状态 -->
+      <div class="empty-state" v-else>
         <div class="empty-icon">💡</div>
-        <p>配置AI模型和提示词，获取文章创作灵感和续写建议</p>
+        <p>暂无生成结果，请先在配置页面生成</p>
       </div>
     </div>
+
+    <!-- 空状态（初始状态） -->
+    <div class="empty-state" v-if="activeTab === 'config' && !isGenerating && !progress && !suggestionResult">
+      <div class="empty-icon">💡</div>
+      <p>配置AI模型和提示词，获取文章创作灵感和续写建议</p>
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -532,95 +532,26 @@ function copySuggestion(suggestion: any) {
   flex-direction: column;
   background-color: var(--background-secondary);
 }
-
 .tool-header {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--background-secondary);
 }
-
 .tool-header h3 {
   margin: 0;
   font-size: 1rem;
   color: var(--text-primary);
 }
-
-.tabs {
-  display: flex;
-  justify-content: space-between;
-  background-color: var(--background-tertiary);
-  height: 2.2rem;
-  border-radius: 0.25rem;
-  overflow: hidden;
-  margin: 0.5rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.tabs button {
-  flex: 1;
-  margin: 0;
-  padding: 0.25rem 0.5rem;
-  border-right: 1px solid var(--border-color);
-  border-radius: 0;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-bottom: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tabs button:last-child {
-  border-right: none;
-}
-
-.tabs button.active {
-  color: var(--primary);
-  border-bottom: 1px solid var(--primary);
-}
-
 .tool-body {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
 }
-
 .config-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-item label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.form-item select,
-.form-item textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  background-color: var(--background-secondary);
-  color: var(--text-primary);
-  font-size: 0.875rem;
-}
-
-.form-item textarea {
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
-}
-
 .preset-description {
   margin-top: 0.25rem;
   padding: 0.5rem;
@@ -631,11 +562,9 @@ function copySuggestion(suggestion: any) {
   color: var(--text-secondary);
   line-height: 1.5;
 }
-
 .prompt-selector-wrapper {
   margin-bottom: 0.5rem;
 }
-
 .prompt-quick-select {
   width: 100%;
   padding: 0.375rem 0.5rem;
@@ -645,48 +574,15 @@ function copySuggestion(suggestion: any) {
   color: var(--text-tertiary);
   font-size: 0.8rem;
 }
-
 .prompt-quick-select:focus {
   outline: none;
   border-color: var(--primary);
   color: var(--text-primary);
 }
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkbox-label input[type="checkbox"] {
-  cursor: pointer;
-}
-
 .actions {
   display: flex;
   gap: 0.5rem;
 }
-
-.btn-primary {
-  flex: 1;
-  padding: .5rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .progress {
   padding: 0.5rem;
   background-color: var(--background-tertiary);
@@ -695,13 +591,11 @@ function copySuggestion(suggestion: any) {
   color: var(--text-secondary);
   text-align: center;
 }
-
 .result-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
 .result-header {
   display: flex;
   justify-content: space-between;
@@ -709,34 +603,15 @@ function copySuggestion(suggestion: any) {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .result-header h4 {
   margin: 0;
   font-size: 0.875rem;
   color: var(--text-primary);
 }
-
 .result-actions {
   display: flex;
   gap: 0.5rem;
 }
-
-.btn-small {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  background-color: var(--background-tertiary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-small:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .result-content {
   flex: 1;
   display: flex;
@@ -744,26 +619,22 @@ function copySuggestion(suggestion: any) {
   gap: 1.5rem;
   user-select: text;
 }
-
 .result-title {
   text-align: center;
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
 }
-
 .result-title h3 {
   margin: 0;
   color: white;
   font-size: 1.125rem;
   font-weight: 600;
 }
-
 .suggestions-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
 .suggestion-card {
   background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
@@ -771,19 +642,16 @@ function copySuggestion(suggestion: any) {
   padding: 1.25rem;
   transition: all 0.2s;
 }
-
 .suggestion-card:hover {
   border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .suggestion-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
-
 .suggestion-number {
   width: 2rem;
   height: 2rem;
@@ -797,7 +665,6 @@ function copySuggestion(suggestion: any) {
   font-size: 0.875rem;
   flex-shrink: 0;
 }
-
 .suggestion-title {
   flex: 1;
   margin: 0;
@@ -805,7 +672,6 @@ function copySuggestion(suggestion: any) {
   color: var(--text-primary);
   font-weight: 600;
 }
-
 .btn-copy-suggestion {
   background: none;
   border: none;
@@ -815,7 +681,6 @@ function copySuggestion(suggestion: any) {
   opacity: 0.6;
   transition: opacity 0.2s;
 }
-
 .suggestion-description {
   color: var(--text-primary);
   line-height: 1.8;
@@ -823,37 +688,31 @@ function copySuggestion(suggestion: any) {
   margin-bottom: 0.75rem;
   text-align: justify;
 }
-
 .suggestion-keypoints {
   background-color: var(--background-secondary);
   border-left: 3px solid var(--primary);
   padding: 0.75rem 1rem;
   border-radius: 0.25rem;
 }
-
 .keypoints-title {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
-
 .suggestion-keypoints ul {
   margin: 0;
   padding-left: 1.25rem;
 }
-
 .suggestion-keypoints li {
   color: var(--text-primary);
   line-height: 1.8;
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
 }
-
 .suggestion-keypoints li:last-child {
   margin-bottom: 0;
 }
-
 .result-summary {
   background-color: var(--background-tertiary);
   border: 1px solid var(--border-color);
@@ -863,23 +722,19 @@ function copySuggestion(suggestion: any) {
   gap: 0.75rem;
   align-items: flex-start;
 }
-
 .summary-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
 }
-
 .summary-content {
   flex: 1;
   color: var(--text-primary);
   line-height: 1.6;
   font-size: 0.9rem;
 }
-
 .result-content-plain {
   flex: 1;
 }
-
 .fallback-notice {
   padding: 0.75rem;
   background-color: rgba(255, 193, 7, 0.1);
@@ -889,7 +744,6 @@ function copySuggestion(suggestion: any) {
   font-size: 0.875rem;
   margin-bottom: 1rem;
 }
-
 .result-content-plain pre {
   padding: 1rem;
   background-color: var(--background-tertiary);
@@ -902,26 +756,5 @@ function copySuggestion(suggestion: any) {
   line-height: 1.6;
   margin: 0;
   font-family: inherit;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  text-align: center;
-  color: var(--text-tertiary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.empty-state p {
-  font-size: 0.875rem;
-  margin: 0;
-  line-height: 1.5;
 }
 </style>

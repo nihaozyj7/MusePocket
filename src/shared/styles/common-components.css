@@ -147,7 +147,7 @@
   height: 2.2rem;
   border-radius: 0.25rem;
   overflow: hidden;
-  margin-bottom: 1rem;
+  margin: .5rem;
 }
 
 .tabs button {
@@ -191,11 +191,7 @@
   color: var(--text-tertiary);
 }
 
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
+
 
 .empty-state p {
   font-size: 0.875rem;

@@ -163,66 +163,66 @@ defineExpose({
 </script>
 
 <template>
-  <Popup ref="popupRef" title="🔍 查找替换" draggable>
-    <div class="find-replace-container">
-      <div class="form-group">
-        <label>查找内容：</label>
-        <input v-model="findText" type="text" placeholder="输入查找内容" @keyup.enter="handleFind" />
+<Popup ref="popupRef" title="🔍 查找替换" draggable>
+  <div class="find-replace-container">
+    <div class="form-group">
+      <label>查找内容：</label>
+      <input v-model="findText" type="text" placeholder="输入查找内容" @keyup.enter="handleFind" />
+    </div>
+
+    <div class="form-group">
+      <label>替换为：</label>
+      <input v-model="replaceText" type="text" placeholder="输入替换内容" @keyup.enter="handleReplaceCurrent" />
+    </div>
+
+    <div class="options">
+      <label class="checkbox-label">
+        <input type="checkbox" v-model="useRegex" />
+        <span>使用正则表达式</span>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" v-model="caseSensitive" />
+        <span>区分大小写</span>
+      </label>
+    </div>
+
+    <div class="hint" v-if="useRegex">
+      <p>💡 正则表达式示例：</p>
+      <ul>
+        <li><code>\d+</code> - 匹配数字</li>
+        <li><code>\s+</code> - 匹配空白字符</li>
+        <li><code>^开头</code> - 匹配行首</li>
+        <li><code>结尾$</code> - 匹配行尾</li>
+      </ul>
+    </div>
+
+    <div class="actions">
+      <button class="btn-secondary" @click="handleFind">🔍 查找</button>
+      <button class="btn-primary" @click="handleReplaceCurrent">🔄 替换当前</button>
+      <button class="btn-primary" @click="handleReplaceAll">🔄 替换全部</button>
+    </div>
+
+    <!-- 预览区域 -->
+    <div class="preview-section" v-if="findText">
+      <div class="preview-header">
+        <h4>📋 预览结果</h4>
+        <span class="match-count" v-if="totalMatches > 0">找到 {{ totalMatches }} 处匹配</span>
+        <span class="match-count no-match" v-else>未找到匹配</span>
       </div>
 
-      <div class="form-group">
-        <label>替换为：</label>
-        <input v-model="replaceText" type="text" placeholder="输入替换内容" @keyup.enter="handleReplaceCurrent" />
-      </div>
-
-      <div class="options">
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="useRegex" />
-          <span>使用正则表达式</span>
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="caseSensitive" />
-          <span>区分大小写</span>
-        </label>
-      </div>
-
-      <div class="hint" v-if="useRegex">
-        <p>💡 正则表达式示例：</p>
-        <ul>
-          <li><code>\d+</code> - 匹配数字</li>
-          <li><code>\s+</code> - 匹配空白字符</li>
-          <li><code>^开头</code> - 匹配行首</li>
-          <li><code>结尾$</code> - 匹配行尾</li>
-        </ul>
-      </div>
-
-      <div class="actions">
-        <button class="btn-secondary" @click="handleFind">🔍 查找</button>
-        <button class="btn-primary" @click="handleReplaceCurrent">🔄 替换当前</button>
-        <button class="btn-primary" @click="handleReplaceAll">🔄 替换全部</button>
-      </div>
-
-      <!-- 预览区域 -->
-      <div class="preview-section" v-if="findText">
-        <div class="preview-header">
-          <h4>📋 预览结果</h4>
-          <span class="match-count" v-if="totalMatches > 0">找到 {{ totalMatches }} 处匹配</span>
-          <span class="match-count no-match" v-else>未找到匹配</span>
+      <div class="preview-content scroll-container">
+        <div v-for="item in previewItems" :key="item.lineNumber" class="preview-line" :class="{ 'matched': item.matched }">
+          <span class="line-number">{{ item.lineNumber }}</span>
+          <span class="line-text" v-html="highlightText(item.text)"></span>
         </div>
 
-        <div class="preview-content scroll-container">
-          <div v-for="item in previewItems" :key="item.lineNumber" class="preview-line" :class="{ 'matched': item.matched }">
-            <span class="line-number">{{ item.lineNumber }}</span>
-            <span class="line-text" v-html="highlightText(item.text)"></span>
-          </div>
-
-          <div class="no-results" v-if="previewItems.length === 0 && findText">
-            <p>😔 未找到匹配的内容</p>
-          </div>
+        <div class="no-results" v-if="previewItems.length === 0 && findText">
+          <p>😔 未找到匹配的内容</p>
         </div>
       </div>
     </div>
-  </Popup>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -234,18 +234,15 @@ defineExpose({
   flex-direction: column;
   overflow: hidden;
 }
-
 .form-group {
   margin-bottom: 0.75rem;
 }
-
 .form-group label {
   display: block;
   margin-bottom: 0.4rem;
   color: var(--text-primary);
   font-size: 0.85rem;
 }
-
 .form-group input[type="text"] {
   width: 100%;
   padding: 0.4rem 0.6rem;
@@ -255,35 +252,15 @@ defineExpose({
   color: var(--text-primary);
   font-size: 0.85rem;
 }
-
 .form-group input[type="text"]:focus {
   outline: none;
   border-color: var(--primary);
 }
-
 .options {
   display: flex;
   gap: 1rem;
   margin-bottom: 0.75rem;
 }
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-size: 0.85rem;
-}
-
-.checkbox-label input[type="checkbox"] {
-  margin-right: 0.4rem;
-  cursor: pointer;
-}
-
-.checkbox-label span {
-  user-select: none;
-}
-
 .hint {
   background: var(--background-tertiary);
   padding: 0.75rem;
@@ -291,23 +268,19 @@ defineExpose({
   margin-bottom: 0.75rem;
   font-size: 0.8rem;
 }
-
 .hint p {
   margin: 0 0 0.4rem 0;
   color: var(--text-primary);
   font-weight: bold;
 }
-
 .hint ul {
   margin: 0;
   padding-left: 1.2rem;
   color: var(--text-secondary);
 }
-
 .hint li {
   margin-bottom: 0.2rem;
 }
-
 .hint code {
   background: var(--background-primary);
   padding: 0.1rem 0.3rem;
@@ -315,34 +288,12 @@ defineExpose({
   font-family: monospace;
   color: var(--primary);
 }
-
 .actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
   margin-bottom: 0.75rem;
 }
-
-.btn-primary,
-.btn-secondary {
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.25rem;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.btn-secondary {
-  background: var(--background-tertiary);
-  color: var(--text-primary);
-}
-
 .preview-section {
   margin-top: 0.75rem;
   border-top: 1px solid var(--border-color);
@@ -352,30 +303,25 @@ defineExpose({
   display: flex;
   flex-direction: column;
 }
-
 .preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
 }
-
 .preview-header h4 {
   margin: 0;
   font-size: 0.85rem;
   color: var(--text-primary);
 }
-
 .match-count {
   font-size: 0.8rem;
   color: var(--primary);
   font-weight: bold;
 }
-
 .match-count.no-match {
   color: var(--text-tertiary);
 }
-
 .preview-content {
   flex: 1;
   overflow-y: auto;
@@ -384,7 +330,6 @@ defineExpose({
   border-radius: 0.25rem;
   padding: 0.5rem;
 }
-
 .preview-line {
   display: flex;
   padding: 0.2rem 0.4rem;
@@ -394,11 +339,9 @@ defineExpose({
   border-radius: 0.2rem;
   margin-bottom: 0.2rem;
 }
-
 .preview-line.matched {
   background: rgba(var(--primary-rgb, 74, 144, 226), 0.1);
 }
-
 .line-number {
   color: var(--text-tertiary);
   margin-right: 0.75rem;
@@ -406,13 +349,11 @@ defineExpose({
   text-align: right;
   user-select: none;
 }
-
 .line-text {
   color: var(--text-primary);
   flex: 1;
   word-break: break-all;
 }
-
 .line-text :deep(mark) {
   background: #ffeb3b;
   color: #000;
@@ -420,13 +361,11 @@ defineExpose({
   border-radius: 0.2rem;
   font-weight: bold;
 }
-
 .no-results {
   text-align: center;
   padding: 1.5rem;
   color: var(--text-tertiary);
 }
-
 .no-results p {
   margin: 0;
   font-size: 0.85rem;

@@ -70,66 +70,66 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 </script>
 
 <template>
-  <Popup ref="popupRef" title="📝 纠错结果" :width="600">
-    <div class="proofread-result">
-      <!-- 空状态 -->
-      <div v-if="issues.length === 0" class="empty-state">
-        <div class="empty-icon">✅</div>
-        <p>未发现错误</p>
+<Popup ref="popupRef" title="📝 纠错结果" :width="600">
+  <div class="proofread-result">
+    <!-- 空状态 -->
+    <div v-if="issues.length === 0" class="empty-state">
+      <div class="empty-icon">✅</div>
+      <p>未发现错误</p>
+    </div>
+
+    <!-- 错误列表 -->
+    <div v-else class="issues-container">
+      <div class="issues-header">
+        <span class="total-count">共发现 {{ issues.length }} 个错误</span>
+        <button class="btn-apply-all" @click="applyAll" v-if="issues.length > 0">
+          全部修改
+        </button>
       </div>
 
-      <!-- 错误列表 -->
-      <div v-else class="issues-container">
-        <div class="issues-header">
-          <span class="total-count">共发现 {{ issues.length }} 个错误</span>
-          <button class="btn-apply-all" @click="applyAll" v-if="issues.length > 0">
-            全部修改
-          </button>
-        </div>
+      <div class="issues-list">
+        <div v-for="(issue, index) in issues" :key="index" class="issue-item">
+          <div class="issue-header">
+            <span class="line-number">第 {{ issue.lineNumber }} 行</span>
+            <span class="position">位置: {{ issue.error.position }}</span>
+          </div>
 
-        <div class="issues-list">
-          <div v-for="(issue, index) in issues" :key="index" class="issue-item">
-            <div class="issue-header">
-              <span class="line-number">第 {{ issue.lineNumber }} 行</span>
-              <span class="position">位置: {{ issue.error.position }}</span>
-            </div>
-
-            <div class="issue-content">
-              <!-- 完整句子展示 -->
-              <div class="sentence-display" v-if="issue.error.lineText">
-                <span class="label">原句:</span>
-                <div class="sentence-text">
-                  <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
-                    <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
-                    <span v-else>{{ part.text }}</span>
-                  </template>
-                </div>
-              </div>
-
-              <!-- 错误与建议 -->
-              <div class="error-text">
-                <span class="label">错误:</span>
-                <span class="text original">{{ issue.error.original }}</span>
-              </div>
-              <div class="correct-text">
-                <span class="label">建议:</span>
-                <span class="text suggestion">{{ issue.error.corrected }}</span>
+          <div class="issue-content">
+            <!-- 完整句子展示 -->
+            <div class="sentence-display" v-if="issue.error.lineText">
+              <span class="label">原句:</span>
+              <div class="sentence-text">
+                <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
+                  <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
+                  <span v-else>{{ part.text }}</span>
+                </template>
               </div>
             </div>
 
-            <div class="issue-actions">
-              <button class="btn-apply" @click="applyFix(issue)">
-                ✓ 修改
-              </button>
-              <button class="btn-ignore" @click="ignoreFix(issue)">
-                × 忽略
-              </button>
+            <!-- 错误与建议 -->
+            <div class="error-text">
+              <span class="label">错误:</span>
+              <span class="text original">{{ issue.error.original }}</span>
             </div>
+            <div class="correct-text">
+              <span class="label">建议:</span>
+              <span class="text suggestion">{{ issue.error.corrected }}</span>
+            </div>
+          </div>
+
+          <div class="issue-actions">
+            <button class="btn-apply" @click="applyFix(issue)">
+              ✓ 修改
+            </button>
+            <button class="btn-ignore" @click="ignoreFix(issue)">
+              × 忽略
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </Popup>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -137,24 +137,11 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   max-height: 500px;
   overflow-y: auto;
 }
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 0;
-  color: var(--text-tertiary);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
 .issues-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-
 .issues-header {
   display: flex;
   justify-content: space-between;
@@ -163,12 +150,10 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
 }
-
 .total-count {
   font-weight: 500;
   color: var(--text-primary);
 }
-
 .btn-apply-all {
   padding: 0.375rem 0.75rem;
   background-color: var(--primary);
@@ -179,17 +164,14 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   font-size: 0.875rem;
   transition: opacity 0.2s;
 }
-
 .btn-apply-all:hover {
   opacity: 0.9;
 }
-
 .issues-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .issue-item {
   padding: .5rem;
   background-color: var(--background-secondary);
@@ -198,11 +180,9 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   border-radius: 0.25rem;
   transition: box-shadow 0.2s;
 }
-
 .issue-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .issue-header {
   display: flex;
   justify-content: space-between;
@@ -211,31 +191,26 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .line-number {
   font-weight: 500;
   color: var(--primary);
   font-size: 0.875rem;
 }
-
 .position {
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
-
 .issue-content {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
-
 .sentence-display {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .sentence-text {
   padding: 0.5rem;
   background-color: var(--background-tertiary);
@@ -244,7 +219,6 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   line-height: 1.6;
   font-size: 0.95rem;
 }
-
 .error-highlight {
   color: #dc3545;
   font-weight: 600;
@@ -254,44 +228,37 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   text-decoration: underline wavy #dc3545;
   text-underline-offset: 2px;
 }
-
 .error-text,
 .correct-text {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .label {
   font-size: 0.875rem;
   color: var(--text-secondary);
   min-width: 3rem;
 }
-
 .text {
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
-
 .text.original {
   background-color: rgba(255, 77, 79, 0.1);
   color: var(--danger);
   text-decoration: line-through;
 }
-
 .text.suggestion {
   background-color: rgba(82, 196, 26, 0.1);
   color: var(--success);
   font-weight: 500;
 }
-
 .issue-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
 }
-
 .btn-apply,
 .btn-ignore {
   padding: 0.375rem 0.75rem;
@@ -301,17 +268,14 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   font-size: 0.875rem;
   transition: opacity 0.2s;
 }
-
 .btn-apply {
   background-color: var(--success);
   color: white;
 }
-
 .btn-ignore {
   background-color: var(--background-tertiary);
   color: var(--text-secondary);
 }
-
 .btn-apply:hover,
 .btn-ignore:hover {
   opacity: 0.9;

@@ -159,7 +159,6 @@ function closeEditor() {
   height: 100%;
   background-color: var(--background-secondary);
 }
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -168,12 +167,10 @@ function closeEditor() {
   border-bottom: 1px solid var(--border-color);
   background-color: var(--background-secondary);
 }
-
 .header h3 {
   margin: 0;
   color: var(--text-primary);
 }
-
 .btn-create {
   padding: 0.25rem 0.5rem;
   background-color: var(--primary);
@@ -184,19 +181,11 @@ function closeEditor() {
   font-size: 0.85rem;
   transition: all 0.2s;
 }
-
 .draft-list {
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
 }
-
-.empty-state {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-tertiary);
-}
-
 .draft-item {
   display: flex;
   justify-content: space-between;
@@ -209,27 +198,22 @@ function closeEditor() {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .draft-item:hover {
   background-color: var(--background-tertiary);
   border-color: var(--primary);
 }
-
 .draft-info {
   flex: 1;
 }
-
 .draft-title {
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
-
 .draft-time {
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
-
 .btn-delete {
   padding: 0.25rem 0.5rem;
   background: transparent;
@@ -238,14 +222,12 @@ function closeEditor() {
   font-size: 1rem;
   opacity: 0.6;
 }
-
 .editor-container {
   display: flex;
   flex-direction: column;
   flex: 1;
   height: 0;
 }
-
 .editor-header {
   display: flex;
   flex-direction: column;
@@ -254,7 +236,6 @@ function closeEditor() {
   border-bottom: 1px solid var(--border-color);
   background-color: var(--background-secondary);
 }
-
 .draft-title-input {
   width: 100%;
   padding: 0.5rem;
@@ -264,12 +245,10 @@ function closeEditor() {
   color: var(--text-primary);
   font-size: 1rem;
 }
-
 .editor-actions {
   display: flex;
   gap: 0.5rem;
 }
-
 .btn-save,
 .btn-close {
   padding: 0.25rem 0.5rem;
@@ -279,23 +258,19 @@ function closeEditor() {
   font-size: 0.85rem;
   transition: all 0.2s;
 }
-
 .btn-save {
   background-color: var(--primary);
   color: white;
   border-color: var(--primary);
 }
-
 .btn-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .btn-close {
   background-color: var(--background-tertiary);
   color: var(--text-primary);
 }
-
 .markdown-editor {
   flex: 1;
   overflow: hidden;
@@ -303,7 +278,6 @@ function closeEditor() {
   display: flex;
   flex-direction: column;
 }
-
 .draft-textarea {
   flex: 1;
   width: 100%;

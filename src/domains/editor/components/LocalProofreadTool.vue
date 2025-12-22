@@ -313,19 +313,6 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 
 <template>
 <div class="local-proofread-tool">
-  <!-- 服务状态 -->
-  <div class="service-status">
-    <div class="status-text">
-      <span>服务状态：</span>
-      <span :class="['status-indicator', isServiceEnabled ? 'enabled' : 'disabled']">
-        {{ proofreadState }}
-      </span>
-    </div>
-    <button v-if="!isServiceEnabled" @click="checkServiceAvailability" class="btn-refresh">
-      🔄 重新检查
-    </button>
-  </div>
-
   <!-- 操作按钮 -->
   <div class="action-buttons">
     <button @click="startProofread" :disabled="!isServiceEnabled || isProofreading" class="btn-primary">
@@ -425,39 +412,25 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   gap: 1rem;
   height: 100%;
 }
-
-.service-status {
-  padding: 1rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .status-text {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
 }
-
 .status-indicator {
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 0.25rem;
 }
-
 .status-indicator.enabled {
   color: #28a745;
   background-color: rgba(40, 167, 69, 0.1);
 }
-
 .status-indicator.disabled {
   color: #dc3545;
   background-color: rgba(220, 53, 69, 0.1);
 }
-
 .btn-refresh {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
@@ -467,35 +440,14 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   border-radius: 0.25rem;
   cursor: pointer;
 }
-
 .btn-refresh:hover {
   opacity: 0.9;
 }
-
 .action-buttons {
   padding: 0 .5rem;
   display: flex;
   gap: 0.75rem;
 }
-
-.btn-primary {
-  flex: 1;
-  padding: .5rem;
-  font-size: .8rem;
-  font-weight: 600;
-  background-color: var(--primary);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  font-size: 0.8rem;
-  background-color: var(--background-tertiary);
-}
-
 .hint-message {
   padding: 1.5rem;
   background-color: rgba(255, 193, 7, 0.1);
@@ -503,24 +455,20 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   border-radius: 0.5rem;
   text-align: center;
 }
-
 .hint-message p {
   margin: 0.5rem 0;
   color: var(--text-primary);
 }
-
 .hint-desc {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-
 .issues-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-
 .issues-header {
   display: flex;
   justify-content: space-between;
@@ -530,52 +478,24 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   border-radius: 0.5rem 0.5rem 0 0;
   border-bottom: 1px solid var(--border-color);
 }
-
 .stats {
   display: flex;
   gap: 1rem;
 }
-
 .total-count {
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .batch-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.btn-small {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.btn-small:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .issues-list {
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
 }
-
 .issue-item {
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
@@ -583,7 +503,6 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   padding: .5rem;
   margin-bottom: 0.75rem;
 }
-
 .issue-header {
   display: flex;
   justify-content: space-between;
@@ -592,30 +511,25 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .line-number {
   font-weight: 600;
   color: var(--primary);
 }
-
 .position {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-
 .issue-content {
   margin-bottom: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .sentence-display {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .sentence-text {
   padding: 0.5rem;
   background-color: var(--background-tertiary);
@@ -624,7 +538,6 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   line-height: 1.6;
   font-size: 0.95rem;
 }
-
 .error-highlight {
   color: #dc3545;
   font-weight: 600;
@@ -634,54 +547,45 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   text-decoration: underline wavy #dc3545;
   text-underline-offset: 2px;
 }
-
 .error-info {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .error-text,
 .correct-text {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-
 .label {
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
-
 .text {
   font-weight: 500;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
-
 .text.original {
   color: #dc3545;
   background-color: rgba(220, 53, 69, 0.1);
   text-decoration: line-through;
 }
-
 .text.suggestion {
   color: #28a745;
   background-color: rgba(40, 167, 69, 0.1);
 }
-
 .arrow {
   color: var(--text-secondary);
   font-weight: bold;
 }
-
 .issue-actions {
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
 }
-
 .btn-apply,
 .btn-ignore {
   font-size: 0.8rem;
@@ -690,35 +594,15 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   cursor: pointer;
   transition: opacity 0.2s;
 }
-
 .btn-apply {
   background-color: #28a745;
   color: white;
 }
-
 .btn-ignore {
   background-color: var(--background-tertiary);
   color: var(--text-secondary);
 }
-
 .btn-ignore:hover {
   background-color: var(--background-secondary);
-}
-
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
 }
 </style>

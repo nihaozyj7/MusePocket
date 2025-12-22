@@ -410,168 +410,168 @@ function applyIssue(issue: ProofreadIssue) {
                     </script>
 
                     <template>
-                      <div class="proofread-tool">
-                        <div class="tool-header">
-                          <h3>✅ 文本校对</h3>
-                        </div>
+                    <div class="proofread-tool">
+                      <div class="tool-header">
+                        <h3>✅ 文本校对</h3>
+                      </div>
 
-                        <!-- 主标签页 -->
-                        <div class="main-tabs" v-if="showLocalProofread">
-                          <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
-                            🔍 纠错
-                          </button>
-                          <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
-                            🤖 AI校对
-                          </button>
-                        </div>
+                      <!-- 主标签页 -->
+                      <div class="tabs" v-if="showLocalProofread">
+                        <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
+                          🔍 纠错
+                        </button>
+                        <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
+                          🤖 AI校对
+                        </button>
+                      </div>
 
-                        <div class="tool-body">
-                          <!-- AI校对内容 -->
-                          <div v-show="mainTab === 'ai'" class="tab-content">
-                            <!-- 配置区域 -->
-                            <div class="config-section">
-                              <div class="form-item">
-                                <label>AI 模型</label>
-                                <select v-model="selectedModel">
-                                  <option :value="null" disabled>请选择模型</option>
-                                  <option v-for="model in modelOptions" :key="model.model" :value="model">
-                                    {{ model.note || model.model }}
+                      <div class="tool-body">
+                        <!-- AI校对内容 -->
+                        <div v-show="mainTab === 'ai'" class="tab-content">
+                          <!-- 配置区域 -->
+                          <div class="config-section">
+                            <div class="form-item">
+                              <label>AI 模型</label>
+                              <select v-model="selectedModel">
+                                <option :value="null" disabled>请选择模型</option>
+                                <option v-for="model in modelOptions" :key="model.model" :value="model">
+                                  {{ model.note || model.model }}
+                                </option>
+                              </select>
+                            </div>
+
+                            <div class="form-item">
+                              <label>校对场景</label>
+                              <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
+                                <option value="">选择校对场景（可选）</option>
+                                <optgroup label="内置场景">
+                                  <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
+                                    {{ preset.title }}
+                                  </option>
+                                </optgroup>
+                                <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
+                                  <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
+                                    {{ preset.title }}
+                                  </option>
+                                </optgroup>
+                              </select>
+                              <p v-if="selectedPreset" class="preset-description">
+                                {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
+                              </p>
+                            </div>
+
+                            <div class="form-item">
+                              <label>校对提示词</label>
+                              <div class="prompt-selector-wrapper">
+                                <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
+                                  <option value="">从提示词库快速选择（可选）</option>
+                                  <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
+                                    {{ prompt.title }}
                                   </option>
                                 </select>
                               </div>
+                              <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
+                            </div>
 
-                              <div class="form-item">
-                                <label>校对场景</label>
-                                <select v-model="selectedPreset" @change="onPresetChange(selectedPreset)" class="select-box">
-                                  <option value="">选择校对场景（可选）</option>
-                                  <optgroup label="内置场景">
-                                    <option v-for="preset in allPresetOptions.filter(p => p.isBuiltin)" :key="preset.id" :value="preset.id">
-                                      {{ preset.title }}
-                                    </option>
-                                  </optgroup>
-                                  <optgroup label="自定义提示词" v-if="allPresetOptions.filter(p => !p.isBuiltin).length > 0">
-                                    <option v-for="preset in allPresetOptions.filter(p => !p.isBuiltin)" :key="preset.id" :value="preset.id">
-                                      {{ preset.title }}
-                                    </option>
-                                  </optgroup>
-                                </select>
-                                <p v-if="selectedPreset" class="preset-description">
-                                  {{allPresetOptions.find(p => p.id === selectedPreset)?.description}}
-                                </p>
+                            <div class="actions">
+                              <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
+                                {{ isProofreading ? '校对中...' : '开始校对' }}
+                              </button>
+                            </div>
+
+                            <div class="progress" v-if="progress">
+                              {{ progress }}
+                            </div>
+                          </div>
+
+                          <!-- 标签页 -->
+                          <div class="tabs" v-if="issues.length > 0">
+                            <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
+                              纠错 ({{ issues.length }})
+                            </button>
+                            <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
+                              预览
+                            </button>
+                          </div>
+
+                          <!-- 问题列表 -->
+                          <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
+                            <div class="issues-header">
+                              <div class="stats">
+                                <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
+                                <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
+                                <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
                               </div>
-
-                              <div class="form-item">
-                                <label>校对提示词</label>
-                                <div class="prompt-selector-wrapper">
-                                  <select @change="selectProofreadPrompt(($event.target as HTMLSelectElement).value)" class="prompt-quick-select">
-                                    <option value="">从提示词库快速选择（可选）</option>
-                                    <option v-for="prompt in promptOptions" :key="prompt.id" :value="prompt.id">
-                                      {{ prompt.title }}
-                                    </option>
-                                  </select>
-                                </div>
-                                <textarea v-model="selectedPrompt" placeholder="输入校对提示词或从上方快速选择..." rows="4"></textarea>
-                              </div>
-
-                              <div class="actions">
-                                <button class="btn-primary" :disabled="!canProofread || isProofreading" @click="startProofread">
-                                  {{ isProofreading ? '校对中...' : '开始校对' }}
+                              <div class="batch-actions">
+                                <label class="checkbox-label">
+                                  <input type="checkbox" v-model="isAllSelected" />
+                                  全选
+                                </label>
+                                <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
+                                  全部修改
                                 </button>
                               </div>
-
-                              <div class="progress" v-if="progress">
-                                {{ progress }}
-                              </div>
                             </div>
 
-                            <!-- 标签页 -->
-                            <div class="tabs" v-if="issues.length > 0">
-                              <button :class="{ active: activeTab === 'errors' }" @click="activeTab = 'errors'">
-                                纠错 ({{ issues.length }})
-                              </button>
-                              <button :class="{ active: activeTab === 'preview' }" @click="activeTab = 'preview'">
-                                预览
-                              </button>
-                            </div>
-
-                            <!-- 问题列表 -->
-                            <div class="issues-section" v-if="activeTab === 'errors' && issues.length > 0">
-                              <div class="issues-header">
-                                <div class="stats">
-                                  <span class="stat-item error">❌ 错误 {{ issueStats.error }}</span>
-                                  <span class="stat-item warning">⚠️ 警告 {{ issueStats.warning }}</span>
-                                  <span class="stat-item suggestion">💡 建议 {{ issueStats.suggestion }}</span>
-                                </div>
-                                <div class="batch-actions">
+                            <div class="issues-list">
+                              <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
+                                <div class="issue-header">
                                   <label class="checkbox-label">
-                                    <input type="checkbox" v-model="isAllSelected" />
-                                    全选
+                                    <input type="checkbox" v-model="issue.selected" />
                                   </label>
-                                  <button class="btn-small" :disabled="!issues.some(i => i.selected)" @click="applyAllSelected">
-                                    全部修改
+                                  <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
+                                  <span class="issue-category">{{ issue.category }}</span>
+                                </div>
+
+                                <div class="issue-content">
+                                  <div class="issue-row">
+                                    <span class="label">发现：</span>
+                                    <span class="original-text">{{ issue.original }}</span>
+                                  </div>
+                                  <div class="issue-row" v-if="issue.suggestion">
+                                    <span class="label">建议：</span>
+                                    <span class="suggestion-text">{{ issue.suggestion }}</span>
+                                  </div>
+                                  <div class="issue-row" v-if="issue.reason">
+                                    <span class="label">原因：</span>
+                                    <span class="reason-text">{{ issue.reason }}</span>
+                                  </div>
+                                </div>
+
+                                <div class="issue-actions">
+                                  <button class="btn-action btn-apply" @click="applyIssue(issue)">
+                                    修改
+                                  </button>
+                                  <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
+                                    忽略
                                   </button>
                                 </div>
                               </div>
-
-                              <div class="issues-list">
-                                <div v-for="issue in filteredIssues" :key="issue.id" class="issue-item" :class="getIssueColorClass(issue.type)">
-                                  <div class="issue-header">
-                                    <label class="checkbox-label">
-                                      <input type="checkbox" v-model="issue.selected" />
-                                    </label>
-                                    <span class="issue-icon">{{ getIssueIcon(issue.type) }}</span>
-                                    <span class="issue-category">{{ issue.category }}</span>
-                                  </div>
-
-                                  <div class="issue-content">
-                                    <div class="issue-row">
-                                      <span class="label">发现：</span>
-                                      <span class="original-text">{{ issue.original }}</span>
-                                    </div>
-                                    <div class="issue-row" v-if="issue.suggestion">
-                                      <span class="label">建议：</span>
-                                      <span class="suggestion-text">{{ issue.suggestion }}</span>
-                                    </div>
-                                    <div class="issue-row" v-if="issue.reason">
-                                      <span class="label">原因：</span>
-                                      <span class="reason-text">{{ issue.reason }}</span>
-                                    </div>
-                                  </div>
-
-                                  <div class="issue-actions">
-                                    <button class="btn-action btn-apply" @click="applyIssue(issue)">
-                                      修改
-                                    </button>
-                                    <button class="btn-action btn-ignore" @click="ignoreIssue(issue)">
-                                      忽略
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <!-- 预览 -->
-                            <div class="preview-section" v-if="activeTab === 'preview'">
-                              <div class="preview-header">
-                                <h4>AI 返回内容</h4>
-                              </div>
-                              <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
-                            </div>
-
-                            <!-- 空状态 -->
-                            <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
-                              <div class="empty-icon">✅</div>
-                              <p>选择AI模型和提示词，点击“开始校对”进行文本校对</p>
                             </div>
                           </div>
 
-                          <!-- 本地纠错内容 -->
-                          <div v-show="mainTab === 'local'" class="tab-content">
-                            <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
+                          <!-- 预览 -->
+                          <div class="preview-section" v-if="activeTab === 'preview'">
+                            <div class="preview-header">
+                              <h4>AI 返回内容</h4>
+                            </div>
+                            <pre class="preview-content">{{ aiRawResponse || '暂无数据' }}</pre>
+                          </div>
+
+                          <!-- 空状态 -->
+                          <div class="empty-state" v-if="!isProofreading && issues.length === 0 && !progress">
+                            <div class="empty-icon">✅</div>
+                            <p>选择AI模型和提示词，点击“开始校对”进行文本校对</p>
                           </div>
                         </div>
+
+                        <!-- 本地纠错内容 -->
+                        <div v-show="mainTab === 'local'" class="tab-content">
+                          <LocalProofreadTool :getEditorBody="props.getEditorBody" @apply-fix="handleLocalProofreadFix" @apply-all="handleLocalProofreadAll" />
+                        </div>
                       </div>
-                    </template>
+                    </div>
+                  </template>
 
                     <style scoped>
                     .proofread-tool {
@@ -582,111 +582,34 @@ function applyIssue(issue: ProofreadIssue) {
                       flex-direction: column;
                       background-color: var(--background-secondary);
                     }
-
                     .tool-header {
                       padding: 1rem;
                       border-bottom: 1px solid var(--border-color);
                       background-color: var(--background-secondary);
                     }
-
                     .tool-header h3 {
                       margin: 0;
                       font-size: 1rem;
                       color: var(--text-primary);
                     }
-
-                    .main-tabs {
-                      display: flex;
-                      justify-content: space-between;
-                      background-color: var(--background-tertiary);
-                      height: 2.2rem;
-                      border-radius: 0.25rem;
-                      overflow: hidden;
-                      margin: 0.5rem 1rem;
-                      border-bottom: 1px solid var(--border-color);
-                    }
-
-                    .main-tabs button {
-                      flex: 1;
-                      margin: 0;
-                      padding: 0.25rem 0.5rem;
-                      border-right: 1px solid var(--border-color);
-                      border-radius: 0;
-                      background: none;
-                      border-top: none;
-                      border-left: none;
-                      border-bottom: none;
-                      color: var(--text-secondary);
-                      font-size: 0.9rem;
-                      font-weight: 500;
-                      cursor: pointer;
-                      transition: all 0.2s;
-                    }
-
-                    .main-tabs button:last-child {
-                      border-right: none;
-                    }
-
-                    .main-tabs button:hover {
-                      color: var(--text-primary);
-                    }
-
-                    .main-tabs button.active {
-                      color: var(--primary);
-                      border-bottom: 1px solid var(--primary);
-                    }
-
                     .tool-body {
                       flex: 1;
                       overflow-y: auto;
                       display: flex;
                       flex-direction: column;
                     }
-
                     .tab-content {
                       flex: 1;
                       display: flex;
                       flex-direction: column;
                     }
-
                     .config-section {
                       margin-bottom: 1rem;
                       padding: .5rem;
                     }
-
-                    .form-item {
-                      margin-bottom: 1rem;
-                    }
-
-                    .form-item label {
-                      display: block;
-                      margin-bottom: 0.5rem;
-                      font-size: 0.875rem;
-                      color: var(--text-secondary);
-                      font-weight: 500;
-                    }
-
-                    .form-item select,
-                    .form-item textarea {
-                      width: 100%;
-                      padding: 0.5rem;
-                      border: 1px solid var(--border-color);
-                      border-radius: 0.25rem;
-                      background-color: var(--background-secondary);
-                      color: var(--text-primary);
-                      font-size: 0.875rem;
-                    }
-
-                    .form-item textarea {
-                      resize: vertical;
-                      min-height: 80px;
-                      font-family: monospace;
-                    }
-
                     .prompt-selector-wrapper {
                       margin-bottom: 0.5rem;
                     }
-
                     .prompt-quick-select {
                       width: 100%;
                       padding: 0.375rem 0.5rem;
@@ -697,42 +620,17 @@ function applyIssue(issue: ProofreadIssue) {
                       font-size: 0.8rem;
                       cursor: pointer;
                     }
-
                     .prompt-quick-select:focus {
                       outline: none;
                       border-color: var(--primary);
                       color: var(--text-primary);
                     }
-
                     .preset-description {
                       margin-top: 0.4rem;
                       font-size: 0.8rem;
                       color: var(--text-tertiary);
                       line-height: 1.4;
                     }
-
-                    .actions {
-                      display: flex;
-                      gap: 0.5rem;
-                    }
-
-                    .btn-primary {
-                      flex: 1;
-                      padding: 0.625rem 1rem;
-                      background-color: var(--primary);
-                      color: white;
-                      border: none;
-                      border-radius: 0.25rem;
-                      font-weight: 500;
-                      cursor: pointer;
-                      transition: background-color 0.2s;
-                    }
-
-                    .btn-primary:disabled {
-                      opacity: 0.5;
-                      cursor: not-allowed;
-                    }
-
                     .progress {
                       margin-top: 0.5rem;
                       padding: 0.5rem;
@@ -742,45 +640,9 @@ function applyIssue(issue: ProofreadIssue) {
                       color: var(--text-secondary);
                       text-align: center;
                     }
-
-                    .tabs {
-                      display: flex;
-                      justify-content: space-between;
-                      background-color: var(--background-tertiary);
-                      height: 2.2rem;
-                      border-radius: 0.25rem;
-                      overflow: hidden;
-                      margin-bottom: 1rem;
-                    }
-
-                    .tabs button {
-                      flex: 1;
-                      margin: 0;
-                      padding: 0.25rem 0.5rem;
-                      border-right: 1px solid var(--border-color);
-                      border-radius: 0;
-                      background: none;
-                      border-top: none;
-                      border-left: none;
-                      border-bottom: none;
-                      color: var(--text-secondary);
-                      cursor: pointer;
-                      transition: all 0.2s;
-                    }
-
-                    .tabs button:last-child {
-                      border-right: none;
-                    }
-
-                    .tabs button.active {
-                      color: var(--primary);
-                      border-bottom: 1px solid var(--primary);
-                    }
-
                     .issues-section {
                       flex: 1;
                     }
-
                     .issues-header {
                       display: flex;
                       justify-content: space-between;
@@ -790,66 +652,35 @@ function applyIssue(issue: ProofreadIssue) {
                       background-color: var(--background-secondary);
                       border-radius: 0.25rem;
                     }
-
                     .stats {
                       display: flex;
                       gap: 1rem;
                       font-size: 0.875rem;
                     }
-
                     .stat-item {
                       display: flex;
                       align-items: center;
                       gap: 0.25rem;
                     }
-
                     .stat-item.error {
                       color: var(--danger);
                     }
-
                     .stat-item.warning {
                       color: var(--warning);
                     }
-
                     .stat-item.suggestion {
                       color: var(--info);
                     }
-
                     .batch-actions {
                       display: flex;
                       align-items: center;
                       gap: 0.5rem;
                     }
-
-                    .checkbox-label {
-                      display: flex;
-                      align-items: center;
-                      gap: 0.25rem;
-                      font-size: 0.875rem;
-                      cursor: pointer;
-                    }
-
-                    .btn-small {
-                      padding: 0.25rem 0.75rem;
-                      font-size: 0.875rem;
-                      background-color: var(--primary);
-                      color: white;
-                      border: none;
-                      border-radius: 0.25rem;
-                      cursor: pointer;
-                    }
-
-                    .btn-small:disabled {
-                      opacity: 0.5;
-                      cursor: not-allowed;
-                    }
-
                     .issues-list {
                       display: flex;
                       flex-direction: column;
                       gap: 0.75rem;
                     }
-
                     .issue-item {
                       padding: .5rem;
                       background-color: var(--background-secondary);
@@ -857,77 +688,62 @@ function applyIssue(issue: ProofreadIssue) {
                       border-left: 3px solid var(--border-color);
                       transition: all 0.2s;
                     }
-
                     .issue-item:hover {
                       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     }
-
                     .issue-item.issue-error {
                       border-left-color: var(--danger);
                     }
-
                     .issue-item.issue-warning {
                       border-left-color: var(--warning);
                     }
-
                     .issue-item.issue-suggestion {
                       border-left-color: var(--info);
                     }
-
                     .issue-header {
                       display: flex;
                       align-items: center;
                       gap: 0.5rem;
                       margin-bottom: 0.75rem;
                     }
-
                     .issue-icon {
                       font-size: 1rem;
                     }
-
                     .issue-category {
                       font-weight: 600;
                       color: var(--text-primary);
                       font-size: 0.875rem;
                     }
-
                     .issue-content {
                       margin-bottom: 0.75rem;
                     }
-
                     .issue-row {
                       display: flex;
                       gap: 0.5rem;
                       margin-bottom: 0.5rem;
                       font-size: 0.875rem;
                     }
-
                     .issue-row .label {
                       color: var(--text-secondary);
                       font-weight: 500;
                       min-width: 3rem;
                     }
-
                     .original-text {
                       color: var(--danger);
                       text-decoration: line-through;
                     }
-
                     .suggestion-text {
                       color: var(--success);
                       font-weight: 500;
                     }
-
                     .reason-text {
                       color: var(--text-secondary);
                       font-style: italic;
                     }
-
                     .issue-actions {
                       display: flex;
                       gap: 0.5rem;
                     }
-
                     .btn-action {
                       padding: 0.375rem 0.75rem;
                       font-size: 0.875rem;
@@ -936,32 +752,26 @@ function applyIssue(issue: ProofreadIssue) {
                       cursor: pointer;
                       transition: all 0.2s;
                     }
-
                     .btn-apply {
                       background-color: var(--primary);
                       color: white;
                       border-color: var(--primary);
                     }
-
                     .btn-ignore {
                       background-color: var(--background-tertiary);
                       color: var(--text-secondary);
                     }
-
                     .preview-section {
                       flex: 1;
                     }
-
                     .preview-header {
                       margin-bottom: 1rem;
                     }
-
                     .preview-header h4 {
                       margin: 0;
                       font-size: 0.875rem;
                       color: var(--text-secondary);
                     }
-
                     .preview-content {
                       padding: 1rem;
                       background-color: var(--background-secondary);
@@ -973,25 +783,5 @@ function applyIssue(issue: ProofreadIssue) {
                       word-wrap: break-word;
                       max-height: 500px;
                       overflow-y: auto;
-                    }
-
-                    .empty-state {
-                      display: flex;
-                      flex-direction: column;
-                      align-items: center;
-                      justify-content: center;
-                      padding: 3rem 1rem;
-                      text-align: center;
-                      color: var(--text-tertiary);
-                    }
-
-                    .empty-icon {
-                      font-size: 3rem;
-                      margin-bottom: 1rem;
-                    }
-
-                    .empty-state p {
-                      font-size: 0.875rem;
-                      margin: 0;
                     }
                   </style>

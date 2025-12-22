@@ -151,43 +151,43 @@ function handleFileChange(event: Event) {
 </script>
 
 <template>
-  <div class="entity-import-export">
-    <div class="content">
-      <div class="section">
-        <h3>📤 导出实体</h3>
-        <p class="description">
-          将当前书籍的所有实体导出为JSON文件
-        </p>
-        <button @click="exportEntities" :disabled="isExporting" class="btn-primary">
-          {{ isExporting ? '导出中...' : '💾 导出实体' }}
-        </button>
-      </div>
+<div class="entity-import-export">
+  <div class="content">
+    <div class="section">
+      <h3>📤 导出实体</h3>
+      <p class="description">
+        将当前书籍的所有实体导出为JSON文件
+      </p>
+      <button @click="exportEntities" :disabled="isExporting" class="btn-primary">
+        {{ isExporting ? '导出中...' : '💾 导出实体' }}
+      </button>
+    </div>
 
-      <div class="divider"></div>
+    <div class="divider"></div>
 
-      <div class="section">
-        <h3>📥 导入实体</h3>
-        <p class="description">
-          从 JSON 文件导入实体到当前书籍<br />
-          <span class="warning">⚠️ 注意：导入的实体将自动归属于当前书籍</span>
-        </p>
-        <input ref="fileInputRef" type="file" accept=".json" @change="handleFileChange" style="display: none;" />
-        <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary">
-          {{ isImporting ? '导入中...' : '📁 选择JSON文件' }}
-        </button>
-      </div>
+    <div class="section">
+      <h3>📥 导入实体</h3>
+      <p class="description">
+        从 JSON 文件导入实体到当前书籍<br />
+        <span class="warning">⚠️ 注意：导入的实体将自动归属于当前书籍</span>
+      </p>
+      <input ref="fileInputRef" type="file" accept=".json" @change="handleFileChange" style="display: none;" />
+      <button @click="triggerFileInput" :disabled="isImporting" class="btn-primary">
+        {{ isImporting ? '导入中...' : '📁 选择JSON文件' }}
+      </button>
+    </div>
 
-      <div class="info-box">
-        <h4>💡 使用说明</h4>
-        <ul>
-          <li>导出：将当前书籍的所有实体保存为JSON文件</li>
-          <li>导入：从 JSON 文件导入实体，会生成新的ID</li>
-          <li>导入时会忽略原文件中的书籍ID，强制归属于当前书籍</li>
-          <li>支持在不同书籍之间复制实体</li>
-        </ul>
-      </div>
+    <div class="info-box">
+      <h4>💡 使用说明</h4>
+      <ul>
+        <li>导出：将当前书籍的所有实体保存为JSON文件</li>
+        <li>导入：从 JSON 文件导入实体，会生成新的ID</li>
+        <li>导入时会忽略原文件中的书籍ID，强制归属于当前书籍</li>
+        <li>支持在不同书籍之间复制实体</li>
+      </ul>
     </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -198,80 +198,17 @@ function handleFileChange(event: Event) {
   overflow-y: auto;
   padding: 1rem;
 }
-
 .content {
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
 }
-
 .section {
   margin-bottom: 1.25rem;
 }
-
 .section h3 {
   color: var(--text-primary);
   margin-bottom: 0.6rem;
   font-size: 0.95rem;
-}
-
-.description {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  margin-bottom: 0.75rem;
-}
-
-.warning {
-  color: #ff9800;
-  font-size: 0.8rem;
-}
-
-.btn-primary {
-  padding: .25rem .5rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 1.25rem 0;
-}
-
-.info-box {
-  background-color: var(--background-secondary);
-  border-left: 3px solid var(--primary);
-  padding: 0.75rem;
-  border-radius: 0.25rem;
-  margin-top: 1.25rem;
-}
-
-.info-box h4 {
-  color: var(--text-primary);
-  margin: 0 0 0.6rem 0;
-  font-size: 0.875rem;
-}
-
-.info-box ul {
-  margin: 0;
-  padding-left: 1.5rem;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  line-height: 1.6;
-}
-
-.info-box li {
-  margin-bottom: 0.2rem;
 }
 </style>

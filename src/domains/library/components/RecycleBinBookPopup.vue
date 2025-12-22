@@ -156,51 +156,51 @@ function formatDate(timestamp: number): string {
 </script>
 
 <template>
-  <Popup ref="popupRef" title="🗑️ 回收站 - 书籍" :draggable="true" :mask-closable="true">
-    <div class="recycle-bin-container">
-      <!-- 顶部操作栏 -->
-      <div class="toolbar">
-        <div class="info">
-          共 {{ deletedBooks.length }} 本已删除的书籍
-        </div>
-        <button class="button-danger" @click="handleClearAll" :disabled="deletedBooks.length === 0 || loading">
-          🗑️ 清空回收站
-        </button>
+<Popup ref="popupRef" title="🗑️ 回收站 - 书籍" :draggable="true" :mask-closable="true">
+  <div class="recycle-bin-container">
+    <!-- 顶部操作栏 -->
+    <div class="toolbar">
+      <div class="info">
+        共 {{ deletedBooks.length }} 本已删除的书籍
       </div>
+      <button class="button-danger" @click="handleClearAll" :disabled="deletedBooks.length === 0 || loading">
+        🗑️ 清空回收站
+      </button>
+    </div>
 
-      <!-- 书籍列表 -->
-      <div class="content">
-        <div v-if="loading" class="loading">
-          加载中...
-        </div>
-        <div v-else-if="deletedBooks.length === 0" class="empty">
-          <div class="empty-icon">📭</div>
-          <p>回收站是空的</p>
-        </div>
-        <div v-else class="book-list">
-          <div v-for="book in deletedBooks" :key="book.id" class="book-item">
-            <img :src="getBookCoverUrl(book.id)" class="book-cover" />
-            <div class="book-info">
-              <h4 class="book-title">{{ book.title }}</h4>
-              <p class="book-desc">{{ book.description || '暂无描述' }}</p>
-              <div class="book-meta">
-                <span>🗑️ 删除于 {{ formatTime(book.deletedTime) }}</span>
-                <span>📅 {{ formatDate(book.deletedTime) }}</span>
-              </div>
+    <!-- 书籍列表 -->
+    <div class="content">
+      <div v-if="loading" class="loading">
+        加载中...
+      </div>
+      <div v-else-if="deletedBooks.length === 0" class="empty">
+        <div class="empty-icon">📭</div>
+        <p>回收站是空的</p>
+      </div>
+      <div v-else class="book-list">
+        <div v-for="book in deletedBooks" :key="book.id" class="book-item">
+          <img :src="getBookCoverUrl(book.id)" class="book-cover" />
+          <div class="book-info">
+            <h4 class="book-title">{{ book.title }}</h4>
+            <p class="book-desc">{{ book.description || '暂无描述' }}</p>
+            <div class="book-meta">
+              <span>🗑️ 删除于 {{ formatTime(book.deletedTime) }}</span>
+              <span>📅 {{ formatDate(book.deletedTime) }}</span>
             </div>
-            <div class="book-actions">
-              <button class="button-primary" @click="handleRestore(book)" :disabled="loading">
-                ♻️ 恢复
-              </button>
-              <button class="button-danger" @click="handlePermanentDelete(book)" :disabled="loading">
-                ❌ 永久删除
-              </button>
-            </div>
+          </div>
+          <div class="book-actions">
+            <button class="button-primary" @click="handleRestore(book)" :disabled="loading">
+              ♻️ 恢复
+            </button>
+            <button class="button-danger" @click="handlePermanentDelete(book)" :disabled="loading">
+              ❌ 永久删除
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </Popup>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -210,7 +210,6 @@ function formatDate(timestamp: number): string {
   display: flex;
   flex-direction: column;
 }
-
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -219,12 +218,10 @@ function formatDate(timestamp: number): string {
   border-bottom: 1px solid var(--border-color);
   background-color: var(--background-secondary);
 }
-
 .info {
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
-
 .button-primary,
 .button-danger {
   padding: 0.4rem 0.8rem;
@@ -233,29 +230,24 @@ function formatDate(timestamp: number): string {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .button-primary {
   background-color: var(--primary);
   color: white;
 }
-
 .button-danger {
   background-color: #ef4444;
   color: white;
 }
-
 .button-primary:disabled,
 .button-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .content {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
 }
-
 .loading {
   display: flex;
   justify-content: center;
@@ -263,7 +255,6 @@ function formatDate(timestamp: number): string {
   height: 100%;
   color: var(--text-secondary);
 }
-
 .empty {
   display: flex;
   flex-direction: column;
@@ -272,19 +263,11 @@ function formatDate(timestamp: number): string {
   height: 100%;
   color: var(--text-secondary);
 }
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
 .book-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .book-item {
   display: flex;
   align-items: start;
@@ -294,12 +277,10 @@ function formatDate(timestamp: number): string {
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
-
 .book-item:hover {
   background-color: var(--background-tertiary);
   border-color: var(--primary);
 }
-
 .book-cover {
   width: 4rem;
   height: 6rem;
@@ -308,19 +289,16 @@ function formatDate(timestamp: number): string {
   margin-right: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .book-info {
   flex: 1;
   min-width: 0;
 }
-
 .book-title {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
-
 .book-desc {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -333,21 +311,18 @@ function formatDate(timestamp: number): string {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .book-meta {
   display: flex;
   gap: 1rem;
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
-
 .book-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-left: 1rem;
 }
-
 .book-actions button {
   min-width: 100px;
 }

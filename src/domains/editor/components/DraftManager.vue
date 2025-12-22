@@ -231,7 +231,7 @@ function closeEditor() {
 .editor-header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
   padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--background-secondary);
@@ -247,7 +247,7 @@ function closeEditor() {
 }
 .editor-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .btn-save,
 .btn-close {

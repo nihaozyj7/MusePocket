@@ -164,7 +164,7 @@ async function applyPreset(preset: SettingsPreset) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .preset-card {
   padding: 1rem;
@@ -191,7 +191,7 @@ async function applyPreset(preset: SettingsPreset) {
 }
 .preset-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .preset-actions button {
   padding: 0.35rem 0.75rem;
@@ -200,7 +200,7 @@ async function applyPreset(preset: SettingsPreset) {
 .preset-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .detail-tag {
   padding: 0.35rem 0.75rem;

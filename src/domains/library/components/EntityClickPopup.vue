@@ -81,47 +81,47 @@ defineExpose({
 </script>
 
 <template>
-  <Popup ref="popupRef" title="📋 实体详情" mask mask-closable>
-    <div class="entity-click-popup" v-if="entity">
-      <!-- 图片 -->
-      <div class="image-section" v-if="entity.imgID && entity.imgID.length > 5">
-        <img :src="entity.imgID" :alt="entity.title" />
+<Popup ref="popupRef" title="📋 实体详情" mask mask-closable>
+  <div class="entity-click-popup" v-if="entity">
+    <!-- 图片 -->
+    <div class="image-section" v-if="entity.imgID && entity.imgID.length > 5">
+      <img :src="entity.imgID" :alt="entity.title" />
+    </div>
+
+    <!-- 基本信息 -->
+    <div class="info-section">
+      <div class="header">
+        <h4 @click="copy(entity.title)" title="点击复制">{{ entity.title }}</h4>
+        <span class="type-tag">{{ entity.type }}</span>
       </div>
 
-      <!-- 基本信息 -->
-      <div class="info-section">
-        <div class="header">
-          <h4 @click="copy(entity.title)" title="点击复制">{{ entity.title }}</h4>
-          <span class="type-tag">{{ entity.type }}</span>
-        </div>
-
-        <!-- 描述 -->
-        <div class="description" v-if="entity.description">
-          <p @click="copy(entity.description)" title="点击复制">{{ entity.description }}</p>
-        </div>
-
-        <!-- 自定义属性 -->
-        <div class="attributes" v-if="entity.attrs && entity.attrs.length > 0">
-          <ul>
-            <li v-for="attribute in entity.attrs" :key="attribute.title">
-              <span class="attr-title">{{ attribute.title }}</span>
-              <span class="attr-value" @click="copy(attribute.value)" title="点击复制">{{ attribute.value }}</span>
-            </li>
-          </ul>
-        </div>
+      <!-- 描述 -->
+      <div class="description" v-if="entity.description">
+        <p @click="copy(entity.description)" title="点击复制">{{ entity.description }}</p>
       </div>
 
-      <!-- 操作按钮 -->
-      <div class="actions">
-        <button class="btn-convert" @click="convertCurrentToPlainText">
-          🔤 转换当前为文本
-        </button>
-        <button class="btn-convert-all" @click="convertAllToPlainText">
-          🔤 转换全部为文本
-        </button>
+      <!-- 自定义属性 -->
+      <div class="attributes" v-if="entity.attrs && entity.attrs.length > 0">
+        <ul>
+          <li v-for="attribute in entity.attrs" :key="attribute.title">
+            <span class="attr-title">{{ attribute.title }}</span>
+            <span class="attr-value" @click="copy(attribute.value)" title="点击复制">{{ attribute.value }}</span>
+          </li>
+        </ul>
       </div>
     </div>
-  </Popup>
+
+    <!-- 操作按钮 -->
+    <div class="actions">
+      <button class="btn-convert" @click="convertCurrentToPlainText">
+        🔤 转换当前为文本
+      </button>
+      <button class="btn-convert-all" @click="convertAllToPlainText">
+        🔤 转换全部为文本
+      </button>
+    </div>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -130,9 +130,8 @@ defineExpose({
   max-height: 30rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
 }
-
 .image-section {
   width: 100%;
   max-height: 12rem;
@@ -143,31 +142,27 @@ defineExpose({
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
 }
-
 .image-section img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: 0.25rem;
 }
-
 .info-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
   flex: 1;
   overflow-y: auto;
 }
-
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .header h4 {
   margin: 0;
   font-size: 1.1rem;
@@ -176,11 +171,9 @@ defineExpose({
   flex: 1;
   word-break: break-word;
 }
-
 .header h4:hover {
   color: var(--primary);
 }
-
 .type-tag {
   padding: 0.2rem 0.5rem;
   background-color: var(--background-tertiary);
@@ -189,7 +182,6 @@ defineExpose({
   font-size: 0.8rem;
   white-space: nowrap;
 }
-
 .description p {
   margin: 0;
   padding: 0.5rem;
@@ -201,59 +193,50 @@ defineExpose({
   cursor: pointer;
   word-break: break-word;
 }
-
 .description p:hover {
   background-color: var(--background-tertiary);
 }
-
 .attributes ul {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
 }
-
 .attributes li {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   padding: 0.5rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
   font-size: 0.85rem;
 }
-
 .attr-title {
   font-weight: 600;
   color: var(--text-primary);
   min-width: 5rem;
   flex-shrink: 0;
 }
-
 .attr-title::after {
   content: ':';
   margin-left: 0.25rem;
 }
-
 .attr-value {
   flex: 1;
   color: var(--text-secondary);
   cursor: pointer;
   word-break: break-word;
 }
-
 .attr-value:hover {
   color: var(--primary);
 }
-
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: .5rem;
   padding-top: 0.5rem;
 }
-
 .btn-convert,
 .btn-convert-all {
   border: none;
@@ -263,17 +246,14 @@ defineExpose({
   transition: all 0.2s;
   white-space: nowrap;
 }
-
 .btn-convert {
   background-color: var(--background-tertiary);
   color: white;
 }
-
 .btn-convert-all {
   background-color: var(--background-tertiary);
   color: white;
 }
-
 .btn-convert:active,
 .btn-convert-all:active {
   transform: translateY(0);

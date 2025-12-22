@@ -864,7 +864,7 @@ main {
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
   margin-bottom: 2rem;
 }
 .stat-card {
@@ -909,7 +909,7 @@ main {
 }
 .recent-books {
   display: grid;
-  gap: .75rem;
+  gap: .5rem;
 }
 .recent-book-item {
   display: flex;
@@ -952,11 +952,11 @@ main {
 .detail-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: .5rem;
 }
 .book-header {
   display: flex;
-  gap: 2rem;
+  gap: .5rem;
   padding: 1.5rem;
   background-color: var(--background-secondary);
   border-radius: 0.25rem;
@@ -989,14 +989,14 @@ main {
 }
 .book-meta {
   display: flex;
-  gap: 1.5rem;
+  gap: .5rem;
   font-size: .85rem;
   color: var(--text-secondary);
 }
 .detail-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
 }
 .detail-stat-item {
   padding: 1rem;
@@ -1121,7 +1121,7 @@ main {
 }
 .import-export-container .button-group {
   display: flex;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .import-export-container .btn-primary {
   padding: .5rem 1rem;

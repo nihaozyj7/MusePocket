@@ -1251,7 +1251,7 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
 }
 .import-export-container .button-group {
   display: flex;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .import-export-container .btn-primary {
   padding: .5rem 1rem;

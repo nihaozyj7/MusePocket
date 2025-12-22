@@ -40,15 +40,15 @@ function handleClose() {
 </script>
 
 <template>
-  <Popup :title="title" ref="popupRef" mask-closable destroy-on-close @close="handleClose">
-    <div class="confirm-dialog">
-      <div class="message">{{ message }}</div>
-      <div class="actions">
-        <button class="btn-cancel" @click="handleCancel">取消</button>
-        <button class="btn-confirm" @click="handleConfirm">确认</button>
-      </div>
+<Popup :title="title" ref="popupRef" mask-closable destroy-on-close @close="handleClose">
+  <div class="confirm-dialog">
+    <div class="message">{{ message }}</div>
+    <div class="actions">
+      <button class="btn-cancel" @click="handleCancel">取消</button>
+      <button class="btn-confirm" @click="handleConfirm">确认</button>
     </div>
-  </Popup>
+  </div>
+</Popup>
 </template>
 
 <style scoped>
@@ -57,9 +57,8 @@ function handleClose() {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: .5rem;
 }
-
 .message {
   font-size: 0.9rem;
   color: var(--text-primary);
@@ -68,13 +67,11 @@ function handleClose() {
   word-wrap: break-word;
   min-height: 3rem;
 }
-
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: .5rem;
 }
-
 .actions button {
   padding: 0.5rem 1.5rem;
   border-radius: 0.25rem;
@@ -83,12 +80,10 @@ function handleClose() {
   transition: all 0.2s;
   border: 1px solid var(--border-color);
 }
-
 .btn-cancel {
   background-color: var(--background-secondary);
   color: var(--text-primary);
 }
-
 .btn-confirm {
   background-color: var(--primary);
   color: white;

@@ -142,7 +142,7 @@ defineExpose({
 .entity-mapping {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
   padding: 0.75rem 0;
   border-top: 1px solid var(--border-color);
 }
@@ -153,7 +153,7 @@ defineExpose({
 }
 .mapping-stats {
   display: flex;
-  gap: 1.5rem;
+  gap: .5rem;
   padding: 0.5rem 0;
   background: var(--background-tertiary);
   border-radius: 4px;
@@ -162,7 +162,7 @@ defineExpose({
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: .5rem;
 }
 .stat-label {
   font-size: 0.9em;
@@ -182,7 +182,7 @@ defineExpose({
 .mapping-list {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: .5rem;
   max-height: 200px;
   overflow-y: auto;
 }

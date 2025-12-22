@@ -151,7 +151,7 @@ async function handleUpload() {
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: .5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
 }
@@ -164,7 +164,7 @@ async function handleUpload() {
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
   padding: 1rem 0;
 }
 .image-item {
@@ -219,7 +219,7 @@ async function handleUpload() {
 .footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: .5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
 }

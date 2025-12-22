@@ -259,7 +259,7 @@ function formatDate(timestamp: number): string {
 .article-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .article-item {
   display: flex;
@@ -294,13 +294,13 @@ function formatDate(timestamp: number): string {
 }
 .article-meta {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 .article-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   margin-left: 1rem;
 }
 .article-actions button {

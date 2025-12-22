@@ -187,76 +187,76 @@ defineExpose({
 </script>
 
 <template>
-  <div class="history-sidebar">
-    <!-- 历史记录列表 -->
-    <div class="history-list">
-      <div class="header">
-        <h3>📜 历史版本</h3>
-        <button class="refresh-btn" @click="refresh">
-          🔄
-        </button>
+<div class="history-sidebar">
+  <!-- 历史记录列表 -->
+  <div class="history-list">
+    <div class="header">
+      <h3>📜 历史版本</h3>
+      <button class="refresh-btn" @click="refresh">
+        🔄
+      </button>
+    </div>
+
+    <div class="list-container scroll-container">
+      <div v-if="histories.length === 0" class="empty">
+        <p>暂无历史记录</p>
       </div>
 
-      <div class="list-container scroll-container">
-        <div v-if="histories.length === 0" class="empty">
-          <p>暂无历史记录</p>
-        </div>
-
-        <div v-for="(history, index) in histories" :key="history.id" class="history-item" :class="{
-          'selected': selectedHistory?.id === history.id,
-          'snapshot': isCurrentVersion(index),
-        }" @click="handleHistoryClick(history)">
-          <div class="item-time">
-            {{ `${formatTime(history.createdTime)}` }}
-            <span class="badges">
-              <span v-if="history.fullContent" class="badge snapshot-badge">快照</span>
-              <span v-if="isCurrentVersion(index)" class="badge current-badge">当前</span>
-            </span>
-          </div>
+      <div v-for="(history, index) in histories" :key="history.id" class="history-item" :class="{
+        'selected': selectedHistory?.id === history.id,
+        'snapshot': isCurrentVersion(index),
+      }" @click="handleHistoryClick(history)">
+        <div class="item-time">
+          {{ `${formatTime(history.createdTime)}` }}
+          <span class="badges">
+            <span v-if="history.fullContent" class="badge snapshot-badge">快照</span>
+            <span v-if="isCurrentVersion(index)" class="badge current-badge">当前</span>
+          </span>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Diff 对比弹出层 -->
-    <Popup title="📊 版本对比" ref="diffPopupRef" :mask-closable="true" @close="closeDiffPopup">
-      <div class="diff-dialog" v-if="selectedHistory" :key="selectedHistory.id">
-        <div class="diff-info">
-          <div class="info-left">
-            <div class="info-item">
-              <span class="label">ID：</span>
-              <span class="value">{{ selectedHistory.id }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">时间：</span>
-              <span class="value">{{ selectedHistory ? formatTime(selectedHistory.createdTime) : '' }}</span>
-            </div>
+  <!-- Diff 对比弹出层 -->
+  <Popup title="📊 版本对比" ref="diffPopupRef" :mask-closable="true" @close="closeDiffPopup">
+    <div class="diff-dialog" v-if="selectedHistory" :key="selectedHistory.id">
+      <div class="diff-info">
+        <div class="info-left">
+          <div class="info-item">
+            <span class="label">ID：</span>
+            <span class="value">{{ selectedHistory.id }}</span>
           </div>
-          <div class="info-hint">
-            💡 以下差异展示的是：从当前版本回退到所选历史版本后的内容变化
+          <div class="info-item">
+            <span class="label">时间：</span>
+            <span class="value">{{ selectedHistory ? formatTime(selectedHistory.createdTime) : '' }}</span>
           </div>
         </div>
-
-        <div class="diff-content scroll-container">
-          <div v-for="(diff, index) in visualDiffs" :key="index" class="diff-line" :class="diff.type">
-            <span class="line-number">{{ diff.lineNumber }}</span>
-            <span class="line-indicator">
-              {{ diff.type === 'added' ? '+' : diff.type === 'removed' ? '-' : ' ' }}
-            </span>
-            <span class="line-content">{{ diff.content || ' ' }}</span>
-          </div>
-        </div>
-
-        <div class="diff-actions">
-          <button class="btn-restore" @click="handleRestore">
-            ⬅️ 回退到此版本
-          </button>
-          <button class="btn-cancel" @click="diffPopupRef?.close()">
-            取消
-          </button>
+        <div class="info-hint">
+          💡 以下差异展示的是：从当前版本回退到所选历史版本后的内容变化
         </div>
       </div>
-    </Popup>
-  </div>
+
+      <div class="diff-content scroll-container">
+        <div v-for="(diff, index) in visualDiffs" :key="index" class="diff-line" :class="diff.type">
+          <span class="line-number">{{ diff.lineNumber }}</span>
+          <span class="line-indicator">
+            {{ diff.type === 'added' ? '+' : diff.type === 'removed' ? '-' : ' ' }}
+          </span>
+          <span class="line-content">{{ diff.content || ' ' }}</span>
+        </div>
+      </div>
+
+      <div class="diff-actions">
+        <button class="btn-restore" @click="handleRestore">
+          ⬅️ 回退到此版本
+        </button>
+        <button class="btn-cancel" @click="diffPopupRef?.close()">
+          取消
+        </button>
+      </div>
+    </div>
+  </Popup>
+</div>
 </template>
 
 <style scoped>
@@ -267,14 +267,12 @@ defineExpose({
   background-color: var(--background-secondary);
   border-left: 1px solid var(--border-color);
 }
-
 .history-list {
   flex: 1;
   width: 0;
   display: flex;
   flex-direction: column;
 }
-
 .header {
   height: 3rem;
   display: flex;
@@ -283,13 +281,11 @@ defineExpose({
   padding: 0 1rem;
   border-bottom: 1px solid var(--border-color);
 }
-
 .header h3 {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .refresh-btn {
   padding: 0.25rem 0.5rem;
   background-color: var(--background-tertiary);
@@ -297,19 +293,16 @@ defineExpose({
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .refresh-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .list-container {
   flex: 1;
   height: 0;
   overflow-y: auto;
   padding: 0.5rem;
 }
-
 .empty {
   display: flex;
   align-items: center;
@@ -318,11 +311,10 @@ defineExpose({
   color: var(--text-tertiary);
   font-size: 0.85rem;
 }
-
 .current-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
   background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
@@ -332,7 +324,6 @@ defineExpose({
   font-weight: 600;
   color: #34c759;
 }
-
 .indicator-icon {
   display: flex;
   align-items: center;
@@ -345,11 +336,9 @@ defineExpose({
   font-size: 0.9rem;
   font-weight: bold;
 }
-
 .indicator-text {
   flex: 1;
 }
-
 .history-item {
   padding: .5rem;
   margin-bottom: 0.5rem;
@@ -359,45 +348,37 @@ defineExpose({
   transition: all 0.2s;
   border: 2px solid transparent;
 }
-
 .history-item:hover {
   background-color: var(--background-primary);
   border-color: var(--primary-light);
 }
-
 .history-item.selected {
   background-color: var(--primary-dark);
   border-color: var(--primary);
 }
-
 .history-item.snapshot {
   border-left: 3px solid var(--primary);
 }
-
 .history-item.current:hover {
   background-color: var(--primary-light);
   border-color: var(--primary);
 }
-
 .item-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   margin-bottom: 0.25rem;
 }
-
 .sequence {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .badges {
   display: flex;
-  gap: 0.25rem;
+  gap: .5rem;
   align-items: center;
 }
-
 .badge {
   font-size: 0.65rem;
   padding: 0.1rem 0.4rem;
@@ -405,15 +386,12 @@ defineExpose({
   border-radius: 0.25rem;
   font-weight: 500;
 }
-
 .snapshot-badge {
   background-color: var(--primary);
 }
-
 .current-badge {
   background-color: #34c759;
 }
-
 .item-time {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -421,7 +399,6 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
 }
-
 /* Diff 弹出层样式 */
 .diff-dialog {
   width: 60rem;
@@ -429,24 +406,21 @@ defineExpose({
   display: flex;
   flex-direction: column;
 }
-
 .diff-info {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: .5rem;
   padding: 1rem;
   background-color: var(--background-tertiary);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
-
 .info-left {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: .5rem;
   flex-shrink: 0;
 }
-
 .info-hint {
   flex: 1;
   padding: 0.75rem;
@@ -457,28 +431,23 @@ defineExpose({
   line-height: 1.5;
   color: var(--text-primary);
 }
-
 .info-item {
   display: flex;
   align-items: center;
   margin-bottom: 0.25rem;
   font-size: 0.85rem;
 }
-
 .info-item:last-child {
   margin-bottom: 0;
 }
-
 .info-item .label {
   color: var(--text-secondary);
   margin-right: 0.5rem;
 }
-
 .info-item .value {
   color: var(--text-primary);
   font-weight: 500;
 }
-
 .diff-content {
   flex: 1;
   height: 0;
@@ -489,27 +458,22 @@ defineExpose({
   font-size: 0.85rem;
   line-height: 1.6;
 }
-
 .diff-line {
   display: flex;
   padding: 0.1rem 0.5rem;
   margin-bottom: 1px;
 }
-
 .diff-line.added {
   background-color: rgba(52, 199, 89, 0.15);
   color: #34c759;
 }
-
 .diff-line.removed {
   background-color: rgba(255, 59, 48, 0.15);
   color: #ff3b30;
 }
-
 .diff-line.unchanged {
   color: var(--text-secondary);
 }
-
 .line-number {
   display: inline-block;
   width: 3rem;
@@ -518,30 +482,26 @@ defineExpose({
   color: var(--text-tertiary);
   user-select: none;
 }
-
 .line-indicator {
   display: inline-block;
   width: 1.5rem;
   text-align: center;
   font-weight: bold;
 }
-
 .line-content {
   flex: 1;
   white-space: pre-wrap;
   word-break: break-all;
 }
-
 .diff-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: .5rem;
   padding: 1rem;
   border-top: 1px solid var(--border-color);
   background-color: var(--background-secondary);
   flex-shrink: 0;
 }
-
 .btn-restore,
 .btn-cancel {
   padding: 0.6rem 1.5rem;
@@ -552,12 +512,10 @@ defineExpose({
   transition: all 0.2s;
   border: 1px solid var(--border-color);
 }
-
 .btn-restore {
   background-color: var(--primary);
   color: white;
 }
-
 .btn-cancel {
   background-color: var(--background-secondary);
   color: var(--text-primary);

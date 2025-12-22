@@ -266,7 +266,7 @@ function formatDate(timestamp: number): string {
 .book-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .book-item {
   display: flex;
@@ -313,14 +313,14 @@ function formatDate(timestamp: number): string {
 }
 .book-meta {
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 .book-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
   margin-left: 1rem;
 }
 .book-actions button {

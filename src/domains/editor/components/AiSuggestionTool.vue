@@ -550,7 +550,7 @@ function copySuggestion(suggestion: any) {
 .config-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
 }
 .preset-description {
   margin-top: 0.25rem;
@@ -581,7 +581,7 @@ function copySuggestion(suggestion: any) {
 }
 .actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .progress {
   padding: 0.5rem;
@@ -594,7 +594,7 @@ function copySuggestion(suggestion: any) {
 .result-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
 }
 .result-header {
   display: flex;
@@ -610,13 +610,13 @@ function copySuggestion(suggestion: any) {
 }
 .result-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .result-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: .5rem;
   user-select: text;
 }
 .result-title {
@@ -633,7 +633,7 @@ function copySuggestion(suggestion: any) {
 .suggestions-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
 }
 .suggestion-card {
   background-color: var(--background-tertiary);
@@ -649,7 +649,7 @@ function copySuggestion(suggestion: any) {
 .suggestion-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: .5rem;
   margin-bottom: 0.75rem;
 }
 .suggestion-number {
@@ -719,7 +719,7 @@ function copySuggestion(suggestion: any) {
   border-radius: 0.5rem;
   padding: 1rem;
   display: flex;
-  gap: 0.75rem;
+  gap: .5rem;
   align-items: flex-start;
 }
 .summary-icon {

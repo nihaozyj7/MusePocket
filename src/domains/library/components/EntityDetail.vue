@@ -6,25 +6,25 @@ const props = defineProps<{ entity: Entity }>()
 </script>
 
 <template>
-  <div class="entity-detail">
-    <div class="header">
-      <h4>{{ props.entity.title }}</h4>
-      <span class="type-tag">{{ props.entity.type }}</span>
-    </div>
-    <div class="description">
-      <p>{{ props.entity.description }}</p>
-    </div>
-    <div class="attributes">
-      <ul>
-        <li v-for="attr, index in props.entity?.attrs" :key="index">
-          <span class="attr-title">{{ attr.title }} :</span>
-          <span class="attr-value">{{ attr.value }}</span>
-        </li>
-      </ul>
-    </div>
-    <!-- 实体映射模块 -->
-    <EntityMapping :entity="props.entity" />
+<div class="entity-detail">
+  <div class="header">
+    <h4>{{ props.entity.title }}</h4>
+    <span class="type-tag">{{ props.entity.type }}</span>
   </div>
+  <div class="description">
+    <p>{{ props.entity.description }}</p>
+  </div>
+  <div class="attributes">
+    <ul>
+      <li v-for="attr, index in props.entity?.attrs" :key="index">
+        <span class="attr-title">{{ attr.title }} :</span>
+        <span class="attr-value">{{ attr.value }}</span>
+      </li>
+    </ul>
+  </div>
+  <!-- 实体映射模块 -->
+  <EntityMapping :entity="props.entity" />
+</div>
 </template>
 
 <style scoped>
@@ -33,7 +33,6 @@ const props = defineProps<{ entity: Entity }>()
   width: 420px;
   max-height: 50vw;
   min-height: 200px;
-
   /* 布局结构清晰 */
   display: flex;
   flex-direction: column;
@@ -45,21 +44,18 @@ const props = defineProps<{ entity: Entity }>()
   overflow-y: auto;
   /* 可滚动内容 */
 }
-
 /* 头部区域：标题 + 类型标签 */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: .5rem;
 }
-
 .header h4 {
   margin: 0;
   font-size: 1.3em;
   line-height: 1.5;
 }
-
 .type-tag {
   font-size: 0.85em;
   background: var(--background-tertiary);
@@ -68,7 +64,6 @@ const props = defineProps<{ entity: Entity }>()
   border-radius: 4px;
   white-space: nowrap;
 }
-
 /* 描述区域 */
 .description p {
   margin: 0;
@@ -77,20 +72,17 @@ const props = defineProps<{ entity: Entity }>()
   font-size: .8rem;
   color: var(--text-tertiary)
 }
-
 .attributes {
   flex: 1;
   height: 0;
   overflow-y: auto;
 }
-
 /* 属性列表容器 */
 .attributes ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .attributes li {
   display: flex;
   justify-content: space-between;
@@ -99,25 +91,21 @@ const props = defineProps<{ entity: Entity }>()
   gap: .5rem;
   padding: .25rem 0;
 }
-
 .attributes li:last-child {
   border-bottom: none;
 }
-
 .attr-title,
 .attr-value {
   font-size: 0.95em;
   line-height: 1.5;
   word-break: break-word;
 }
-
 /* 自适应宽度，避免溢出 */
 .attr-title {
   flex: 0 0 5rem;
   /* 固定宽度，可调 */
   text-align: right;
 }
-
 .attr-value {
   flex: 1;
   /* 占满剩余空间 */

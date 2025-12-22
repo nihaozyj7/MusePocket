@@ -60,50 +60,50 @@ const resetToDefault = async () => {
 </script>
 
 <template>
-  <div class="base-setting">
-    <div class="title">{{ props.title }}</div>
-    <div class="content">
-      <div class="shortcut-group">
-        <div class="shortcut-item">
-          <label>
-            <span class="label-text">保存：</span>
-            <input type="text" readonly :value="settingStore.shortcutKeys.save" @keydown="e => handleKeyDown(e, 'save')" @focus="() => handleFocus('save')" @blur="handleBlur" placeholder="按下快捷键组合">
-          </label>
-        </div>
-
-        <div class="shortcut-item">
-          <label>
-            <span class="label-text">一键排版：</span>
-            <input type="text" readonly :value="settingStore.shortcutKeys.format" @keydown="e => handleKeyDown(e, 'format')" @focus="() => handleFocus('format')" @blur="handleBlur" placeholder="按下快捷键组合">
-          </label>
-        </div>
+<div class="base-setting">
+  <div class="title">{{ props.title }}</div>
+  <div class="content">
+    <div class="shortcut-group">
+      <div class="shortcut-item">
+        <label>
+          <span class="label-text">保存：</span>
+          <input type="text" readonly :value="settingStore.shortcutKeys.save" @keydown="e => handleKeyDown(e, 'save')" @focus="() => handleFocus('save')" @blur="handleBlur" placeholder="按下快捷键组合">
+        </label>
       </div>
 
-      <div class="shortcut-group">
-        <div class="shortcut-item">
-          <label>
-            <span class="label-text">查找替换：</span>
-            <input type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
-          </label>
-        </div>
-
-        <div class="shortcut-item">
-          <label>
-            <span class="label-text">搜索章节：</span>
-            <input type="text" readonly :value="settingStore.shortcutKeys.search" @keydown="e => handleKeyDown(e, 'search')" @focus="() => handleFocus('search')" @blur="handleBlur" placeholder="按下快捷键组合">
-          </label>
-        </div>
-      </div>
-
-      <div class="button-group">
-        <button class="reset-btn" @click="resetToDefault">重置为默认</button>
-      </div>
-
-      <div class="hint">
-        <p>💡 提示：点击输入框后直接按下您想要设置的快捷键组合</p>
+      <div class="shortcut-item">
+        <label>
+          <span class="label-text">一键排版：</span>
+          <input type="text" readonly :value="settingStore.shortcutKeys.format" @keydown="e => handleKeyDown(e, 'format')" @focus="() => handleFocus('format')" @blur="handleBlur" placeholder="按下快捷键组合">
+        </label>
       </div>
     </div>
+
+    <div class="shortcut-group">
+      <div class="shortcut-item">
+        <label>
+          <span class="label-text">查找替换：</span>
+          <input type="text" readonly :value="settingStore.shortcutKeys.replace" @keydown="e => handleKeyDown(e, 'replace')" @focus="() => handleFocus('replace')" @blur="handleBlur" placeholder="按下快捷键组合">
+        </label>
+      </div>
+
+      <div class="shortcut-item">
+        <label>
+          <span class="label-text">搜索章节：</span>
+          <input type="text" readonly :value="settingStore.shortcutKeys.search" @keydown="e => handleKeyDown(e, 'search')" @focus="() => handleFocus('search')" @blur="handleBlur" placeholder="按下快捷键组合">
+        </label>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="reset-btn" @click="resetToDefault">重置为默认</button>
+    </div>
+
+    <div class="hint">
+      <p>💡 提示：点击输入框后直接按下您想要设置的快捷键组合</p>
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
@@ -111,51 +111,44 @@ const resetToDefault = async () => {
   display: flex;
   flex-direction: column;
 }
-
 .shortcut-group {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: .5rem;
   margin-bottom: 1.5rem;
   padding: 1rem;
   background-color: var(--background-secondary);
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
 .shortcut-item {
   display: flex;
   align-items: center;
 }
-
 .shortcut-item label {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: .5rem;
   width: 100%;
 }
-
 .label-text {
   min-width: 5rem;
   text-align: right;
   color: var(--text-secondary);
   font-weight: 500;
 }
-
 .shortcut-item input {
   flex: 1;
   text-align: center;
   font-weight: 500;
 }
-
 .button-group {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
 }
-
 .hint {
   margin-top: 1.5rem;
   padding: 1rem;
@@ -163,7 +156,6 @@ const resetToDefault = async () => {
   border-radius: 0.5rem;
   border-left: 3px solid var(--primary);
 }
-
 .hint p {
   margin: 0;
   color: var(--text-secondary);

@@ -140,15 +140,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .issues-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-.issues-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background-color: var(--background-tertiary);
-  border-radius: 0.25rem;
+  gap: .5rem;
 }
 .total-count {
   font-weight: 500;
@@ -170,7 +162,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .issues-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .issue-item {
   padding: .5rem;
@@ -203,13 +195,13 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .issue-content {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
   margin-bottom: 0.75rem;
 }
 .sentence-display {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .sentence-text {
   padding: 0.5rem;
@@ -232,7 +224,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .correct-text {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .label {
   font-size: 0.875rem;
@@ -256,7 +248,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 }
 .issue-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   justify-content: flex-end;
 }
 .btn-apply,

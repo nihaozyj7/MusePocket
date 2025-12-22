@@ -329,7 +329,7 @@ function clearResults() {
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .section {
   background-color: var(--background-secondary);
@@ -417,7 +417,7 @@ function clearResults() {
 }
 .results-actions {
   display: flex;
-  gap: 0.4rem;
+  gap: .5rem;
 }
 .action-btn {
   padding: 0.35rem 0.7rem;
@@ -432,7 +432,7 @@ function clearResults() {
 .names-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.6rem;
+  gap: .5rem;
 }
 .name-card {
   padding: 0.6rem;
@@ -444,7 +444,7 @@ function clearResults() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.4rem;
+  gap: .5rem;
 }
 .name-card:hover {
   background-color: var(--background-primary);

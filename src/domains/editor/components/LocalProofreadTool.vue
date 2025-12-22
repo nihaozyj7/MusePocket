@@ -409,13 +409,13 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .local-proofread-tool {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .5rem;
   height: 100%;
 }
 .status-text {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   font-size: 0.9rem;
 }
 .status-indicator {
@@ -446,7 +446,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .action-buttons {
   padding: 0 .5rem;
   display: flex;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .hint-message {
   padding: 1.5rem;
@@ -469,18 +469,9 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   flex-direction: column;
   overflow: hidden;
 }
-.issues-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background-color: var(--background-secondary);
-  border-radius: 0.5rem 0.5rem 0 0;
-  border-bottom: 1px solid var(--border-color);
-}
 .stats {
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
 }
 .total-count {
   font-weight: 600;
@@ -489,7 +480,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .batch-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .issues-list {
   flex: 1;
@@ -523,12 +514,12 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   margin-bottom: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: .5rem;
 }
 .sentence-display {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .sentence-text {
   padding: 0.5rem;
@@ -550,14 +541,14 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 .error-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: .5rem;
   flex-wrap: wrap;
 }
 .error-text,
 .correct-text {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .label {
   font-size: 0.85rem;
@@ -583,7 +574,7 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
 }
 .issue-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   justify-content: flex-end;
 }
 .btn-apply,

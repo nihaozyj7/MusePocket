@@ -258,7 +258,7 @@ defineExpose({
 }
 .options {
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
   margin-bottom: 0.75rem;
 }
 .hint {
@@ -290,7 +290,7 @@ defineExpose({
 }
 .actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   justify-content: flex-end;
   margin-bottom: 0.75rem;
 }

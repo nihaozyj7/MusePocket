@@ -165,7 +165,7 @@ function copyImageId(id: string) {
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: .5rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border-color);
@@ -173,7 +173,7 @@ function copyImageId(id: string) {
 .info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
@@ -184,7 +184,7 @@ function copyImageId(id: string) {
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
 }
 .image-item {
   display: flex;
@@ -215,7 +215,7 @@ function copyImageId(id: string) {
 }
 .image-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: .5rem;
   padding: 0.5rem;
   border-top: 1px solid var(--border-color);
 }

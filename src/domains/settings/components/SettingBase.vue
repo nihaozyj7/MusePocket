@@ -367,7 +367,7 @@ const testProofreadApi = async () => {
 .setting-item label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   flex-wrap: wrap;
 }
 .label-text {
@@ -384,7 +384,7 @@ const testProofreadApi = async () => {
 .input-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .unit {
   color: var(--text-secondary);
@@ -410,7 +410,7 @@ const testProofreadApi = async () => {
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .range-input {
   flex: 1;
@@ -447,7 +447,7 @@ const testProofreadApi = async () => {
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
 }
 .test-btn {
   padding: 0.4rem 0.8rem;

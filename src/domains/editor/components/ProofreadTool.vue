@@ -593,24 +593,15 @@ function applyIssue(issue: ProofreadIssue) {
                     .issues-section {
                       flex: 1;
                     }
-                    .issues-header {
-                      display: flex;
-                      justify-content: space-between;
-                      align-items: center;
-                      margin-bottom: 1rem;
-                      padding: 0.75rem;
-                      background-color: var(--background-secondary);
-                      border-radius: 0.25rem;
-                    }
                     .stats {
                       display: flex;
-                      gap: 1rem;
+                      gap: .5rem;
                       font-size: 0.875rem;
                     }
                     .stat-item {
                       display: flex;
                       align-items: center;
-                      gap: 0.25rem;
+                      gap: .5rem;
                     }
                     .stat-item.error {
                       color: var(--danger);
@@ -624,12 +615,12 @@ function applyIssue(issue: ProofreadIssue) {
                     .batch-actions {
                       display: flex;
                       align-items: center;
-                      gap: 0.5rem;
+                      gap: .5rem;
                     }
                     .issues-list {
                       display: flex;
                       flex-direction: column;
-                      gap: 0.75rem;
+                      gap: .5rem;
                     }
                     .issue-item {
                       padding: .5rem;
@@ -653,7 +644,7 @@ function applyIssue(issue: ProofreadIssue) {
                     .issue-header {
                       display: flex;
                       align-items: center;
-                      gap: 0.5rem;
+                      gap: .5rem;
                       margin-bottom: 0.75rem;
                     }
                     .issue-icon {
@@ -669,7 +660,7 @@ function applyIssue(issue: ProofreadIssue) {
                     }
                     .issue-row {
                       display: flex;
-                      gap: 0.5rem;
+                      gap: .5rem;
                       margin-bottom: 0.5rem;
                       font-size: 0.875rem;
                     }
@@ -692,7 +683,7 @@ function applyIssue(issue: ProofreadIssue) {
                     }
                     .issue-actions {
                       display: flex;
-                      gap: 0.5rem;
+                      gap: .5rem;
                     }
                     .btn-action {
                       padding: 0.375rem 0.75rem;

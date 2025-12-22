@@ -46,99 +46,98 @@ const highlights = [
 </script>
 
 <template>
-  <div class="base-setting">
-    <div class="title">{{ props.title }}</div>
-    <div class="content">
-      <!-- 应用信息 -->
-      <div class="info-section">
-        <div class="app-header">
-          <div class="app-icon">✨</div>
-          <div class="app-info">
-            <h2 class="app-name">{{ appInfo.name }}</h2>
-            <p class="app-slogan">{{ appInfo.slogan }}</p>
-            <p class="app-version">Version {{ appInfo.version }}</p>
-          </div>
-        </div>
-
-        <p class="app-description">{{ appInfo.description }}</p>
-
-        <!-- 亮点展示 -->
-        <div class="highlights-grid">
-          <div v-for="item in highlights" :key="item.label" class="highlight-item">
-            <div class="highlight-label">{{ item.label }}</div>
-            <div class="highlight-value">{{ item.value }}</div>
-          </div>
-        </div>
-
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">👨‍💻 作者</span>
-            <span class="info-value">{{ appInfo.author }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">📜 许可协议</span>
-            <span class="info-value">{{ appInfo.license }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">🏠 项目主页</span>
-            <a :href="appInfo.homepage" target="_blank" class="info-link">GitHub</a>
-          </div>
-          <div class="info-item">
-            <span class="info-label">🎮 哔哩哔哩</span>
-            <a :href="appInfo.bilibili" target="_blank" class="info-link">热爱游戏的猫猫</a>
-          </div>
-          <div class="info-item">
-            <span class="info-label">💻 开源仓库</span>
-            <a :href="appInfo.github" target="_blank" class="info-link">@nihaozyj7</a>
-          </div>
+<div class="base-setting">
+  <div class="title">{{ props.title }}</div>
+  <div class="content">
+    <!-- 应用信息 -->
+    <div class="info-section">
+      <div class="app-header">
+        <div class="app-icon">✨</div>
+        <div class="app-info">
+          <h2 class="app-name">{{ appInfo.name }}</h2>
+          <p class="app-slogan">{{ appInfo.slogan }}</p>
+          <p class="app-version">Version {{ appInfo.version }}</p>
         </div>
       </div>
 
-      <!-- 功能特性 -->
-      <div class="feature-section">
-        <h3 class="section-title">💡 核心功能</h3>
-        <div class="feature-grid">
-          <div v-for="(feature, index) in features" :key="index" class="feature-item">
-            <div class="feature-icon">{{ feature.icon }}</div>
-            <div class="feature-content">
-              <div class="feature-title">{{ feature.title }}</div>
-              <div class="feature-desc">{{ feature.desc }}</div>
-            </div>
-          </div>
+      <p class="app-description">{{ appInfo.description }}</p>
+
+      <!-- 亮点展示 -->
+      <div class="highlights-grid">
+        <div v-for="item in highlights" :key="item.label" class="highlight-item">
+          <div class="highlight-label">{{ item.label }}</div>
+          <div class="highlight-value">{{ item.value }}</div>
         </div>
       </div>
 
-      <!-- 技术栈 -->
-      <div class="tech-section">
-        <h3 class="section-title">🛠️ 技术栈</h3>
-        <div class="tech-grid">
-          <div v-for="tech in techStack" :key="tech.name" class="tech-item">
-            <span class="tech-name">{{ tech.name }}</span>
-            <span class="tech-desc">{{ tech.desc }}</span>
-          </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">👨‍💻 作者</span>
+          <span class="info-value">{{ appInfo.author }}</span>
         </div>
-      </div>
-
-      <!-- 版权信息 -->
-      <div class="copyright">
-        <p class="copyright-year">© 2024 {{ appInfo.name }}. All rights reserved.</p>
-        <p class="copyright-message">✍️ 让每一个创作灵感都有归宿,让每一段文字都闪耀光芒</p>
-        <p class="copyright-thanks">感谢使用 {{ appInfo.name }},愿你的创作之路繁花似锦 🌸</p>
-        <p class="copyright-author">Made with ❤️ by 热爱游戏的猫猫</p>
-        <div class="social-links">
-          <a :href="appInfo.bilibili" target="_blank" class="social-link">🎮 B站主页</a>
-          <a :href="appInfo.github" target="_blank" class="social-link">💻 GitHub</a>
+        <div class="info-item">
+          <span class="info-label">📜 许可协议</span>
+          <span class="info-value">{{ appInfo.license }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">🏠 项目主页</span>
+          <a :href="appInfo.homepage" target="_blank" class="info-link">GitHub</a>
+        </div>
+        <div class="info-item">
+          <span class="info-label">🎮 哔哩哔哩</span>
+          <a :href="appInfo.bilibili" target="_blank" class="info-link">热爱游戏的猫猫</a>
+        </div>
+        <div class="info-item">
+          <span class="info-label">💻 开源仓库</span>
+          <a :href="appInfo.github" target="_blank" class="info-link">@nihaozyj7</a>
         </div>
       </div>
     </div>
+
+    <!-- 功能特性 -->
+    <div class="feature-section">
+      <h3 class="section-title">💡 核心功能</h3>
+      <div class="feature-grid">
+        <div v-for="(feature, index) in features" :key="index" class="feature-item">
+          <div class="feature-icon">{{ feature.icon }}</div>
+          <div class="feature-content">
+            <div class="feature-title">{{ feature.title }}</div>
+            <div class="feature-desc">{{ feature.desc }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 技术栈 -->
+    <div class="tech-section">
+      <h3 class="section-title">🛠️ 技术栈</h3>
+      <div class="tech-grid">
+        <div v-for="tech in techStack" :key="tech.name" class="tech-item">
+          <span class="tech-name">{{ tech.name }}</span>
+          <span class="tech-desc">{{ tech.desc }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 版权信息 -->
+    <div class="copyright">
+      <p class="copyright-year">© 2024 {{ appInfo.name }}. All rights reserved.</p>
+      <p class="copyright-message">✍️ 让每一个创作灵感都有归宿,让每一段文字都闪耀光芒</p>
+      <p class="copyright-thanks">感谢使用 {{ appInfo.name }},愿你的创作之路繁花似锦 🌸</p>
+      <p class="copyright-author">Made with ❤️ by 热爱游戏的猫猫</p>
+      <div class="social-links">
+        <a :href="appInfo.bilibili" target="_blank" class="social-link">🎮 B站主页</a>
+        <a :href="appInfo.github" target="_blank" class="social-link">💻 GitHub</a>
+      </div>
+    </div>
   </div>
+</div>
 </template>
 
 <style scoped>
 .content {
   padding: 0 !important;
 }
-
 .info-section {
   margin-bottom: 2rem;
   padding: 1.5rem;
@@ -146,30 +145,25 @@ const highlights = [
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
 .app-header {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: .5rem;
   margin-bottom: 1.5rem;
 }
-
 .app-icon {
   font-size: 4rem;
   line-height: 1;
 }
-
 .app-info {
   flex: 1;
 }
-
 .app-name {
   font-size: 2rem;
   font-weight: bold;
   margin: 0;
   color: var(--text-primary);
 }
-
 .app-slogan {
   margin: 0.25rem 0;
   color: var(--primary);
@@ -177,28 +171,24 @@ const highlights = [
   font-weight: 500;
   font-style: italic;
 }
-
 .app-version {
   margin: 0.5rem 0 0;
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-family: monospace;
 }
-
 .app-description {
   font-size: 1rem;
   color: var(--text-primary);
   margin-bottom: 1.5rem;
   line-height: 1.6;
 }
-
 .highlights-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
+  gap: .5rem;
   margin-bottom: 1.5rem;
 }
-
 .highlight-item {
   text-align: center;
   padding: 1rem;
@@ -207,29 +197,24 @@ const highlights = [
   color: white;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .highlight-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
-
 .highlight-label {
   font-size: 0.75rem;
   opacity: 0.9;
   margin-bottom: 0.25rem;
   font-weight: 500;
 }
-
 .highlight-value {
   font-size: 0.9rem;
   font-weight: bold;
 }
-
 .info-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: .5rem;
 }
-
 .info-item {
   display: flex;
   align-items: baseline;
@@ -237,31 +222,26 @@ const highlights = [
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;
 }
-
 .info-label {
   font-weight: 600;
   color: var(--text-primary);
   min-width: 6rem;
   font-size: 0.85rem;
 }
-
 .info-value {
   color: var(--text-primary);
   font-size: 0.85rem;
 }
-
 .info-link {
   color: var(--primary);
   text-decoration: none;
   transition: opacity 0.2s;
   font-size: 0.85rem;
 }
-
 .info-link:hover {
   opacity: 0.8;
   text-decoration: underline;
 }
-
 .section-title {
   font-size: 1.2rem;
   font-weight: bold;
@@ -270,7 +250,6 @@ const highlights = [
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--primary);
 }
-
 .feature-section {
   margin-bottom: 2rem;
   padding: 1.5rem;
@@ -278,16 +257,14 @@ const highlights = [
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: .5rem;
 }
-
 .feature-item {
   display: flex;
-  gap: 1rem;
+  gap: .5rem;
   align-items: flex-start;
   padding: 1.25rem;
   background-color: var(--background-tertiary);
@@ -296,36 +273,30 @@ const highlights = [
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   border: 2px solid var(--border-color);
 }
-
 .feature-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   border-color: var(--primary);
 }
-
 .feature-icon {
   font-size: 2rem;
   line-height: 1;
   flex-shrink: 0;
 }
-
 .feature-content {
   flex: 1;
 }
-
 .feature-title {
   font-weight: 600;
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
   color: var(--text-primary);
 }
-
 .feature-desc {
   font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.5;
 }
-
 .tech-section {
   margin-bottom: 2rem;
   padding: 1.5rem;
@@ -333,12 +304,10 @@ const highlights = [
   border-radius: 0.5rem;
   border: 1px solid var(--border-color);
 }
-
 .tech-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: .5rem;
 }
-
 .tech-item {
   display: flex;
   justify-content: space-between;
@@ -349,22 +318,18 @@ const highlights = [
   border-radius: 0.25rem;
   transition: border-color 0.2s;
 }
-
 .tech-item:hover {
   border-color: var(--primary);
 }
-
 .tech-name {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 0.9rem;
 }
-
 .tech-desc {
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
-
 .copyright {
   margin-top: 2rem;
   padding: 1.5rem;
@@ -375,42 +340,35 @@ const highlights = [
   color: var(--text-tertiary);
   font-size: 0.85rem;
 }
-
 .copyright p {
   margin: 0.5rem 0;
   line-height: 1.8;
 }
-
 .copyright-year {
   font-size: 0.8rem;
   opacity: 0.7;
 }
-
 .copyright-message {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--primary);
   margin: 1rem 0 !important;
 }
-
 .copyright-thanks {
   font-size: 0.85rem;
 }
-
 .copyright-author {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 1.2rem 0 0.8rem !important;
 }
-
 .social-links {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: .5rem;
   margin-top: 1rem;
 }
-
 .social-link {
   display: inline-flex;
   align-items: center;
@@ -423,7 +381,6 @@ const highlights = [
   font-size: 0.85rem;
   transition: all 0.2s;
 }
-
 .social-link:hover {
   background-color: var(--primary);
   color: white;

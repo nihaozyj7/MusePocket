@@ -58,45 +58,20 @@ async function checkServiceAvailability() {
 }
 
 /**
- * 将文本按句子分割并智能合并
- * 优先按标点符号分割，遇到换行必须截断
+ * 将文本按段落分割
+ * 优先按段落分割，每个段落作为一个整体提交
  */
-function splitAndMergeText(text: string, maxLength: number = 30): string[] {
+function splitByParagraphs(text: string): string[] {
   const result: string[] = []
 
-  // 1. 先按换行符分割（换行必须截断）
-  const lines = text.split('\n')
+  // 按段落分割（两个换行符分隔，或者单个换行符但内容连续）
+  const paragraphs = text.split(/\n\s*\n/)
 
-  // 2. 定义匹配句子的正则（匹配非标点序列 + 标点序列）
-  const sentencePattern = /[^。！？；!?;，,、]*(?:[。！？；!?;，,、]|$)/g
-
-  lines.forEach(line => {
-    const trimmedLine = line.trim()
-    if (!trimmedLine) return
-
-    // 3. 使用匹配代替分割，避免连续标点问题
-    const matches = trimmedLine.match(sentencePattern) || []
-
-    // 4. 过滤空字符串并处理匹配结果
-    const validSentences = matches
-      .map(s => s.trim())
-      .filter(s => s.length > 0)
-
-    // 5. 处理每个句子（可能需要按最大长度分割）
-    validSentences.forEach(sentence => {
-      if (sentence.length <= maxLength) {
-        result.push(sentence)
-      } else {
-        // 按最大长度分割长句
-        let start = 0
-        while (start < sentence.length) {
-          const end = Math.min(start + maxLength, sentence.length)
-          const segment = sentence.substring(start, end).trim()
-          if (segment) result.push(segment)
-          start = end
-        }
-      }
-    })
+  paragraphs.forEach(paragraph => {
+    const trimmedParagraph = paragraph.trim()
+    if (trimmedParagraph) {
+      result.push(trimmedParagraph)
+    }
   })
 
   return result
@@ -104,11 +79,11 @@ function splitAndMergeText(text: string, maxLength: number = 30): string[] {
 
 
 /**
- * 根据行号合并同一句子的所有错误
- * 如果同一行有多个错误，说明整个句子都有问题，应该合并成一个句子级错误
+ * 根据行号合并同一段落的所有错误
+ * 如果同一段落有多个错误，说明整个段落有问题，应该合并成一个段落级错误
  */
-function mergeSameSentenceErrors(issues: LocalProofreadIssue[]): LocalProofreadIssue[] {
-  // 按行号分组
+function mergeSameParagraphErrors(issues: LocalProofreadIssue[]): LocalProofreadIssue[] {
+  // 按行号分组（现在代表段落索引）
   const grouped = new Map<number, LocalProofreadIssue[]>()
 
   issues.forEach(issue => {
@@ -121,21 +96,21 @@ function mergeSameSentenceErrors(issues: LocalProofreadIssue[]): LocalProofreadI
 
   const mergedIssues: LocalProofreadIssue[] = []
 
-  // 处理每一行
-  grouped.forEach((lineIssues, lineNumber) => {
-    if (lineIssues.length === 1) {
+  // 处理每一个段落
+  grouped.forEach((paragraphIssues, lineNumber) => {
+    if (paragraphIssues.length === 1) {
       // 只有一个错误，直接保留
-      mergedIssues.push(lineIssues[0])
+      mergedIssues.push(paragraphIssues[0])
     } else {
-      // 多个错误，合并为句子级错误
-      const sentence = lineIssues[0].error.lineText || ''
-      let correctedSentence = sentence
+      // 多个错误，合并为段落级错误
+      const paragraph = paragraphIssues[0].error.lineText || ''
+      let correctedParagraph = paragraph
 
       // 按位置排序，从后往前替换以避免位置偏移
-      const sortedIssues = [...lineIssues].sort((a, b) => b.error.position - a.error.position)
+      const sortedIssues = [...paragraphIssues].sort((a, b) => b.error.position - a.error.position)
 
       sortedIssues.forEach(issue => {
-        correctedSentence = correctedSentence.replace(issue.error.original, issue.error.corrected)
+        correctedParagraph = correctedParagraph.replace(issue.error.original, issue.error.corrected)
       })
 
       // 创建合并后的错误
@@ -143,10 +118,10 @@ function mergeSameSentenceErrors(issues: LocalProofreadIssue[]): LocalProofreadI
         id: `merged-${lineNumber}`,
         lineNumber: lineNumber,
         error: {
-          original: sentence,
-          corrected: correctedSentence,
+          original: paragraph,
+          corrected: correctedParagraph,
           position: 0,
-          lineText: sentence
+          lineText: paragraph
         },
         selected: false
       })
@@ -174,31 +149,44 @@ async function startProofread() {
   proofreadState.value = '⏳ 检查中...'
   issues.value = []
 
-  const allIssues: LocalProofreadIssue[] = []
-  let processedCount = 0
-
   try {
-    // 将整个文本按句子分割并智能合并，每次发送不超过30字
-    const chunks = splitAndMergeText(text, 30)
-    const totalChunks = chunks.length
+    // 将整个文本按段落分割
+    const paragraphs = splitByParagraphs(text)
+    const totalParagraphs = paragraphs.length
 
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i]
+    if (totalParagraphs === 0) {
+      proofreadState.value = '✅ 无内容需要检查'
+      $tips.success('没有可检查的段落')
+      isProofreading.value = false
+      return
+    }
 
-      // 更新进度
-      processedCount++
-      proofreadState.value = `⏳ 检查中... (${processedCount}/${totalChunks})`
+    // 使用批量纠错接口
+    proofreadState.value = `⏳ 准备提交 ${totalParagraphs} 个段落...`
+    const batchResult = await proofreadingService.correctBatch(paragraphs)
 
-      const result = await proofreadingService.correctText(chunk)
+    if (!batchResult) {
+      throw new Error('批量纠错返回结果为空')
+    }
 
-      if (result && result.has_error && result.errors.length > 0) {
+    const allIssues: LocalProofreadIssue[] = []
+
+    // 处理批量结果
+    for (let i = 0; i < batchResult.results.length; i++) {
+      const result = batchResult.results[i]
+      const paragraphIndex = result.index
+      const paragraphText = paragraphs[paragraphIndex]
+
+      proofreadState.value = `⏳ 处理中... (${i + 1}/${totalParagraphs})`
+
+      if (result.has_error && result.errors.length > 0) {
         result.errors.forEach(error => {
           allIssues.push({
-            id: `${i}-${error.position}`,
-            lineNumber: i + 1,
+            id: `${paragraphIndex}-${error.position}`,
+            lineNumber: paragraphIndex + 1, // 使用段落索引作为"行号"
             error: {
               ...error,
-              lineText: chunk
+              lineText: paragraphText
             },
             selected: false
           })
@@ -206,8 +194,8 @@ async function startProofread() {
       }
     }
 
-    // 合并同一句子的所有错误
-    issues.value = mergeSameSentenceErrors(allIssues)
+    // 合并同一段落的所有错误
+    issues.value = mergeSameParagraphErrors(allIssues)
 
     if (allIssues.length > 0) {
       proofreadState.value = `⚠️ 发现 ${allIssues.length} 个错误`
@@ -354,16 +342,16 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
         <div class="issue-header">
           <label class="checkbox-label">
             <input type="checkbox" v-model="issue.selected" />
-            <span class="line-number">第 {{ issue.lineNumber }} 行</span>
+            <span class="line-number">第 {{ issue.lineNumber }} 段</span>
           </label>
           <span class="position">位置: {{ issue.error.position }}</span>
         </div>
 
         <div class="issue-content">
-          <!-- 完整句子展示 -->
-          <div class="sentence-display" v-if="issue.error.lineText">
-            <span class="label">原句:</span>
-            <div class="sentence-text">
+          <!-- 完整段落展示 -->
+          <div class="paragraph-display" v-if="issue.error.lineText">
+            <span class="label">原文段落:</span>
+            <div class="paragraph-text">
               <template v-for="(part, idx) in highlightError(issue.error.lineText, issue.error.original)" :key="idx">
                 <span v-if="part.isError" class="error-highlight">{{ part.text }}</span>
                 <span v-else>{{ part.text }}</span>
@@ -516,12 +504,12 @@ function highlightError(fullText: string, errorText: string): Array<{ text: stri
   flex-direction: column;
   gap: .5rem;
 }
-.sentence-display {
+.paragraph-display {
   display: flex;
   flex-direction: column;
   gap: .5rem;
 }
-.sentence-text {
+.paragraph-text {
   padding: 0.5rem;
   background-color: var(--background-tertiary);
   border-radius: 0.25rem;

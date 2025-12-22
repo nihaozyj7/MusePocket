@@ -326,7 +326,7 @@ function clearResults() {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 0.75rem;
+  padding: .5rem;
   display: flex;
   flex-direction: column;
   gap: .5rem;
@@ -334,7 +334,7 @@ function clearResults() {
 .section {
   background-color: var(--background-secondary);
   border-radius: 0.375rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--border-color);
 }
 .section h3 {

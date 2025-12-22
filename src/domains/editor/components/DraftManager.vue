@@ -114,8 +114,8 @@ function closeEditor() {
 
 <template>
 <div class="draft-manager">
-  <div class="header">
-    <h3>📝 草稿箱</h3>
+  <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: .5rem;">
+    <h3 style="margin: 0;">📝 草稿箱</h3>
     <div class="editor-actions" v-show="showEditor">
       <button @click="saveDraft" :disabled="isSaving" class="btn-save">
         {{ isSaving ? '保存中...' : '💾 保存' }}

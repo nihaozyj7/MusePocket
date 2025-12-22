@@ -190,8 +190,8 @@ defineExpose({
 <div class="history-sidebar">
   <!-- 历史记录列表 -->
   <div class="history-list">
-    <div class="header">
-      <h3>📜 历史版本</h3>
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: .5rem;">
+      <h3 style="margin: 0;">📜 历史版本</h3>
       <button class="refresh-btn" @click="refresh">
         🔄
       </button>

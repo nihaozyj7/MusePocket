@@ -339,18 +339,17 @@ function copySuggestion(suggestion: any) {
 
 <template>
 <div class="ai-suggestion-tool">
-  <div class="tool-header">
+  <div class="header">
     <h3>💡 AI建议</h3>
-  </div>
-
-  <!-- 标签页 -->
-  <div class="tabs">
-    <button :class="{ active: activeTab === 'config' }" @click="activeTab = 'config'">
-      配置
-    </button>
-    <button :class="{ active: activeTab === 'result' }" @click="activeTab = 'result'">
-      结果
-    </button>
+    <!-- 标签页 -->
+    <div class="tabs">
+      <button :class="{ active: activeTab === 'config' }" @click="activeTab = 'config'">
+        配置
+      </button>
+      <button :class="{ active: activeTab === 'result' }" @click="activeTab = 'result'">
+        结果
+      </button>
+    </div>
   </div>
 
   <div class="tool-body">
@@ -531,16 +530,6 @@ function copySuggestion(suggestion: any) {
   display: flex;
   flex-direction: column;
   background-color: var(--background-secondary);
-}
-.tool-header {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--background-secondary);
-}
-.tool-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--text-primary);
 }
 .tool-body {
   flex: 1;

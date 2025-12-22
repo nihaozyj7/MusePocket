@@ -54,27 +54,27 @@ async function rebuildMappings() {
 </script>
 
 <template>
-  <div class="container">
-    <header>
-      <div class="title-row">
-        <h4>实体管理</h4>
-        <button @click="rebuildMappings" :disabled="isRebuildingMappings" v-show="selectedTitle === titles[0]" class="rebuild-btn" title="扫描所有文章，重新生成实体在章节中的引用映射">
-          {{ isRebuildingMappings ? '🔄 重建中...' : '🔄 重建映射' }}
-        </button>
-      </div>
-      <div class="buttons">
-        <button @click="handleHeaderButtonClick" :class="{ selected: selectedTitle === title }" v-for="title in titles">{{ title }}</button>
-      </div>
-    </header>
-    <!-- 实体列表 -->
-    <EntityList v-show="selectedTitle === titles[0]" />
-    <!-- 导入导出 -->
-    <EntityImportExport v-show="selectedTitle === titles[1]" />
-    <!-- AI提取 -->
-    <EntityAiExtract v-show="selectedTitle === titles[2]" />
-    <!-- 新建实体 -->
-    <EntityCreate v-show="selectedTitle === titles[3]" />
-  </div>
+<div class="container">
+  <header>
+    <div style="position: relative;">
+      <h4>实体管理</h4>
+      <button @click="rebuildMappings" :disabled="isRebuildingMappings" v-show="selectedTitle === titles[0]" class="rebuild-btn" title="扫描所有文章，重新生成实体在章节中的引用映射">
+        {{ isRebuildingMappings ? '🔄 重建中...' : '🔄 重建映射' }}
+      </button>
+    </div>
+    <div class="buttons">
+      <button @click="handleHeaderButtonClick" :class="{ selected: selectedTitle === title }" v-for="title in titles">{{ title }}</button>
+    </div>
+  </header>
+  <!-- 实体列表 -->
+  <EntityList v-show="selectedTitle === titles[0]" />
+  <!-- 导入导出 -->
+  <EntityImportExport v-show="selectedTitle === titles[1]" />
+  <!-- AI提取 -->
+  <EntityAiExtract v-show="selectedTitle === titles[2]" />
+  <!-- 新建实体 -->
+  <EntityCreate v-show="selectedTitle === titles[3]" />
+</div>
 </template>
 
 <style scoped>
@@ -87,12 +87,10 @@ async function rebuildMappings() {
   width: 0;
   background-color: var(--background-secondary);
 }
-
 .container>div {
   flex: 1;
   height: 0;
 }
-
 header {
   background-color: var(--background-secondary);
   width: 100%;
@@ -103,22 +101,6 @@ header {
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
 }
-
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0.5rem;
-  position: relative;
-}
-
-header>h4,
-.title-row>h4 {
-  padding: 0;
-  margin: 0;
-  color: var(--text-primary);
-}
-
 .rebuild-btn {
   padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
@@ -132,12 +114,10 @@ header>h4,
   right: 0.5rem;
   top: 0;
 }
-
 .rebuild-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .buttons {
   display: flex;
   justify-content: space-between;
@@ -146,7 +126,6 @@ header>h4,
   border-radius: 0.25rem;
   overflow: hidden;
 }
-
 .buttons button {
   flex: 1;
   margin: 0;
@@ -154,11 +133,9 @@ header>h4,
   border-right: 1px solid var(--border-color);
   border-radius: 0;
 }
-
 .buttons button:last-child {
   border-right: none;
 }
-
 .selected {
   border-bottom: 1px solid var(--primary);
   color: var(--primary);

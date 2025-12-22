@@ -361,18 +361,17 @@ function applyIssue(issue: ProofreadIssue) {
 
                     <template>
                     <div class="proofread-tool">
-                      <div class="tool-header">
+                      <div class="header">
                         <h3>✅ 文本校对</h3>
-                      </div>
-
-                      <!-- 主标签页 -->
-                      <div class="tabs" v-if="showLocalProofread">
-                        <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
-                          🔍 纠错
-                        </button>
-                        <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
-                          🤖 AI校对
-                        </button>
+                        <!-- 主标签页 -->
+                        <div class="tabs" v-if="showLocalProofread">
+                          <button :class="{ active: mainTab === 'local' }" @click="mainTab = 'local'">
+                            🔍 纠错
+                          </button>
+                          <button :class="{ active: mainTab === 'ai' }" @click="mainTab = 'ai'">
+                            🤖 AI校对
+                          </button>
+                        </div>
                       </div>
 
                       <div class="tool-body">
@@ -531,16 +530,6 @@ function applyIssue(issue: ProofreadIssue) {
                       display: flex;
                       flex-direction: column;
                       background-color: var(--background-secondary);
-                    }
-                    .tool-header {
-                      padding: 1rem;
-                      border-bottom: 1px solid var(--border-color);
-                      background-color: var(--background-secondary);
-                    }
-                    .tool-header h3 {
-                      margin: 0;
-                      font-size: 1rem;
-                      color: var(--text-primary);
                     }
                     .tool-body {
                       flex: 1;

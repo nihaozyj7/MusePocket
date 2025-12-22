@@ -199,13 +199,6 @@ defineExpose({
   top: 0;
   z-index: 1;
 }
-.header-chapter {
-  flex: 1;
-}
-.header-count {
-  width: 3rem;
-  text-align: center;
-}
 .mapping-item {
   display: flex;
   justify-content: space-between;

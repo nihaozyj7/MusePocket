@@ -44,18 +44,6 @@ const props = defineProps<{ entity: Entity }>()
   overflow-y: auto;
   /* 可滚动内容 */
 }
-/* 头部区域：标题 + 类型标签 */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: .5rem;
-}
-.header h4 {
-  margin: 0;
-  font-size: 1.3em;
-  line-height: 1.5;
-}
 .type-tag {
   font-size: 0.85em;
   background: var(--background-tertiary);

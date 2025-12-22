@@ -155,25 +155,6 @@ defineExpose({
   flex: 1;
   overflow-y: auto;
 }
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: .5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.header h4 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: var(--text-primary);
-  cursor: pointer;
-  flex: 1;
-  word-break: break-word;
-}
-.header h4:hover {
-  color: var(--primary);
-}
 .type-tag {
   padding: 0.2rem 0.5rem;
   background-color: var(--background-tertiary);

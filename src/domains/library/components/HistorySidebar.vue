@@ -273,19 +273,6 @@ defineExpose({
   display: flex;
   flex-direction: column;
 }
-.header {
-  height: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.header h3 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
 .refresh-btn {
   padding: 0.25rem 0.5rem;
   background-color: var(--background-tertiary);

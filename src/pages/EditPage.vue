@@ -444,6 +444,7 @@ function handleProofreadFix(issueOrOriginal: any, corrected?: string) {
 
   let originalText: string
   let correctedText: string
+  let position: number | null = null
 
   // 支持两种调用方式
   if (typeof issueOrOriginal === 'string' && corrected) {
@@ -455,27 +456,77 @@ function handleProofreadFix(issueOrOriginal: any, corrected?: string) {
     const issue = issueOrOriginal
     originalText = issue.original
     correctedText = issue.suggestion
+    // 如果有位置信息，使用位置来定位
+    position = issue.position
   }
 
   // 保存光标位置
   const cursorPos = saveCursorTextPosition(bodyElement)
 
-  // 直接在DOM中查找并替换文本
-  const walker = document.createTreeWalker(
-    bodyElement,
-    NodeFilter.SHOW_TEXT,
-    null
-  )
+  // 获取编辑器中的纯文本内容
+  const editorText = editorRef.value.getBodyText()
 
-  let node: Text | null
   let replaced = false
+  let targetNode: Text | null = null
+  let targetOffset: number = 0
 
-  while (node = walker.nextNode() as Text) {
-    const content = node.textContent || ''
-    if (content.includes(originalText)) {
-      node.textContent = content.replace(originalText, correctedText)
-      replaced = true
-      break // 只替换第一个匹配项
+  if (position !== null && position >= 0) {
+    // 使用字符偏移量精确定位
+    const walker = document.createTreeWalker(
+      bodyElement,
+      NodeFilter.SHOW_TEXT,
+      null
+    )
+
+    let currentNode: Text | null
+    let currentOffset = 0
+
+    while (currentNode = walker.nextNode() as Text) {
+      const nodeText = currentNode.textContent || ''
+      const nodeLength = nodeText.length
+
+      // 检查目标位置是否在这个节点中
+      if (position >= currentOffset && position < currentOffset + nodeLength) {
+        // 计算在这个节点中的相对位置
+        const relativePosition = position - currentOffset
+
+        // 检查这个位置开始的文本是否匹配originalText
+        if (nodeText.substring(relativePosition, relativePosition + originalText.length) === originalText) {
+          targetNode = currentNode
+          targetOffset = relativePosition
+          break
+        }
+      }
+
+      currentOffset += nodeLength
+    }
+  }
+
+  if (targetNode) {
+    // 在目标节点中执行替换
+    const nodeText = targetNode.textContent || ''
+    const beforeText = nodeText.substring(0, targetOffset)
+    const afterText = nodeText.substring(targetOffset + originalText.length)
+
+    targetNode.textContent = beforeText + correctedText + afterText
+    replaced = true
+  } else {
+    // 如果无法通过偏移量定位，回退到文本搜索
+    const walker = document.createTreeWalker(
+      bodyElement,
+      NodeFilter.SHOW_TEXT,
+      null
+    )
+
+    let node: Text | null
+    while (node = walker.nextNode() as Text) {
+      const content = node.textContent || ''
+      const index = content.indexOf(originalText)
+      if (index !== -1) {
+        node.textContent = content.replace(originalText, correctedText)
+        replaced = true
+        break // 只替换第一个匹配项
+      }
     }
   }
 

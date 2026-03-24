@@ -25,16 +25,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="w-full h-full">
     <RouterView />
     <ConfirmDialog />
     <SettingPopup ref="settingPopupRef" />
   </div>
 </template>
-
-<style scoped>
-.app-container {
-  width: 100%;
-  height: 100%;
-}
-</style>

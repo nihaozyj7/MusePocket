@@ -19,88 +19,22 @@ function isSelected(article: Article) {
 </script>
 
 <template>
-<div class="article-selector">
-  <div class="section-header">
-    <h3>📚 选择文章</h3>
-    <button @click="emit('toggleAll')" class="btn-small">
+<div class="article-selector mb-4">
+  <div class="section-header flex justify-between items-center mb-[0.6rem]">
+    <h3 class="text-primary m-0 text-[0.9rem]">📚 选择文章</h3>
+    <button @click="emit('toggleAll')" class="btn-small px-3 py-1 text-sm bg-tertiary text-primary border border-color rounded cursor-pointer transition-all hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed">
       {{ selectedArticles.length === articles.length ? '反选' : '全选' }}
     </button>
   </div>
-  <div class="article-list">
-    <div v-if="articles.length === 0" class="empty-state">
+  <div class="article-list max-h-[250px] overflow-y-auto border border-color rounded p-1 bg-secondary">
+    <div v-if="articles.length === 0" class="empty-state flex flex-col items-center justify-center p-12 text-center text-tertiary">
       当前书籍没有文章
     </div>
-    <label v-for="article in articles" :key="article.id" class="article-item" :class="{ selected: selectedArticles.some(a => a.id === article.id) }">
-      <input type="checkbox" :checked="selectedArticles.some(a => a.id === article.id)" @change="emit('toggle', article)" />
-      <span class="article-title">{{ article.title }}</span>
-      <span class="article-words">{{ article.wordCount }} 字</span>
+    <label v-for="article in articles" :key="article.id" class="article-item flex items-center gap-2 p-1 rounded cursor-pointer transition-[background-color] duration-200 hover:bg-tertiary" :class="{ selected: selectedArticles.some(a => a.id === article.id) }">
+      <input type="checkbox" class="cursor-pointer" :checked="selectedArticles.some(a => a.id === article.id)" @change="emit('toggle', article)" />
+      <span class="article-title flex-1 text-primary text-[0.85rem]">{{ article.title }}</span>
+      <span class="article-words text-tertiary text-[0.75rem]">{{ article.wordCount }} 字</span>
     </label>
   </div>
 </div>
 </template>
-
-<style scoped>
-.article-selector {
-  margin-bottom: 1rem;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.6rem;
-}
-.section-header h3 {
-  color: var(--text-primary);
-  margin: 0;
-  font-size: 0.9rem;
-}
-.article-list {
-  max-height: 250px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  padding: 0.4rem;
-  background-color: var(--background-secondary);
-}
-.article-item {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: 0.4rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-.article-item:hover {
-  background-color: var(--background-tertiary);
-}
-.article-item.selected {
-  background-color: var(--background-tertiary);
-}
-.article-item input[type="checkbox"] {
-  cursor: pointer;
-}
-.article-title {
-  flex: 1;
-  color: var(--text-primary);
-  font-size: 0.85rem;
-}
-.article-words {
-  color: var(--text-tertiary);
-  font-size: 0.75rem;
-}
-/* 滚动条样式 */
-.article-list::-webkit-scrollbar {
-  width: 6px;
-}
-.article-list::-webkit-scrollbar-track {
-  background: var(--background-secondary);
-}
-.article-list::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
-}
-.article-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
-}
-</style>

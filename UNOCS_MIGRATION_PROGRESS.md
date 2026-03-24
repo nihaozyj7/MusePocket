@@ -5,7 +5,7 @@
 
 ---
 
-## ✅ 已完成（7 个组件）
+## ✅ 已完成（10 个组件）
 
 ### 基础组件 (6 个)
 1. ✅ `src/shared/components/ConfirmDialog.vue` 
@@ -15,8 +15,13 @@
 5. ✅ `src/shared/components/SelectCoverPopup.vue`
 6. ✅ `src/shared/components/HistoryViewPopup.vue`
 
-### 页面组件 (1 个)
+### 页面组件 (3 个)
 7. ✅ `src/pages/BooksPage.vue` - 主要样式已迁移，保留复杂 CSS
+8. ✅ `src/pages/EditPage.vue` - 主要样式已迁移，保留复杂 CSS
+9. ✅ `src/App.vue` - 根组件
+
+### 其他组件 (1 个)
+10. ✅ `src/shared/components/ConfirmDialog.vue`
 
 ---
 
@@ -117,11 +122,11 @@
 | 类别 | 已迁移 | 待迁移 | 总计 | 完成率 |
 |------|--------|--------|------|--------|
 | 基础组件 | 6 | 3 | 9 | 67% |
-| 页面组件 | 1 | 1 | 2 | 50% |
+| 页面组件 | 3 | 0 | 3 | 100% |
 | Library 模块 | 0 | 16 | 16 | 0% |
 | Editor 模块 | 0 | 9 | 9 | 0% |
 | Settings 模块 | 0 | 10 | 10 | 0% |
-| **总计** | **7** | **36** | **43** | **16%** |
+| **总计** | **10** | **33** | **43** | **23%** |
 
 ---
 

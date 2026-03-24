@@ -104,131 +104,39 @@ async function handleUpload() {
 
 <template>
 <Popup title="🖼️ 选择封面" ref="popupRef">
-  <div class="select-cover-container">
+  <div class="select-cover-container w-[50rem] h-[35rem] flex flex-col">
     <!-- 操作栏 -->
-    <div class="toolbar">
+    <div class="toolbar flex items-center gap-2 pb-4 border-b border-color">
       <button @click="handleUpload" :disabled="uploading">
         {{ uploading ? '上传中...' : '📤 上传新图片' }}
       </button>
-      <span class="info">共 {{ images.length }} 张图片</span>
+      <span class="info text-[0.85rem] text-secondary">共 {{ images.length }} 张图片</span>
     </div>
 
     <!-- 图片网格 -->
-    <div class="image-grid" v-if="images.length > 0">
-      <div class="image-item" :class="{ selected: image.id === selectedCoverId }" v-for="image in images" :key="image.id" @click="selectCover(image.id)">
-        <div class="image-wrapper">
-          <img :src="imageUrls.get(image.id)" :alt="image.id" />
+    <div class="image-grid flex-1 overflow-y-auto grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 p-4" v-if="images.length > 0">
+      <div class="image-item relative aspect-[3/4] border-2 border-color rounded overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary hover:scale-105" :class="{ selected: image.id === selectedCoverId }" v-for="image in images" :key="image.id" @click="selectCover(image.id)">
+        <div class="image-wrapper w-full h-full bg-tertiary flex items-center justify-center">
+          <img :src="imageUrls.get(image.id)" :alt="image.id" class="w-full h-full object-cover" />
         </div>
-        <div class="selected-badge" v-if="image.id === selectedCoverId">
+        <div class="selected-badge absolute top-2 right-2 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-[0.9rem] font-bold" v-if="image.id === selectedCoverId">
           ✓
         </div>
       </div>
     </div>
 
     <!-- 空状态 -->
-    <div class="empty-state" v-else>
-      <div class="empty-icon">🖼️</div>
-      <p>还没有图片</p>
-      <p class="empty-tip">点击上方按钮上传第一张图片</p>
+    <div class="empty-state flex flex-col items-center justify-center p-12 text-center text-tertiary" v-else>
+      <div class="empty-icon text-4xl">🖼️</div>
+      <p class="mt-2">还没有图片</p>
+      <p class="empty-tip text-[0.85rem] opacity-70 mt-1">点击上方按钮上传第一张图片</p>
     </div>
 
     <!-- 底部按钮 -->
-    <div class="footer">
-      <button @click="popupRef?.close()" class="btn-cancel">取消</button>
-      <button @click="confirmSelect" class="btn-confirm">确定</button>
+    <div class="footer flex justify-end gap-2 pt-4 border-t border-color">
+      <button @click="popupRef?.close()" class="btn-cancel bg-tertiary">取消</button>
+      <button @click="confirmSelect" class="btn-confirm bg-primary text-white border-primary">确定</button>
     </div>
   </div>
 </Popup>
 </template>
-
-<style scoped>
-.select-cover-container {
-  width: 50rem;
-  height: 35rem;
-  display: flex;
-  flex-direction: column;
-}
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.info {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-.image-grid {
-  flex: 1;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: .5rem;
-  padding: 1rem 0;
-}
-.image-item {
-  position: relative;
-  aspect-ratio: 3/4;
-  border: 2px solid var(--border-color);
-  border-radius: 0.25rem;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.image-item:hover {
-  border-color: var(--primary);
-  transform: scale(1.05);
-}
-.image-item.selected {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.2);
-}
-.image-wrapper {
-  width: 100%;
-  height: 100%;
-  background-color: var(--background-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.image-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.selected-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  background-color: var(--primary);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-.empty-tip {
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
-.footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: .5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-.btn-cancel {
-  background-color: var(--background-tertiary);
-}
-.btn-confirm {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-</style>

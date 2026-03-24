@@ -236,96 +236,18 @@ watch(
 </script>
 
 <template>
-  <div class="mask" v-if="props.destroyOnClose ? isVisible : true" v-show="props.destroyOnClose ? true : isVisible" @click="onMaskClick" :style="{ zIndex: currentZIndex }">
-    <div class="window" ref="windowRef" @click.stop :style="windowStyle">
-      <header ref="headerRef" @mousedown.prevent="onDragStartMouse" @touchstart.passive.prevent="onDragStartTouch">
-        <h3>{{ props.title }}</h3>
-        <button class="close" @click="close">❌</button>
+  <div class="w-full h-full absolute top-0 left-0 flex justify-center items-center cursor-pointer bg-[#0005]" v-if="props.destroyOnClose ? isVisible : true" v-show="props.destroyOnClose ? true : isVisible" @click="onMaskClick" :style="{ zIndex: currentZIndex }">
+    <div class="bg-primary border border-color rounded overflow-hidden cursor-default flex flex-col absolute shadow-lg" ref="windowRef" @click.stop :style="windowStyle">
+      <header class="w-full h-10 bg-secondary flex justify-between items-center px-1 py-1 select-none border-b border-color" ref="headerRef" @mousedown.prevent="onDragStartMouse" @touchstart.passive.prevent="onDragStartTouch">
+        <h3 class="leading-4 text-[0.85rem] p-0 m-0 text-primary font-semibold">{{ props.title }}</h3>
+        <button class="px-1 py-1 mr-[-0.5rem] bg-transparent border-none" @click="close">❌</button>
       </header>
 
-      <main>
+      <main class="flex-1 h-0 flex p-2">
         <slot></slot>
       </main>
     </div>
 
-    <div class="tips" v-show="props.mask && props.maskClosable">点击空白处关闭</div>
+    <div class="tips absolute bottom-4 text-[0.8rem] text-tertiary" v-show="props.mask && props.maskClosable">点击空白处关闭</div>
   </div>
 </template>
-
-<style scoped>
-.mask {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  background-color: #0005;
-  /* z-index 通过内联样式动态设置 */
-}
-
-.tips {
-  position: absolute;
-  bottom: 1rem;
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-}
-
-.tips.hide {
-  display: none;
-}
-
-.window {
-  background-color: var(--background-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.25rem;
-  overflow: hidden;
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  box-shadow: var(--shadow-lg);
-}
-
-header {
-  width: 100%;
-  height: 2.5rem;
-  background-color: var(--background-secondary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  user-select: none;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.close {
-  padding: 0.25rem 0.5rem;
-  margin-right: -0.5rem;
-  background-color: transparent;
-  border: none;
-}
-
-header>h3 {
-  line-height: 1rem;
-  font-size: 0.85rem;
-  padding: 0;
-  margin: 0;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-main {
-  flex: 1;
-  height: 0;
-  display: flex;
-  padding: 0.5rem;
-}
-
-.popup-dragging {
-  cursor: move !important;
-}
-</style>

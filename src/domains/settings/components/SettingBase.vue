@@ -171,8 +171,7 @@ const testProofreadApi = async () => {
       <div class="group-title">📝 字体与排版</div>
       <div class="setting-item">
         <label>
-          <span class="label-text">基准尺寸</span>
-          <span class="label-desc">影响全局文字和UI</span>
+          <span class="label-text" data-desc="影响全局文字和 UI">基准尺寸</span>
           <div class="input-group">
             <input type="number" v-model="tempBaseFontSize" @blur="handleBaseFontSizeBlur" min="12" max="24">
             <span class="unit">px</span>
@@ -182,8 +181,7 @@ const testProofreadApi = async () => {
 
       <div class="setting-item">
         <label>
-          <span class="label-text">编辑区文字尺寸</span>
-          <span class="label-desc">该值为基准尺寸的倍数</span>
+          <span class="label-text" data-desc="该值为基准尺寸的倍数">编辑区文字尺寸</span>
           <div class="input-group">
             <input type="number" v-model="tempEditorFontSize" @blur="handleEditorFontSizeBlur" min="0.5" max="3" step="0.1">
             <span class="unit">rem</span>
@@ -193,8 +191,7 @@ const testProofreadApi = async () => {
 
       <div class="setting-item">
         <label>
-          <span class="label-text">字体行高</span>
-          <span class="label-desc">默认2.5倍字体高度</span>
+          <span class="label-text" data-desc="默认 2.5 倍字体高度">字体行高</span>
           <div class="input-group">
             <input type="number" v-model="tempLineHeight" @blur="handleLineHeightBlur" min="1" max="5" step="0.1">
             <span class="unit">倍字体高度</span>
@@ -205,10 +202,10 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.enableParagraphSpacing" @change="e => settingStore.toggleParagraphSpacing((e.target as HTMLInputElement).checked)">
-          <span>启用段间距</span>
-          <span class="label-desc">段落之间会有一个不可编辑的当前行高的空白行</span>
+          <span class="label-text" data-desc="段落之间会有一个不可编辑的当前行高的空白行">启用段间距</span>
         </label>
       </div>
+
     </div>
 
     <!-- 实体样式 -->
@@ -217,29 +214,28 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.entityStyle.underline" @change="e => settingStore.updateEntityStyle('underline', (e.target as HTMLInputElement).checked)">
-          <span>下划线</span>
+          <span class="label-text">下划线</span>
           <input type="color" :value="underlineColorSix" @input="handleUnderlineColorChange" :disabled="!settings.entityStyle.underline">
         </label>
       </div>
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.entityStyle.background" @change="e => settingStore.updateEntityStyle('background', (e.target as HTMLInputElement).checked)">
-          <span>背景色</span>
+          <span class="label-text">背景色</span>
           <input type="color" :value="backgroundColorSix" @input="handleBackgroundColorChange" :disabled="!settings.entityStyle.background">
         </label>
       </div>
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.entityStyle.textColor" @change="e => settingStore.updateEntityStyle('textColor', (e.target as HTMLInputElement).checked)">
-          <span>文字色</span>
+          <span class="label-text">文字色</span>
           <input type="color" :value="textColorSix" @input="handleTextColorChange" :disabled="!settings.entityStyle.textColor">
         </label>
       </div>
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.insertEntityAsPlainText" @change="e => settings.insertEntityAsPlainText = (e.target as HTMLInputElement).checked">
-          <span>插入实体为普通文本</span>
-          <span class="label-desc">不勾选时插入的是实体节点，实体内容将同步更新文章中的节点</span>
+          <span class="label-text" data-desc="不勾选时插入的是实体节点，实体内容将同步更新文章中的节点">插入实体为普通文本</span>
         </label>
       </div>
     </div>
@@ -260,8 +256,7 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.usePlainTextPaste" @change="e => settings.usePlainTextPaste = (e.target as HTMLInputElement).checked">
-          <span>使用纯文本粘贴</span>
-          <span class="label-desc">粘贴时对文本进行清洗，粘贴后将变更为普通文本</span>
+          <span class="label-text" data-desc="粘贴时对文本进行清洗，粘贴后将变更为普通文本">使用纯文本粘贴</span>
         </label>
       </div>
     </div>
@@ -271,8 +266,7 @@ const testProofreadApi = async () => {
       <div class="group-title">💡 自动完成</div>
       <div class="setting-item">
         <label>
-          <span class="label-text">悬浮层延迟</span>
-          <span class="label-desc">输入后多久显示实体匹配提示</span>
+          <span class="label-text" data-desc="输入后多久显示实体匹配提示">悬浮层延迟</span>
           <div class="input-group">
             <input type="number" :value="settings.autoCompleteDelay" @input="e => settingStore.updateAutoCompleteDelay(Number((e.target as HTMLInputElement).value))" min="0" max="2000" step="50">
             <span class="unit">毫秒</span>
@@ -294,8 +288,7 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.autoCompleteDefaultSelect" @change="e => settings.autoCompleteDefaultSelect = (e.target as HTMLInputElement).checked">
-          <span>默认选中第一个建议</span>
-          <span class="label-desc">关闭后需要使用上下方向键手动选择</span>
+          <span class="label-text" data-desc="关闭后需要使用上下方向键手动选择">默认选中第一个建议</span>
         </label>
       </div>
     </div>
@@ -306,7 +299,7 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.enableGridLines" @change="e => settingStore.toggleGridLines((e.target as HTMLInputElement).checked)">
-          <span>启用网格线</span>
+          <span class="label-text">启用网格线</span>
           <select :value="settings.gridLineStyle" @change="e => settingStore.updateGridLineStyle((e.target as HTMLSelectElement).value as GridLineStyle)" :disabled="!settings.enableGridLines">
             <option value="dashed">虚线</option>
             <option value="solid">实线</option>
@@ -316,7 +309,7 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settings.enableBackgroundImage" @change="e => settingStore.toggleBackgroundImage((e.target as HTMLInputElement).checked)">
-          <span>启用图片背景</span>
+          <span class="label-text">启用图片背景</span>
           <button @click="handleImageUpload" :disabled="!settings.enableBackgroundImage">
             🖼️ 选择图片
           </button>
@@ -329,10 +322,9 @@ const testProofreadApi = async () => {
       <div class="group-title">✅ 纠错设置</div>
       <div class="setting-item">
         <label>
-          <span class="label-text">纠错接口地址</span>
-          <span class="label-desc">本地纠错服务的API地址</span>
+          <span class="label-text" data-desc="本地纠错服务的 API 地址">纠错接口地址</span>
           <div class="input-group">
-            <input type="text" v-model="tempProofreadApiUrl" @blur="handleProofreadApiUrlBlur" placeholder="例如: http://localhost:3006" style="min-width: 250px;">
+            <input type="text" v-model="tempProofreadApiUrl" @blur="handleProofreadApiUrlBlur" placeholder="例如：http://localhost:3006" style="min-width: 250px;">
             <button @click="testProofreadApi" :disabled="isTesting || !tempProofreadApiUrl.trim()" class="test-btn">
               {{ isTesting ? '测试中...' : '🔍 测试接口' }}
             </button>
@@ -343,8 +335,7 @@ const testProofreadApi = async () => {
       <div class="setting-item">
         <label class="checkbox-label">
           <input type="checkbox" :checked="settingStore.proofreadingSettings.autoProofread" @change="e => settingStore.toggleAutoProofread((e.target as HTMLInputElement).checked)">
-          <span>启用自动纠错</span>
-          <span class="label-desc">开启后编辑器将自动检测文本错误（需要接口地址配置且服务可用）</span>
+          <span class="label-text" data-desc="开启后编辑器将自动检测文本错误（需要接口地址配置且服务可用）">启用自动纠错</span>
         </label>
       </div>
     </div>
@@ -370,16 +361,41 @@ const testProofreadApi = async () => {
   gap: .5rem;
   flex-wrap: wrap;
 }
+.checkbox-label {
+  font-size: 1rem;
+}
+.checkbox-label .label-text {
+  font-size: 1rem;
+}
 .label-text {
+  font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
   min-width: 120px;
+  position: relative;
+  cursor: help;
 }
-.label-desc {
+.label-text:hover::after {
+  content: attr(data-desc);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  background-color: var(--background-tertiary);
   color: var(--text-secondary);
   font-size: 0.85rem;
-  flex: 1;
-  min-width: 200px;
+  font-weight: 400;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border-color);
+  white-space: normal;
+  max-width: 300px;
+  z-index: 100;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  line-height: 1.5;
+}
+.label-desc {
+  display: none;
 }
 .input-group {
   display: flex;

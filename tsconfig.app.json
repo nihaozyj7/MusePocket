@@ -5,8 +5,7 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "types": [
-      "vite/client",
-      "unocss/vite"
+      "vite/client"
     ],
     "baseUrl": ".",
     "paths": {

@@ -69,22 +69,22 @@ defineExpose({
 
 <template>
   <Popup :title="popupTitle" ref="popupRef">
-    <div class="w-[30rem] flex items-center">
-      <div class="cover h-[17.6rem] w-[11rem] bg-secondary rounded relative overflow-hidden m-2">
-        <img :src="coverUrl" :alt="`${book.title}的封面`" class="h-full w-full object-cover object-center block"></img>
-        <button class="absolute bg-tertiary w-full bottom-0 text-[0.8rem]" @click="openCoverSelector">更换封面</button>
+    <div style="width: 30rem; display: flex; align-items: center;">
+      <div class="cover">
+        <img :src="coverUrl" :alt="`${book.title}的封面`"></img>
+        <button @click="openCoverSelector">更换封面</button>
       </div>
-      <div class="form flex-1 w-0 flex flex-col pl-2">
-        <label for="title" class="text-[0.8rem] text-secondary mb-2">书名</label>
-        <input type="text" id="title" placeholder="请输入书名" v-model="book.title" class="w-full border-b border-color p-2 mb-4">
-        <label for="overview" class="text-[0.8rem] text-secondary mb-2">简介</label>
-        <textarea id="overview" placeholder="请输入书籍简介" v-model="book.description" class="w-full border border-color leading-[1.5rem] mt-2 h-[9rem] p-2"></textarea>
+      <div class="form">
+        <label for="title">书名</label>
+        <input type="text" id="title" placeholder="请输入书名" v-model="book.title">
+        <label for="overview">简介</label>
+        <textarea id="overview" placeholder="请输入书籍简介" v-model="book.description"></textarea>
 
-        <div class="buttons flex" v-if="editType === 'edit'">
-          <button @click="popupRef.close" class="mr-2 bg-secondary w-[8rem]">取消</button>
-          <button @click="saveBook" class="bg-primary-dark mt-4 leading-[1.9rem] rounded text-primary">保存修改</button>
+        <div class="buttons" v-if="editType === 'edit'">
+          <button @click="popupRef.close" style="margin-right: .5rem;">取消</button>
+          <button @click="saveBook">保存修改</button>
         </div>
-        <button @click="saveBook" v-else class="bg-primary-dark mt-4 leading-[1.9rem] rounded text-primary">创建新书</button>
+        <button @click="saveBook" v-else>创建新书</button>
       </div>
     </div>
   </Popup>
@@ -92,3 +92,80 @@ defineExpose({
   <!-- 封面选择弹窗 -->
   <SelectCoverPopup ref="selectCoverPopupRef" @select="handleCoverSelected" />
 </template>
+
+<style scoped>
+.cover {
+  height: 17.6rem;
+  width: 11rem;
+  background-color: var(--background-secondary);
+  border-radius: .25rem;
+  position: relative;
+  overflow: hidden;
+  margin: .5rem;
+}
+
+.cover img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.cover button {
+  position: absolute;
+  background-color: var(--background-tertiary);
+  width: 100%;
+  bottom: 0;
+  font-size: .8rem;
+}
+
+.form {
+  flex: 1;
+  width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-left: .5rem;
+}
+
+.form * {
+  width: 100%;
+}
+
+.form label {
+  font-size: .8rem;
+  color: var(--text-secondary);
+  margin-bottom: .5rem;
+}
+
+.form input {
+  border-bottom: 1px solid var(--border-color);
+  padding: .5rem;
+  margin-bottom: 1rem;
+}
+
+.form textarea {
+  border: 1px solid var(--border-color);
+  line-height: 1.5rem;
+  margin-top: .5rem;
+  height: 9rem;
+  padding: .5rem;
+}
+
+.buttons {
+  display: flex;
+}
+
+.form button {
+  background-color: var(--primary-dark);
+  margin-top: 1rem;
+  line-height: 1.9rem;
+  border-radius: .25rem;
+  color: var(--text-primary);
+}
+
+.form button:first-child {
+  background-color: var(--secondary);
+  width: 8rem;
+}
+</style>

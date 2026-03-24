@@ -59,9 +59,36 @@ defineExpose({ show, hide })
 </script>
 
 <template>
-  <div class="context-menu absolute rounded bg-secondary border border-color shadow-md z-[1000] text-[0.85rem] overflow-hidden p-1" ref="menuRef" v-show="isVisable">
-    <div v-for="item in items" :key="item.title" class="menu-item leading-[1.6rem] px-2 py-1 cursor-pointer transition-all duration-[200ms] ease-in-out rounded hover:bg-primary hover:text-white" @click="item.callback" :title="item?.tips">
+  <div class="context-menu" ref="menuRef" v-show="isVisable">
+    <div v-for="item in items" :key="item.title" class="menu-item" @click="item.callback" :title="item?.tips">
       {{ item.title }}
     </div>
   </div>
 </template>
+
+<style scoped>
+.context-menu {
+  position: absolute;
+  border-radius: 0.25rem;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  font-size: 0.85rem;
+  overflow: hidden;
+  padding: 0.25rem;
+}
+
+.menu-item {
+  line-height: 1.6rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 0.25rem;
+}
+
+.menu-item:hover {
+  background-color: var(--primary);
+  color: white;
+}
+</style>

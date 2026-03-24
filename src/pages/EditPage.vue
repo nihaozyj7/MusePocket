@@ -925,52 +925,52 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
 </script>
 
 <template>
-<div class="container h-full w-full flex border-t border-color">
-  <div class="sidebar flex flex-col w-[18rem] h-full bg-secondary border-r border-color">
+<div class="container">
+  <div class="sidebar">
     <!-- 搜索栏 -->
-    <div class="search h-[2.7rem] flex items-center border-b border-color pl-4 font-bold text-tertiary text-[.9rem] cursor-text" @click="openSearchPopup">搜索章节</div>
+    <div class="search" @click="openSearchPopup">搜索章节</div>
     <!-- 操作按钮 -->
-    <div class="operations flex h-10 items-center px-1 border-b border-color">
+    <div class="operations">
       <!-- 回到主页 -->
       <button class="button-m" title="回到主页" @click="goHome">🔙 返回</button>
       <!-- 占位符 -->
-      <div class="flex-1"></div>
+      <div style="flex: 1;"></div>
       <!-- 回收站 -->
       <button class="button-m" title="回收站" @click="openRecycleBin">🗑 回收站</button>
       <!-- 新建书籍 -->
       <button class="button-m" title="创建新文章" @click="creatreArticle">✏️ 新文章</button>
     </div>
-    <div class="articleshelf flex-1 h-0 p-1" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
+    <div class="articleshelf" @click="handleArticleClick" @contextmenu="handleArticleContextmenu">
       <div class="scroll-container">
-        <div class="article-item flex p-2 cursor-pointer transition-all select-none rounded m-2 border border-transparent hover:h4-color" :class="{
+        <div class="article-item" :class="{
           'selected': isSelected(article),
           'dragging': draggedItem && draggedItem.id === article.id,
           'drag-over': dragOverIndex === index
         }" v-for="(article, index) in articles" :data-article-id="article.id" :key="article.id" draggable="true" @dragstart="handleDragStart($event, article)" @dragend="handleDragEnd" @dragover="handleDragOver($event, index)" @dragleave="handleDragLeave" @drop="handleDrop($event, index)">
-          <span class="w-8">📜</span>
-          <h4 class="whitespace-nowrap overflow-hidden text-ellipsis text-[.8rem] flex-1">{{ article.title }}</h4>
-          <div class="count text-[.6rem] text-tertiary block mt-1">{{ article.wordCount }}</div>
+          <span>📜</span>
+          <h4>{{ article.title }}</h4>
+          <div class="count">{{ article.wordCount }}</div>
         </div>
       </div>
     </div>
   </div>
-  <div class="right-container flex-1 flex flex-col">
-    <header class="toolbar flex h-[2.7rem] border-b border-color justify-between bg-secondary">
+  <div class="right-container">
+    <header class="toolbar">
       <!-- 面包屑 -->
-      <div class="breadcrumb h-full flex items-center">
-        <span class="text-[1.2rem] block mt-[-.3rem]">📖</span>
-        <span class="ml-2 text-[.8rem]">{{ selectedBookStore.v?.title }}</span>
+      <div class="breadcrumb">
+        <span style="font-size: 1.2rem; display: block; margin-top: -.3rem;">📖</span>
+        <span>{{ selectedBookStore.v?.title }}</span>
       </div>
       <!-- 工具按钮 -->
-      <div class="tools flex items-center mr-2">
+      <div class="tools">
         <button title="对当前文章进行排版" @click="handleFormat">✨ 一键排版</button>
         <button title="插入文本预设" @click="insertSnippetPopupRef.show">📋 插入预设</button>
         <button title="查找与替换" @click="openFindReplace">🔍 查找替换</button>
-        <div class="button-group flex items-center ml-2 bg-tertiary rounded border border-color">
-          <button title="回退 (Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo" class="text-[1rem] p-[.19rem] m-0 disabled:opacity-30 disabled:cursor-not-allowed">
+        <div class="button-group">
+          <button title="回退(Ctrl+Z)" :disabled="!historyStore.canUndo" @click="handleUndo">
             ↩️
           </button>
-          <button title="重做 (Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo" class="text-[1rem] p-[.19rem] m-0 disabled:opacity-30 disabled:cursor-not-allowed">
+          <button title="重做(Ctrl+Y)" :disabled="!historyStore.canRedo" @click="handleRedo">
             ↪️
           </button>
         </div>
@@ -979,12 +979,12 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
         <button title="软件设置" @click="openSettings">⚙️ 配置</button>
       </div>
     </header>
-    <div class="bottom flex flex-1 h-0">
+    <div class="bottom">
       <!-- 编辑器 -->
       <Editor :updateThrottleTime="3000" ref="editorRef" @update:article-title="handleSaveArticleTitle" @update:article-body="saveArticle" @undo="handleUndo" @redo="handleRedo" />
       <!-- 工具窗口 -->
-      <div class="utils-drawer flex" v-show="settingStore.rutilsTitle" ref="rutilsRef">
-        <div class="split-line w-2 bg-secondary cursor-col-resize border-l border-r border-color" @mousedown="handleSplitLineMousedown"></div>
+      <div class="utils-drawer" v-show="settingStore.rutilsTitle" ref="rutilsRef">
+        <div class="split-line" @mousedown="handleSplitLineMousedown"></div>
         <NameGeneratorTool v-show="settingStore.rutilsTitle === rutilsTitles[0]" />
         <ProofreadTool v-show="settingStore.rutilsTitle === rutilsTitles[1]" ref="proofreadToolRef" :getEditorBody="() => editorRef?.getBodyText()" :applyTextFix="handleProofreadFix" @apply-fix="handleProofreadFix" />
         <EntityManager v-show="settingStore.rutilsTitle === rutilsTitles[2]" />
@@ -993,8 +993,8 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
         <HistorySidebar v-show="settingStore.rutilsTitle === rutilsTitles[5]" ref="historySidebarRef" @restore="handleRestoreFromHistory" />
       </div>
       <!-- 侧边工具栏 -->
-      <div class="utils-panel vertical-text w-[2.7rem] pt-2 border-l bg-secondary overflow-y-hidden" @click="HandleUtilsPanelButtonsClick">
-        <button :class="{ selected: settingStore.rutilsTitle === rt }" class="bg-tertiary p-2 px-1 pb-2 mb-2 mr-2 rounded border border-color" v-for="rt in rutilsTitles">{{ rt }}</button>
+      <div class="utils-panel vertical-text" @click="HandleUtilsPanelButtonsClick">
+        <button :class="{ selected: settingStore.rutilsTitle === rt }" v-for="rt in rutilsTitles">{{ rt }}</button>
       </div>
     </div>
   </div>
@@ -1014,24 +1014,24 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
 
 <!-- 导入导出弹出层 -->
 <Popup ref="importExportPopupRef" title="💾 文章导入导出">
-  <div class="import-export-container max-w-[700px] mx-auto">
+  <div class="import-export-container">
     <!-- 导入文章 -->
-    <div class="section mb-6">
-      <h3 class="text-primary mb-3 text-[1rem]">📂 导入文章</h3>
+    <div class="section">
+      <h3>📂 导入文章</h3>
       <ArticleImportExport :bookId="selectedBookStore.v?.id || ''" @importSuccess="handleImportSuccess" />
     </div>
 
-    <div class="divider h-px bg-border-color my-6"></div>
+    <div class="divider"></div>
 
     <!-- 导出文章 -->
-    <div class="section mb-6">
-      <h3 class="text-primary mb-3 text-[1rem]">💾 导出文章</h3>
-      <p class="description text-secondary text-[0.85rem] leading-normal mb-3">
+    <div class="section">
+      <h3>💾 导出文章</h3>
+      <p class="description">
         导出当前选中的文章或所有文章为 JSON 文件
       </p>
-      <div class="button-group flex gap-2">
-        <button @click="exportCurrentArticle" class="btn-primary px-4 py-2 bg-primary text-white border-none rounded cursor-pointer text-[0.875rem] flex-1">📝 导出当前文章</button>
-        <button @click="exportAllArticles" class="btn-primary px-4 py-2 bg-primary text-white border-none rounded cursor-pointer text-[0.875rem] flex-1">📚 导出所有文章</button>
+      <div class="button-group">
+        <button @click="exportCurrentArticle" class="btn-primary">📝 导出当前文章</button>
+        <button @click="exportAllArticles" class="btn-primary">📚 导出所有文章</button>
       </div>
     </div>
   </div>
@@ -1039,17 +1039,89 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
 </template>
 
 <style scoped>
-/* 保留复杂样式和伪类选择器 */
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  border-top: 1px solid var(--border-color);
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  height: 100%;
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+}
+.search {
+  height: 2.7rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-left: 1rem;
+  font-weight: bold;
+  color: var(--text-tertiary);
+  font-size: .9rem;
+  cursor: text;
+}
+.operations {
+  display: flex;
+  height: 2.5rem;
+  align-items: center;
+  padding: 0 .25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.operations button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: var(--background-tertiary);
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+.operations button:last-child {
+  margin-right: 0;
+}
+.bookshelf {
+  flex: 1;
+  height: 0;
+  padding: .5rem 0;
+}
+.book-item {
+  display: flex;
+  align-items: start;
+  cursor: pointer;
+  border-radius: .25rem;
+  padding: .5rem;
+  margin: 0 .25rem .25rem .25rem;
+}
+.book-item.checked {
+  background-color: var(--background-tertiary);
+}
+.book-item .cover {
+  height: 8rem;
+  width: 5rem;
+  border-radius: .25rem;
+  margin-right: .5rem;
+  overflow: hidden;
+}
+.book-item .cover img {
+  height: 100%;
+  width: 100%;
+}
+.bookInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 0;
+}
 .book-item>div>:nth-child(1) {
   color: var(--text-primary);
   margin-top: .25rem;
 }
-
 .book-item>div>:nth-child(2) {
   font-size: .8rem;
   margin-top: .6rem;
 }
-
 .book-item>div>:nth-child(3) {
   font-size: .8rem;
   margin-top: .6rem;
@@ -1062,82 +1134,69 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   text-overflow: ellipsis;
   word-break: break-all;
 }
-
-.operations button {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  background-color: var(--background-tertiary);
-  margin-right: 0.5rem;
-  border: 1px solid var(--border-color);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
+.right-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-
-.operations button:last-child {
-  margin-right: 0;
+.toolbar {
+  display: flex;
+  height: 2.7rem;
+  border-bottom: 1px solid var(--border-color);
+  justify-content: space-between;
+  background-color: var(--background-secondary);
 }
-
-.operations button:hover:not(:disabled) {
-  opacity: 0.6;
+.breadcrumb {
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
-
+.breadcrumb span {
+  display: block;
+  margin-left: .5rem;
+  font-size: .8rem;
+}
+.tools {
+  display: flex;
+  align-items: center;
+  margin-right: .5rem;
+}
 .tools>button {
   margin-left: 0.5rem;
   background-color: var(--background-tertiary);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   border: 1px solid var(--border-color);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
 }
-
-.tools>button:hover:not(:disabled) {
-  opacity: 0.6;
-}
-
-.utils-panel button {
+.button-group {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
   background-color: var(--background-tertiary);
-  padding: .5rem .1rem .5rem .25rem !important;
   border-radius: 0.25rem;
-  margin-bottom: 0.5rem;
-  margin-right: 0.5rem;
   border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.2s;
 }
-
-.utils-panel button.selected {
-  background-color: var(--primary-dark);
-  color: var(--text-primary);
+.button-group button {
+  font-size: 1rem;
+  padding: 0.19rem;
+  margin: 0;
 }
-
-.article-item h4 {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: .8rem;
+.button-group button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.right-container .bottom {
+  display: flex;
   flex: 1;
+  height: 0;
 }
-
-.article-item:hover h4 {
-  color: var(--primary-light);
+.utils-panel {
+  width: 2.7rem;
+  padding-top: .5rem;
+  border-left: 1px solid var(--border-color);
+  background-color: var(--background-secondary);
+  overflow-y: hidden;
 }
-
-.article-item.selected h4 {
-  color: var(--primary);
-}
-
-.article-item.dragging {
-  opacity: 0.5;
-}
-
-.article-item.drag-over {
-  border-top: 2px solid var(--primary);
-  margin-top: 2px;
-}
-
 .vertical-text {
   writing-mode: vertical-rl;
   text-orientation: sideways;
@@ -1147,28 +1206,106 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   padding-bottom: 1rem;
   user-select: text;
 }
-
+.utils-panel button {
+  background-color: var(--background-tertiary);
+  padding: .5rem .1rem .5rem .25rem !important;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+.utils-panel button.selected {
+  background-color: var(--primary-dark);
+  color: var(--text-primary);
+}
+.articleshelf {
+  flex: 1;
+  height: 0;
+  padding: .25rem 0;
+}
+.article-item {
+  display: flex;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  border-radius: 0.25rem;
+  margin: 0 0.5rem 0.5rem 0.5rem;
+  border: 1px solid transparent;
+}
+.article-item:active {
+  cursor: grabbing;
+}
+.article-item.dragging {
+  opacity: 0.5;
+}
+.article-item.drag-over {
+  border-top: 2px solid var(--primary);
+  margin-top: 2px;
+}
+.article-item:hover h4 {
+  color: var(--primary-light);
+}
+.article-item .count {
+  font-size: .6rem;
+  color: var(--text-tertiary);
+  display: block;
+  margin-top: .25rem;
+}
+.article-item.selected {
+  background-color: var(--background-tertiary);
+}
+.article-item.selected h4 {
+  color: var(--primary);
+}
+.article-item span {
+  width: 2rem;
+}
+.article-item h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .8rem;
+  flex: 1;
+}
+.utils-drawer {
+  display: flex;
+}
+.utils-drawer .split-line {
+  width: .5rem;
+  background-color: var(--background-secondary);
+  cursor: col-resize;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
 ::v-deep(.utils-drawer>*:nth-child(2)) {
   flex: 1;
   width: 0;
 }
-
-.button-m {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  background-color: var(--background-tertiary);
+.import-export-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.import-export-container .section {
+  margin-bottom: 1.5rem;
+}
+.import-export-container h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+.import-export-container .description {
+  color: var(--text-secondary);
   font-size: 0.85rem;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.2s;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
 }
-
-.button-m:hover:not(:disabled) {
-  opacity: 0.6;
+.import-export-container .button-group {
+  display: flex;
+  gap: .5rem;
 }
-
-.btn-primary {
-  padding: 0.5rem 1rem;
+.import-export-container .btn-primary {
+  padding: .5rem 1rem;
   background-color: var(--primary);
   color: white;
   border: none;
@@ -1178,8 +1315,9 @@ function handleFindReplace(findText: string, replaceText: string, isRegex: boole
   transition: background-color 0.2s;
   flex: 1;
 }
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+.import-export-container .divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 0;
 }
 </style>

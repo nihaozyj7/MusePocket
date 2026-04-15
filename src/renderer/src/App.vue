@@ -11,7 +11,7 @@ const settingStore = useSettingStore()
 /** 设置弹出层 */
 const settingPopupRef = ref<InstanceType<typeof SettingPopup> | null>(null)
 
-document.addEventListener('contextmenu', e => e.preventDefault())
+document.addEventListener('contextmenu', (e) => e.preventDefault())
 
 onMounted(() => {
   // 在应用启动时统一应用背景图片设置
@@ -26,7 +26,11 @@ onMounted(() => {
 
 <template>
   <div class="app-container">
-    <RouterView />
+    <Transition name="fade" mode="out-in">
+      <div :key="$route.fullPath" class="route-wrapper">
+        <RouterView />
+      </div>
+    </Transition>
     <ConfirmDialog />
     <SettingPopup ref="settingPopupRef" />
   </div>
@@ -36,5 +40,20 @@ onMounted(() => {
 .app-container {
   width: 100%;
   height: 100%;
+}
+
+.route-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

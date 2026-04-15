@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onUnmounted, nextTick, watch, computed } from 'vue'
+import { ref, onUnmounted, nextTick, watch, computed, onMounted } from 'vue'
 import { zIndexManager } from '@shared/utils/z-index-manager'
 
 const props = defineProps({
@@ -26,11 +26,17 @@ const headerRef = ref<HTMLElement | null>(null)
 const windowRef = ref<HTMLElement | null>(null)
 /** 显示状态(内部控制) */
 const isVisible = ref(false)
+/** 动画显示状态 */
+const isAnimatedVisible = ref(false)
 /** 当前弹窗的 z-index */
 const currentZIndex = ref<number>(999)
 
 /** 当前窗口内联样式（用于 left/top/transform）——便于调试与绑定 */
-const windowStyle = computed(() => ({ left: windowLeft.value, top: windowTop.value, transform: windowTransform.value }))
+const windowStyle = computed(() => ({
+  left: windowLeft.value,
+  top: windowTop.value,
+  transform: windowTransform.value
+}))
 
 /** 是否处于拖拽中 */
 let dragging = false
@@ -78,6 +84,9 @@ function show() {
   // 获取新的 z-index 值
   currentZIndex.value = zIndexManager.getNext()
   isVisible.value = true
+  nextTick(() => {
+    isAnimatedVisible.value = true
+  })
   if (props.resetPosition) nextTick(() => resetWindowPosition())
 
   if (props.draggable && headerRef.value) {
@@ -85,7 +94,11 @@ function show() {
   }
 
   // 确保 headerRef 及其父元素存在后再设置样式
-  if (headerRef.value && headerRef.value.parentElement && headerRef.value.parentElement.parentElement) {
+  if (
+    headerRef.value &&
+    headerRef.value.parentElement &&
+    headerRef.value.parentElement.parentElement
+  ) {
     if (props.maskClosable) {
       headerRef.value.parentElement.parentElement.style.cursor = 'pointer'
     } else {
@@ -96,9 +109,12 @@ function show() {
 
 /** 关闭弹窗 */
 function close() {
-  isVisible.value = false
-  clearDragEvents()
-  emit('close')
+  isAnimatedVisible.value = false
+  setTimeout(() => {
+    isVisible.value = false
+    clearDragEvents()
+    emit('close')
+  }, 150)
 }
 
 defineExpose({ show, close, hide: close })
@@ -184,7 +200,7 @@ function onDragEndTouch() {
 function beginDragging() {
   dragging = true
   document.body.style.userSelect = 'none'
-  document.body.style.cursor = 'move'  // 全局光标
+  document.body.style.cursor = 'move' // 全局光标
   if (headerRef.value) headerRef.value.style.cursor = 'move'
 }
 
@@ -236,9 +252,26 @@ watch(
 </script>
 
 <template>
-  <div class="mask" v-if="props.destroyOnClose ? isVisible : true" v-show="props.destroyOnClose ? true : isVisible" @click="onMaskClick" :style="{ zIndex: currentZIndex }">
-    <div class="window" ref="windowRef" @click.stop :style="windowStyle">
-      <header ref="headerRef" @mousedown.prevent="onDragStartMouse" @touchstart.passive.prevent="onDragStartTouch">
+  <div
+    class="mask"
+    :class="{ show: isAnimatedVisible }"
+    v-if="props.destroyOnClose ? isVisible : true"
+    v-show="props.destroyOnClose ? true : isVisible"
+    @click="onMaskClick"
+    :style="{ zIndex: currentZIndex }"
+  >
+    <div
+      class="window"
+      ref="windowRef"
+      @click.stop
+      :style="windowStyle"
+      :class="{ show: isAnimatedVisible }"
+    >
+      <header
+        ref="headerRef"
+        @mousedown.prevent="onDragStartMouse"
+        @touchstart.passive.prevent="onDragStartTouch"
+      >
         <h3>{{ props.title }}</h3>
         <button class="close" @click="close">❌</button>
       </header>
@@ -264,18 +297,17 @@ watch(
   align-items: center;
   cursor: pointer;
   background-color: #0005;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
   /* z-index 通过内联样式动态设置 */
 }
 
-.tips {
-  position: absolute;
-  bottom: 1rem;
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-}
-
-.tips.hide {
-  display: none;
+.mask.show {
+  opacity: 1;
+  visibility: visible;
 }
 
 .window {
@@ -288,6 +320,16 @@ watch(
   flex-direction: column;
   position: absolute;
   box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.window.show {
+  opacity: 1;
+  transform: scale(1);
 }
 
 header {
@@ -309,7 +351,7 @@ header {
   border: none;
 }
 
-header>h3 {
+header > h3 {
   line-height: 1rem;
   font-size: 0.85rem;
   padding: 0;

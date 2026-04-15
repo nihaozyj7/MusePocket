@@ -1,8 +1,31 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
-const api = {}
+interface AiChatParams {
+  baseUrl: string
+  model: string
+  messages: { role: string; content: string }[]
+  stream?: boolean
+  apiKey?: string
+}
+
+interface AiConfig {
+  baseUrl: string
+  apiKey: string
+  model: string
+}
+
+const api = {
+  ai: {
+    getConfig: (): Promise<{ baseUrl: string; model: string } | null> =>
+      ipcRenderer.invoke('ai:get-config'),
+    saveConfig: (config: AiConfig): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke('ai:save-config', config),
+    chat: (params: AiChatParams): Promise<unknown> =>
+      // eslint-disable-line @typescript-eslint/no-explicit-any
+      ipcRenderer.invoke('ai:chat', params)
+  }
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

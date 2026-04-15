@@ -1,4 +1,3 @@
-
 /**
  * 清理 AI 返回内容中的思考块
  * 移除 <think>...</think> 标签及其包裹的内容
@@ -24,15 +23,27 @@ export interface OpenAiParams {
   model: string
   /** 消息 */
   messages?: {
-    role: 'user' | 'assistant' | 'system',
+    role: 'user' | 'assistant' | 'system'
     content: string
   }[]
   /** 使用流 */
   stream?: boolean
 }
 
+export interface OpenAiResponse {
+  choices?: {
+    message?: {
+      content?: string
+    }
+    finish_reason?: string
+  }[]
+  error?: {
+    message?: string
+    type?: string
+  }
+}
 
-export async function openaiFetch(params: OpenAiParams) {
+export async function openaiFetch(params: OpenAiParams): Promise<OpenAiResponse | undefined> {
   const {
     baseUrl,
     apiKey,
@@ -42,11 +53,22 @@ export async function openaiFetch(params: OpenAiParams) {
   } = params
 
   try {
+    if (window.api?.ai) {
+      const result = await window.api.ai.chat({
+        baseUrl,
+        model,
+        messages,
+        stream,
+        apiKey
+      })
+      return result
+    }
+
     const res = await fetch(baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model,
@@ -56,7 +78,6 @@ export async function openaiFetch(params: OpenAiParams) {
     })
     const data = await res.json()
 
-    // 自动清理返回内容中的思考块
     if (data?.choices?.[0]?.message?.content) {
       data.choices[0].message.content = cleanThinkTags(data.choices[0].message.content)
     }
@@ -64,5 +85,6 @@ export async function openaiFetch(params: OpenAiParams) {
     return data
   } catch (error) {
     console.error(error)
+    return undefined
   }
 }
